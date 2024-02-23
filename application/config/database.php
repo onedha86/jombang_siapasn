@@ -49,8 +49,8 @@ $active_group = 'default';
 $active_record = TRUE;
 
 $db['default'] = array(
-	'dsn'	   => 'pgsql:host=localhost;port=5432;dbname=simpeg_jombang;user=postgres;password=root',
-	'hostname' => 'localhost',
+	'dsn'	   => 'pgsql:host=192.168.88.100;port=5432;dbname=simpeg_jombang;user=postgres;password=root',
+	'hostname' => '192.168.88.100',
 	'username' => 'postgres',
 	'password' => 'root',
 	'database' => 'simpeg_jombang',

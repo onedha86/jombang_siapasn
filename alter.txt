@@ -1800,6 +1800,192 @@ from
 ) as x
 where u.jabatan_riwayat_id = x.jabatan_riwayat_id;
 
+alter table jabatan_tambahan
+add column status_triger numeric
+;
+
+DROP type if exists p_jabatantmbhturut_type;
+create type p_jabatantmbhturut_type as (
+urut integer, jabatan_tambahan_id numeric, pegawai_id numeric
+, tmt_jabatan timestamp without time zone, tmt_jabatan_date date
+);
+
+DROP FUNCTION if exists p_jabatantmbhturut_pegawai(character varying, numeric);
+CREATE or replace FUNCTION p_jabatantmbhturut_pegawai(vurut character varying, pegawaiid numeric) RETURNS SETOF p_jabatantmbhturut_type AS $$
+DECLARE
+  cur refcursor;
+  query TEXT;
+  rec p_jabatantmbhturut_type%ROWTYPE;
+BEGIN
+  query := '
+  select a.*, to_date(to_char(a.tmt_jabatan, ''yyyy-mm-dd''), ''yyyy-mm-dd'') tmt_jabatan_date
+  from
+  (
+    select
+    row_number () over (partition by pegawai_id order by tmt_jabatan desc) urut
+    , a.jabatan_tambahan_id, a.pegawai_id, a.tmt_jabatan
+    from jabatan_tambahan a
+    where pegawai_id = '||pegawaiid||'
+    and (coalesce(nullif(a.status, ''''), null) is null or a.status = ''2'')
+    order by tmt_jabatan desc
+  ) a
+  where 1=1';
+  
+  if coalesce(nullif(vurut, ''), null) is not null then
+    query := query || ' and urut::text = '''||vurut||''' ';
+  end if;
+
+  query := query || ' order by urut';
+  
+  --raise notice 'sql %', query;
+  --select * from p_jabatantmbhturut_pegawai('', 9741);
+  --select * from p_jabatantmbhturut_pegawai('2', 9741);
+  
+  OPEN cur FOR EXECUTE query;
+  
+  FETCH cur INTO rec;
+  WHILE FOUND LOOP
+    RETURN NEXT rec;
+    FETCH cur INTO rec;
+  END LOOP;
+  CLOSE cur;
+END;
+$$ LANGUAGE plpgsql STRICT;
+
+create or replace function jabatan_tambahan_beforelamajabatan()
+  returns trigger as
+$body$
+declare
+  var_id integer;
+  varcheck integer;
+begin
+
+  if new.status_triger = 1 then
+    new.status_triger = null;
+    return new;
+  else
+    new.status_triger:= 1;
+  end if;
+    return new;
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function jabatan_tambahan_beforelamajabatan() owner to postgres;
+
+drop trigger if exists jabatan_tambahan_tbeforelamajabatan on jabatan_tambahan;
+create trigger jabatan_tambahan_tbeforelamajabatan
+before insert or update
+on jabatan_tambahan
+for each row
+execute procedure jabatan_tambahan_beforelamajabatan();
+
+create or replace function jabatan_tambahan_hlamajabatan(vpegawaiid numeric)
+  returns void as
+$body$
+declare
+  sqlquery text;
+  vurut numeric;
+  recdata record;
+
+  vjabatanriwayatid numeric;
+  vtipepegawaiid numeric;
+  vtmtjabatan date;
+  ntmtjabatan date;
+  nlabajabatan numeric;
+begin
+
+  for recdata in (select * from p_jabatantmbhturut_pegawai('', vpegawaiid))
+  loop
+    vurut:= recdata.urut;
+    vjabatanriwayatid:= recdata.jabatan_tambahan_id;
+    vtmtjabatan:= recdata.tmt_jabatan_date;
+
+    if ntmtjabatan is not null and vtmtjabatan is not null then
+      if vurut > 1 then
+        
+        sqlquery:= ' update jabatan_tambahan set tmt_jabatan_akhir = to_date('''||ntmtjabatan||''', ''yyyy-mm-dd'')
+        , status_triger = 1
+        where jabatan_tambahan_id = ' || vjabatanriwayatid;
+        --raise notice 'sql %',sqlquery;
+        execute sqlquery;
+      else
+        sqlquery:= ' update jabatan_tambahan set tmt_jabatan_akhir = null
+        , status_triger = 1
+        where jabatan_tambahan_id = ' || vjabatanriwayatid;
+        --raise notice 'sql %',sqlquery;
+        execute sqlquery;
+        
+      end if;
+    end if;
+    
+    --ambil data sebelum
+    ntmtjabatan:= vtmtjabatan;
+  end loop;
+  
+  --update jabatan_tambahan set pegawai_id = 4857 where jabatan_tambahan_id = 33584;
+  --execute sqlquery;
+  --select jabatan_tambahan_hlamajabatan(4857);
+    
+--exception
+--when others
+--then raise exception 'an error was encountered - ', sqlquery; 
+
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function jabatan_tambahan_hlamajabatan(numeric) owner to postgres;
+
+create or replace function jabatan_tambahan_plamajabatan()
+  returns trigger as
+$body$
+declare
+    var_id integer;
+    varcheck integer;
+    
+begin
+  if new.status_triger = 1 then
+    perform jabatan_tambahan_hlamajabatan(new.pegawai_id);
+    --update jabatan_tambahan set pegawai_id = 4857 where jabatan_tambahan_id = 33584;
+  end if;
+    return new;
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function jabatan_tambahan_plamajabatan() owner to postgres;
+
+drop trigger if exists jabatan_tambahan_tlamajabatan on jabatan_tambahan;
+create trigger jabatan_tambahan_tlamajabatan
+after insert or update
+on jabatan_tambahan
+for each row
+execute procedure jabatan_tambahan_plamajabatan();
+
+--ALTER TABLE public.jabatan_tambahan_log DROP CONSTRAINT ak_u_peg_log_jabatan_tambahan;
+--ALTER TABLE public.jabatan_tambahan_log ADD CONSTRAINT ak_u_peg_log_jabatan_tambahan UNIQUE(jabatan_tambahan_id, last_date);
+
+update jabatan_tambahan as u
+set
+status_triger = null
+from
+(
+  select *
+  from
+  (
+    select
+    row_number () over (partition by pegawai_id order by jabatan_tambahan_id desc) urut
+    , a.jabatan_tambahan_id
+    from jabatan_tambahan a
+    --where pegawai_id in (9741,8300)
+    where pegawai_id in (9741)
+    --where pegawai_id in (13257)
+    and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+  ) a
+  where urut = 1
+) as x
+where u.jabatan_tambahan_id = x.jabatan_tambahan_id;
+
 create or replace function satuan_kerja_p_rumpun()
   returns trigger as
 $body$
