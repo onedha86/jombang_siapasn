@@ -85,23 +85,29 @@ DESCRIPTION			:
     function getCountByParamsMonitoring($paramsArray=array(), $statement='', $statementdetil="")
 	{
 		$str = "
-		SELECT COUNT(A.PEGAWAI_ID) AS ROWCOUNT 
-		FROM PEGAWAI A
-		LEFT JOIN
+		SELECT COUNT(1) AS ROWCOUNT
+		FROM
 		(
-			SELECT A.PANGKAT_RIWAYAT_ID, B.KODE, A.TMT_PANGKAT
-			FROM PANGKAT_RIWAYAT A
-			LEFT JOIN PANGKAT B ON A.PANGKAT_ID = B.PANGKAT_ID
-		) PANG_RIW ON A.PANGKAT_RIWAYAT_ID = PANG_RIW.PANGKAT_RIWAYAT_ID
-		LEFT JOIN SATUAN_KERJA SK ON SK.SATUAN_KERJA_ID = A.SATUAN_KERJA_ID
-		LEFT JOIN (SELECT PEGAWAI_ID, TANGGAL_MULAI, TANGGAL_AKHIR FROM HUKUMAN_TERAKHIR X) G ON A.PEGAWAI_ID = G.PEGAWAI_ID
+			SELECT A.PEGAWAI_ID
+			FROM PEGAWAI A
+			LEFT JOIN
+			(
+				SELECT A.PANGKAT_RIWAYAT_ID, B.KODE, A.TMT_PANGKAT
+				FROM PANGKAT_RIWAYAT A
+				LEFT JOIN PANGKAT B ON A.PANGKAT_ID = B.PANGKAT_ID
+			) PANG_RIW ON A.PANGKAT_RIWAYAT_ID = PANG_RIW.PANGKAT_RIWAYAT_ID
+			LEFT JOIN SATUAN_KERJA SK ON SK.SATUAN_KERJA_ID = A.SATUAN_KERJA_ID
+			LEFT JOIN (SELECT PEGAWAI_ID, TANGGAL_MULAI, TANGGAL_AKHIR FROM HUKUMAN_TERAKHIR X) G ON A.PEGAWAI_ID = G.PEGAWAI_ID
+			WHERE 1 = 1 ";
+			foreach ($paramsArray as $key => $val)
+			{
+				$str .= " AND $key = '$val' ";
+			}
+			$str .= $statement." 
+		) A
 		INNER JOIN validasi.validasi_perubahandatavalidasi('') V ON A.PEGAWAI_ID = V.PEGAWAI_ID
-		WHERE 1 = 1 ".$statement;
+		WHERE 1=1 ".$statementdetil;
 
-		foreach ($paramsArray as $key => $val)
-		{
-			$str .= " AND $key = '$val' ";
-		}
 		$this->query = $str;
 		// echo $str;exit();
 		$this->select($str); 
