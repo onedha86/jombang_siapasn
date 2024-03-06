@@ -1911,10 +1911,22 @@ $(function(){
     
   });
 
+  function generateRandomString() {
+    var alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    var randomString = '';
+
+    for (var i = 0; i < 5; i++) {
+      var randomIndex = Math.floor(Math.random() * alphabet.length);
+      randomString += alphabet.charAt(randomIndex);
+    }
+
+    return randomString;
+  }
+
   $(".reqtekensurat").click(function() {
     // $(".mbox-wrapper hr").hide();
     info= "Masukkan Passphrase, untuk Teken surat !!!";
-    info+= '<input placeholder="" type="password" autocomplete="off" id="reqalasan" class="easyui-validatebox" />';
+    info+= '<input placeholder="" type="text" autocomplete="off" id="reqalasan" class="easyui-validatebox" readonly onfocus=\'this.removeAttribute("readonly");\' />';
 
     mbox.custom({
       message: info,
@@ -1988,6 +2000,66 @@ $(function(){
         }
       }
       ]
+    });
+
+    $('#reqalasan').keyup(function () {
+      val= $(this).val();
+      length= $(this).length;
+
+      var vdocid = document.getElementById("reqalasan");
+      if(val == "")
+      {
+        vdocid.type = "text";
+      }
+      else
+      {
+        vdocid.type = "password";
+      }
+    });
+
+    $('#reqalasan').focus(function (e) {
+
+
+      // console.log($(this).attr('type'))
+
+      // $(this).attr('type','text');
+      // $(this).attr('type','password');
+
+      /*var uniqueAutocompleteID = + new Date();
+      $(this).attr("autocomplete", uniqueAutocompleteID);
+      // $(this).attr("id", uniqueAutocompleteID);
+      console.log(uniqueAutocompleteID);*/
+
+      /*var isChromium = window.chrome;
+      var winNav = window.navigator;
+      var vendorName = winNav.vendor;
+      var isOpera = typeof window.opr !== "undefined";
+      var isIEedge = winNav.userAgent.indexOf("Edge") > -1;
+      var isIOSChrome = winNav.userAgent.match("CriOS");
+
+      // Autocomplete default value
+      var autocomplete = "chrome-off";
+      if (isIOSChrome) {
+        // is Google Chrome on IOS
+      } else if (
+        isChromium !== null &&
+        typeof isChromium !== "undefined" &&
+        vendorName === "Google Inc." &&
+        isOpera === false &&
+        isIEedge === false
+      ) {
+        // Is google chrome
+      } else {
+        // Is firefox
+        autocomplete = "off";
+      }
+      // console.log(autocomplete);
+
+      $(this).attr('autocomplete', autocomplete);
+      $("#reqalasan").attr({
+       autocomplete: "none",
+      });*/
+
     });
 
   });

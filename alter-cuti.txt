@@ -1179,6 +1179,7 @@ values('130107', '1301', 1, 'Teken Sekretaris Daerah', 'surat_masuk_bkd_teken_se
 insert into menu(menu_id, menu_parent_id, menu_group_id, nama, link_file, menu_icon_id)
 values('130108', '1301', 1, 'Teken Bupati Jombang', 'surat_masuk_bkd_teken_bupati_cuti?1=1', 'fa fa-files-o');
 
+--delete from cuti_usulan;
 drop table if exists cuti_usulan;
 create table cuti_usulan
 (
@@ -1225,6 +1226,11 @@ create table cuti_usulan
   nip_kepala character varying,
   nama_kepala character varying,
   satuan_kerja_asal_id numeric,
+  cuti_id numeric,
+  valid_tte numeric,
+  valid_nomor character varying,
+  valid_periode character varying,
+  valid_sub_nomor numeric,
   last_user character varying,
   last_date timestamp without time zone,
   last_level numeric,
@@ -1233,6 +1239,19 @@ create table cuti_usulan
   constraint pk_cuti_usulan primary key (cuti_usulan_id)
 );
 alter table cuti_usulan owner to postgres;
+
+drop table if exists info_qrcode;
+create table info_qrcode
+(
+  v_id numeric,
+  v_p_id numeric,
+  tabel character varying,
+  jenis character varying,
+  enkrip_1 character varying,
+  enkrip_2 character varying,
+  constraint pk_info_qrcode primary key (v_id, v_p_id, tabel)
+);
+alter table info_qrcode owner to postgres;
 
 create or replace function cuti_usulan_p_hapus()
   returns trigger as
@@ -1246,6 +1265,7 @@ begin
     delete from cuti_usulan_log where cuti_usulan_id = old.cuti_usulan_id;
     delete from cuti_usulan_turun_status where cuti_usulan_id = old.cuti_usulan_id;
     delete from cuti_usulan_tms_tolak where cuti_usulan_id = old.cuti_usulan_id;
+    delete from info_qrcode where lower(tabel) = 'cuti_usulan' and v_id = old.cuti_usulan_id;
 
     return old;
   end if;
@@ -1261,100 +1281,6 @@ before delete
 on cuti_usulan
 for each row
 execute procedure cuti_usulan_p_hapus();
-
-drop table if exists cuti_usulan_turun_status;
-create table cuti_usulan_turun_status
-(
-  cuti_usulan_turun_status_id numeric not null,
-  cuti_usulan_id numeric not null,
-  posisi_menu_id character varying,
-  input_personal numeric,
-  keterangan text,
-  last_user character varying,
-  last_date timestamp without time zone,
-  last_level numeric,
-  --constraint fk_smptstosmp foreign key (cuti_usulan_id) references cuti_usulan (cuti_usulan_id) match simple on update restrict on delete restrict,
-  constraint cuti_usulan_turun_status_id primary key (cuti_usulan_turun_status_id)
-);
-alter table cuti_usulan_turun_status owner to postgres;
-
-create or replace function cuti_usulan_turun_status_p()
-  returns trigger as
-$body$
-declare
-vnomor character varying;
-begin
-
-  update cuti_usulan set
-    status_berkas= 0, last_user= new.last_user, posisi_menu_id= new.posisi_menu_id
-    , status_kembali= 1, status_pernah_turun= 1
-  where cuti_usulan_id = new.cuti_usulan_id;
-  return new;
-   
-end;
-$body$
-language plpgsql volatile cost 100;
-alter function cuti_usulan_turun_status_p() owner to postgres;
-  
-drop trigger if exists cuti_usulan_turun_status_t on cuti_usulan_turun_status;
-create trigger cuti_usulan_turun_status_t
-before insert or update
-on cuti_usulan_turun_status
-for each row
-execute procedure cuti_usulan_turun_status_p();
-
-drop table if exists cuti_usulan_tms_tolak;
-create table cuti_usulan_tms_tolak
-(
-  cuti_usulan_tms_tolak_id numeric not null,
-  cuti_usulan_id numeric not null,
-  jenis character varying,
-  keterangan text,
-  last_user character varying,
-  last_date timestamp without time zone,
-  last_level numeric,
-  --constraint fk_smptstosmp foreign key (cuti_usulan_id) references cuti_usulan (cuti_usulan_id) match simple on update restrict on delete restrict,
-  constraint cuti_usulan_tms_tolak_id primary key (cuti_usulan_tms_tolak_id)
-);
-alter table cuti_usulan_tms_tolak owner to postgres;
-
-create or replace function cuti_usulan_tms_tolak_p()
-  returns trigger as
-$body$
-declare
-vnomor character varying;
-begin
-  
-    if new.jenis = 'tms' then
-    update cuti_usulan
-    set
-      status_tms= 1,
-      last_user= new.last_user,
-      last_date= new.last_date,
-      last_level= new.last_level
-    where cuti_usulan_id= new.cuti_usulan_id;
-    elsif new.jenis = 'tolak' then
-    update cuti_usulan
-    set
-      status_berkas= 99,
-      last_user= new.last_user,
-      last_date= new.last_date,
-      last_level= new.last_level
-    where cuti_usulan_id= new.cuti_usulan_id;
-  end if;
-  return new;
-   
-end;
-$body$
-language plpgsql volatile cost 100;
-alter function cuti_usulan_tms_tolak_p() owner to postgres;
-  
-drop trigger if exists cuti_usulan_tms_tolak_t on cuti_usulan_tms_tolak;
-create trigger cuti_usulan_tms_tolak_t
-before insert or update
-on cuti_usulan_tms_tolak
-for each row
-execute procedure cuti_usulan_tms_tolak_p();
 
 drop table if exists cuti_usulan_log;
 create table cuti_usulan_log
@@ -1562,104 +1488,6 @@ BEGIN
   new.posisi_menu_id:= vmenuid;
   --raise notice 'sql %',vmenuid;
 
-  /*
-  if new.user_login_pegawai_id is null and new.user_login_id is null then
-
-    if vmenuid is null then
-      tempquery:= '
-      INSERT INTO cuti_usulan_log(cuti_usulan_id, pegawai_id, info_log, last_user, last_date, user_login_id, user_login_pegawai_id)
-      VALUES(
-      '|| new.cuti_usulan_id ||',
-      '|| new.pegawai_id ||',
-      '''|| tempinfo ||''',
-      '''|| new.last_user ||''',
-      '''|| now() ||'''
-      , NULL
-      , NULL
-      )
-      ';
-    else
-      tempquery:= '
-      INSERT INTO cuti_usulan_log(cuti_usulan_id, pegawai_id, menu_id, info_log, last_user, last_date, user_login_id, user_login_pegawai_id)
-      VALUES(
-      '|| new.cuti_usulan_id ||',
-      '|| new.pegawai_id ||',
-      '''|| vmenuid ||''',
-      '''|| tempinfo ||''',
-      '''|| new.last_user ||''',
-      '''|| now() ||'''
-      , NULL
-      , NULL
-      )
-      ';
-    end if;
-  elsif new.user_login_pegawai_id is null then
-
-    if vmenuid is null then
-      tempquery:= '
-      INSERT INTO cuti_usulan_log(cuti_usulan_id, pegawai_id, info_log, last_user, last_date, user_login_id, user_login_pegawai_id)
-      VALUES(
-      '|| new.cuti_usulan_id ||',
-      '|| new.pegawai_id ||',
-      '''|| tempinfo ||''',
-      '''|| new.last_user ||''',
-      '''|| now() ||'''
-      , '|| new.user_login_id ||'
-      , NULL
-      )
-      ';
-    else
-      tempquery:= '
-      INSERT INTO cuti_usulan_log(cuti_usulan_id, pegawai_id, menu_id, info_log, last_user, last_date, user_login_id, user_login_pegawai_id)
-      VALUES(
-      '|| new.cuti_usulan_id ||',
-      '|| new.pegawai_id ||',
-      '''|| vmenuid ||''',
-      '''|| tempinfo ||''',
-      '''|| new.last_user ||''',
-      '''|| now() ||'''
-      , '|| new.user_login_id ||'
-      , NULL
-      )
-      ';
-    end if;
-  else
-    if vmenuid is null then
-      tempquery:= '
-      INSERT INTO cuti_usulan_log(cuti_usulan_id, pegawai_id, info_log, last_user, last_date, user_login_id, user_login_pegawai_id)
-      VALUES(
-      '|| new.cuti_usulan_id ||',
-      '|| new.pegawai_id ||',
-      '''|| tempinfo ||''',
-      '''|| new.last_user ||''',
-      '''|| now() ||'''
-      , '|| new.user_login_id ||'
-      , '|| new.user_login_pegawai_id ||'
-      )
-      ';
-    else
-      tempquery:= '
-      INSERT INTO cuti_usulan_log(cuti_usulan_id, pegawai_id, menu_id, info_log, last_user, last_date, user_login_id, user_login_pegawai_id)
-      VALUES(
-      '|| new.cuti_usulan_id ||',
-      '|| new.pegawai_id ||',
-      '''|| vmenuid ||''',
-      '''|| tempinfo ||''',
-      '''|| new.last_user ||''',
-      '''|| now() ||'''
-      , '|| new.user_login_id ||'
-      , '|| new.user_login_pegawai_id ||'
-      )
-      ';
-    end if;
-  END IF;
-  
-  raise notice 'sql %',tempquery;
-  IF tempquery IS NOT NULL THEN         
-  EXECUTE tempquery;
-  END IF;
-  */
-
   INSERT INTO cuti_usulan_log
   (
     cuti_usulan_id, pegawai_id, menu_id, info_log, last_user, last_date, user_login_id, user_login_pegawai_id
@@ -1690,3 +1518,97 @@ BEFORE INSERT OR UPDATE
 ON cuti_usulan
 FOR EACH ROW
 EXECUTE PROCEDURE cuti_usulan_triger_log();
+
+drop table if exists cuti_usulan_turun_status;
+create table cuti_usulan_turun_status
+(
+  cuti_usulan_turun_status_id numeric not null,
+  cuti_usulan_id numeric not null,
+  posisi_menu_id character varying,
+  input_personal numeric,
+  keterangan text,
+  last_user character varying,
+  last_date timestamp without time zone,
+  last_level numeric,
+  --constraint fk_smptstosmp foreign key (cuti_usulan_id) references cuti_usulan (cuti_usulan_id) match simple on update restrict on delete restrict,
+  constraint cuti_usulan_turun_status_id primary key (cuti_usulan_turun_status_id)
+);
+alter table cuti_usulan_turun_status owner to postgres;
+
+create or replace function cuti_usulan_turun_status_p()
+  returns trigger as
+$body$
+declare
+vnomor character varying;
+begin
+
+  update cuti_usulan set
+    status_berkas= 0, last_user= new.last_user, posisi_menu_id= new.posisi_menu_id
+    , status_kembali= 1, status_pernah_turun= 1
+  where cuti_usulan_id = new.cuti_usulan_id;
+  return new;
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function cuti_usulan_turun_status_p() owner to postgres;
+  
+drop trigger if exists cuti_usulan_turun_status_t on cuti_usulan_turun_status;
+create trigger cuti_usulan_turun_status_t
+before insert or update
+on cuti_usulan_turun_status
+for each row
+execute procedure cuti_usulan_turun_status_p();
+
+drop table if exists cuti_usulan_tms_tolak;
+create table cuti_usulan_tms_tolak
+(
+  cuti_usulan_tms_tolak_id numeric not null,
+  cuti_usulan_id numeric not null,
+  jenis character varying,
+  keterangan text,
+  last_user character varying,
+  last_date timestamp without time zone,
+  last_level numeric,
+  --constraint fk_smptstosmp foreign key (cuti_usulan_id) references cuti_usulan (cuti_usulan_id) match simple on update restrict on delete restrict,
+  constraint cuti_usulan_tms_tolak_id primary key (cuti_usulan_tms_tolak_id)
+);
+alter table cuti_usulan_tms_tolak owner to postgres;
+
+create or replace function cuti_usulan_tms_tolak_p()
+  returns trigger as
+$body$
+declare
+vnomor character varying;
+begin
+  
+    if new.jenis = 'tms' then
+    update cuti_usulan
+    set
+      status_tms= 1,
+      last_user= new.last_user,
+      last_date= new.last_date,
+      last_level= new.last_level
+    where cuti_usulan_id= new.cuti_usulan_id;
+    elsif new.jenis = 'tolak' then
+    update cuti_usulan
+    set
+      status_berkas= 99,
+      last_user= new.last_user,
+      last_date= new.last_date,
+      last_level= new.last_level
+    where cuti_usulan_id= new.cuti_usulan_id;
+  end if;
+  return new;
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function cuti_usulan_tms_tolak_p() owner to postgres;
+  
+drop trigger if exists cuti_usulan_tms_tolak_t on cuti_usulan_tms_tolak;
+create trigger cuti_usulan_tms_tolak_t
+before insert or update
+on cuti_usulan_tms_tolak
+for each row
+execute procedure cuti_usulan_tms_tolak_p();
