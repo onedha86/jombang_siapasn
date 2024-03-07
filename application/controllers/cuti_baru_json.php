@@ -726,7 +726,7 @@ class cuti_baru_json extends CI_Controller {
 		$reqPassphrase= $this->input->get("reqPassphrase");
 
 		$reqJenis= "cuti-".$reqId;
-		$arrparam= array("reqJenis"=>$reqJenis, "reqPassphrase"=>$reqPassphrase);
+		$arrparam= array("reqId"=>$reqId, "reqJenis"=>$reqJenis, "reqPassphrase"=>$reqPassphrase);
 		$infosimpan= $vfpeg->settoken($arrparam);
 
 		if($infosimpan == "1")

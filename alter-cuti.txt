@@ -1179,6 +1179,81 @@ values('130107', '1301', 1, 'Teken Sekretaris Daerah', 'surat_masuk_bkd_teken_se
 insert into menu(menu_id, menu_parent_id, menu_group_id, nama, link_file, menu_icon_id)
 values('130108', '1301', 1, 'Teken Bupati Jombang', 'surat_masuk_bkd_teken_bupati_cuti?1=1', 'fa fa-files-o');
 
+alter table jenis_cuti add column kode character varying;
+update jenis_cuti set kode = '851' where jenis_cuti_id = 1;
+update jenis_cuti set kode = '852' where jenis_cuti_id = 2;
+update jenis_cuti set kode = '853' where jenis_cuti_id = 3;
+update jenis_cuti set kode = '854' where jenis_cuti_id = 4;
+update jenis_cuti set kode = '857' where jenis_cuti_id = 5;
+update jenis_cuti set kode = '' where jenis_cuti_id = 6;
+update jenis_cuti set kode = '856' where jenis_cuti_id = 7;
+
+create or replace function pcutinomorvalid(pcutiusulanid numeric)
+  returns void as
+$body$
+declare
+    sqlquery text;
+    dtmenupenandatanganid character varying;
+    dtkode character varying;
+    dtnomenklatur character varying;
+    dtvalidtte numeric;
+    dtvalidnomor character varying;
+    dtperiode character varying;
+    dtbulan character varying;
+    dttahun character varying;
+    nextvalidsubnomor numeric;
+    nextvalidnomor character varying;
+begin
+  select
+  a.menu_penanda_tangan_id, a.valid_tte, a.valid_nomor
+  , case a.menu_penanda_tangan_id when '130106' then '415.41' else '' end nomenklatur, a1.kode
+  into dtmenupenandatanganid, dtvalidtte, dtvalidnomor, dtnomenklatur, dtkode
+  from cuti_usulan a
+  inner join jenis_cuti a1 on a.jenis_cuti_id = a1.jenis_cuti_id
+  where 1=1 and cuti_usulan_id = pcutiusulanid;
+
+  select menu_penanda_tangan_id, valid_tte, valid_nomor
+  into dtmenupenandatanganid, dtvalidtte, dtvalidnomor
+  from cuti_usulan a
+  where 1=1 and cuti_usulan_id = pcutiusulanid;
+
+  -- set data kalau valid nomor kosong dan harus ada nomenklatur
+  if coalesce(nullif(dtvalidnomor, ''), null) is null and coalesce(nullif(dtnomenklatur, ''), null) is not null then
+    select
+    to_char(nw, 'mmyyyy') vperiode, to_char(nw, 'mm') vbulan, to_char(nw, 'yyyy') vtahun
+    into dtperiode, dtbulan, dttahun
+    from
+    (
+      select now() nw
+    ) a;
+
+    select
+    (vnext + 1) vnext into nextvalidsubnomor
+    from
+    (
+      select valid_sub_nomor vnext
+      from cuti_usulan a
+      where 1=1 and menu_penanda_tangan_id = dtmenupenandatanganid
+      and valid_periode = dtperiode
+      and coalesce(nullif(a.valid_nomor, ''), null) is not null
+      union all
+      select 0 vnext
+    ) a;
+
+    nextvalidnomor:= dtkode || '/' || dtbulan || '.'  || nextvalidsubnomor || '/' || dtnomenklatur || '/' || dttahun;
+    raise notice 'sql %',nextvalidnomor;
+  end if;
+  --select pcutinomorvalid(1);
+  
+exception
+when others
+then raise exception 'an error was encountered - ';
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function pcutinomorvalid(numeric) owner to postgres;
+
 --delete from cuti_usulan;
 drop table if exists cuti_usulan;
 create table cuti_usulan

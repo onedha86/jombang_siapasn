@@ -21,8 +21,11 @@ $reqSatuanKerjaNama= $set->getField("SATUAN_KERJA_NAMA");
 $reqTglMulai= dateToPageCheck($set->getField("TANGGAL_MULAI"));
 $reqTglSelesai= dateToPageCheck($set->getField("TANGGAL_SELESAI"));
 $reqLamaDurasi= $set->getField("LAMA_HARI");
+$ttdjabatan= $set->getField("JABATAN_KEPALA");
+$ttdnip= $set->getField("NIP_KEPALA");
+$ttdnama= $set->getField("NAMA_KEPALA");
 
-$reqNomor= $set->getField("NOMOR");
+$reqNomor= $set->getField("VALID_NOMOR");
 $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
 ?>
 <link href="<?= base_url() ?>css/gaya-surat.css" rel="stylesheet" type="text/css">
@@ -92,7 +95,7 @@ $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
   </p>
 
   <p style="font-size: 14px;">
-    Demikian Surat Izin Cuti Sakit dibuat untuk dapat dipergunakan sebagaimana mestinya.
+    Demikian Surat Izin Cuti ini diberikan untuk dapat dipergunakan sebagaimana mestinya..
   </p>
 
 </div> 
@@ -114,21 +117,24 @@ $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
         
       </td>
     </tr>
-
     <tr>
-      <td colspan="3"><br>JABATAN_PENGIRIM</td>
+      <td colspan="3"><br><?=$ttdjabatan?></td>
     </tr>
     <tr>
+      <td colspan="3" style="color:darkgrey;">Ditandatangani secara elektronik</td>
+    </tr>
+
+    <tr>
       <td colspan="3">
-        <img src="<?=base_url()?>images/logo-dp3.png" height="100px">
+        <img src="<?=base_url()?>images/contohqrcode.png" height="100px">
         <br>
       </td>
     </tr>
     <tr>
-      <td colspan="3">NAMA_PENGIRIM</td>
+      <td colspan="3"><?=$ttdnama?></td>
     </tr>
     <tr>
-      <td colspan="3">NIP. NIP_PENGIRIM</td>
+      <td colspan="3">NIP. <?=$ttdnip?></td>
     </tr>
   </table>
   <br>&nbsp;

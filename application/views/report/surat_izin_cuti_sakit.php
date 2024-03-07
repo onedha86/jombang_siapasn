@@ -27,13 +27,6 @@ $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
 ?>
 <link href="<?= base_url() ?>css/gaya-surat.css" rel="stylesheet" type="text/css">
 <style>
-  .isi-naskah {
-    padding-left:70px;
-    padding-right: 70px;
-    width: 85%;
-    text-align: justify;
-/*    border: 5px solid red;*/
-}
   body{
       background-image:url('<?= base_url() ?>images/bg_cetak.jpg')  ;
       background-image-resize:6;
@@ -54,27 +47,27 @@ $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
   <p>
     <table width="100%" style="font-size: 14px;">
       <tr>
-        <td width="20%">Nama</td>
+        <td width="15%">Nama</td>
         <td width="1%">:</td>
         <td width="59%"><?=$reqNamaPegawai?></td>
       </tr>
       <tr>
-        <td width="20%">Nomor Induk Pegawai</td>
+        <td width="15%">Nomor Induk Pegawai</td>
         <td width="1%">:</td>
         <td width="59%"><?=$reqNipBaru?></td>
       </tr>
       <tr>
-        <td width="20%">Pangkat/Gol. Ruang</td>
+        <td width="15%">Pangkat/Gol. Ruang</td>
         <td width="1%">:</td>
         <td width="59%"><?=$reqPangkatNama?></td>
       </tr>
       <tr>
-        <td width="20%">Jabatan</td>
+        <td width="15%">Jabatan</td>
         <td width="1%">:</td>
         <td width="59%"><?=$reqJabatanNama?></td>
       </tr>
       <tr>
-        <td width="20%">Unit Kerja</td>
+        <td width="15%">Unit Kerja</td>
         <td width="1%">:</td>
         <td width="59%"><?=$reqSatuanKerjaNama?></td>
       </tr>

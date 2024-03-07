@@ -29,25 +29,64 @@ class globalteken
 		$arrreturn["sessionaksesappsimpegid"]= $sessionaksesappsimpegid;
 		$arrreturn["sessioninfosepeta"]= $sessioninfosepeta;
 		// print_r($arrreturn);exit;
+
+		$arrreturn["ttd_url"]= $CI->config->item('ttd_url');
+		$arrreturn["ttd_username"]= $CI->config->item('ttd_username');
+		$arrreturn["ttd_password"]= $CI->config->item('ttd_password');
+
 		return $arrreturn;
 	}
 
 	function settoken($arrparam)
 	{
+		$CI = &get_instance();
+		$CI->load->model("base-cuti/CutiUsulan");
+		$CI->load->library('ReportPDF');
+
 		// print_r($arrparam);exit;
+		$reqId= $arrparam["reqId"];
 		$reqJenis= $arrparam["reqJenis"];
 		$reqPassphrase= $arrparam["reqPassphrase"];
 
 		$infologdata= $infosimpan= "";
-		if($reqPassphrase == "gagal")
+		$arrgetsessionuser= $this->getsessionuser();
+		// print_r($arrgetsessionuser);exit;
+
+		$infoparam= "";
+		if(empty($reqId)) $reqId= -1;
+
+		$infoparam= " AND A.CUTI_USULAN_ID = ".$reqId;
+		$set=  new CutiUsulan();
+		$set->selectdata(array(), -1, -1, $infoparam);
+		// echo $set->query;exit;
+		$set->firstRow();
+		$vcutiid= $set->getField("CUTI_ID");
+		$vtte= $set->getField("VALID_TTE");
+		$vnomor= $set->getField("VALID_NOMOR");
+		$vperiode= $set->getField("VALID_PERIODE");
+		$vsubnomor= $set->getField("VALID_SUB_NOMOR");
+
+		// kalau masih vtte kosong maka proses tte
+		if(empty($vtte))
+		{
+			$infoid= $reqId;
+			$report= new ReportPDF();
+			$arrparam= ["reqId"=>$infoid];
+			$docPDF= $report->generatecuti($arrparam);
+			$infourl= 'uploads/cuti/'.$infoid.'/'.$docPDF;
+			
+			echo "Asd";exit;
+		}
+		exit;
+		/*if($reqPassphrase == "gagal")
 		{
 			$infologdata= "1";
-		}
-		// echo $infologdata;exit;
+		}*/
+
+		echo $infologdata;exit;
 
 		if($infologdata == "1")
 		{
-			$arrgetsessionuser= $this->getsessionuser();
 			$sessionloginlevel= $arrgetsessionuser["sessionloginlevel"];
 			$sessionloginuser= $arrgetsessionuser["sessionloginuser"];
 			$sessionloginid= $arrgetsessionuser["sessionloginid"];

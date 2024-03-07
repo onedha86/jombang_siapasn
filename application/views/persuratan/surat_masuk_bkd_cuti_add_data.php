@@ -1911,18 +1911,6 @@ $(function(){
     
   });
 
-  function generateRandomString() {
-    var alphabet = 'abcdefghijklmnopqrstuvwxyz';
-    var randomString = '';
-
-    for (var i = 0; i < 5; i++) {
-      var randomIndex = Math.floor(Math.random() * alphabet.length);
-      randomString += alphabet.charAt(randomIndex);
-    }
-
-    return randomString;
-  }
-
   $(".reqtekensurat").click(function() {
     // $(".mbox-wrapper hr").hide();
     info= "Masukkan Passphrase, untuk Teken surat !!!";

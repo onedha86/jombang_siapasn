@@ -33,6 +33,10 @@ $config['base_report'] = $config['base_url'];
 //$config['base_url'] = 'http://siapasn.jombangkab.go.id/';
 $config['settingurlapi'] = $config['base_url']."api/api-bkn/";
 
+// bsre setting
+$config['ttd_url']= "103.142.14.156";
+$config['ttd_username']= "esign";
+$config['ttd_password']= "qwerty";
 /*
 |--------------------------------------------------------------------------
 | Index File
