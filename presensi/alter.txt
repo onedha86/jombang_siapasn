@@ -1,0 +1,2 @@
+alter table presensi.kerja_jam add column status_aktif character varying(1);
+update presensi.kerja_jam set status_aktif = '1' where jenis_jam_kerja != 'normal_5_hari';

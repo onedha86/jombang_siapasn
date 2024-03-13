@@ -211,6 +211,9 @@ class jadwal_json extends CI_Controller {
 		else
 			$statement.= " AND COALESCE(NULLIF(A.HARI_KHUSUS, ''), NULL) IS NULL";
 
+		// tambahan khusus yg aktif
+		$statement.= " AND COALESCE(NULLIF(A.STATUS_AKTIF, ''), NULL) IS NULL";
+
 		$searchJson = " AND ( UPPER(A.NAMA_JAM_KERJA) LIKE '%".strtoupper($reqPencarian)."%' )";
 		$allRecord = $set->getCountByParams(array(), $statement);
 		//echo $allRecord;
@@ -1006,9 +1009,9 @@ class jadwal_json extends CI_Controller {
 
 		if(empty($reqStatus)){}
 		else if(!empty($reqStatus) && $reqStatus !== "xxx")
-			$statement.= " AND A.STATUS_PEGAWAI_ID NOT IN (1,2)";
+			$statement.= " AND A.STATUS_PEGAWAI_ID NOT IN (1,2,6)";
 		else
-			$statement.= " AND A.STATUS_PEGAWAI_ID IN (1,2)";
+			$statement.= " AND A.STATUS_PEGAWAI_ID IN (1,2,6)";
 
 		if(!empty($satuankerjakondisi))
 		{
@@ -1633,7 +1636,7 @@ class jadwal_json extends CI_Controller {
 		// $statement.= " AND P.PEGAWAI_ID = 8300";
 		$statement.= " AND 
 		(
-			A.STATUS_PEGAWAI_ID IN (1,2)
+			A.STATUS_PEGAWAI_ID IN (1,2,6)
 			OR
 			(
 				A.STATUS_PEGAWAI_ID IN (3,4,5)

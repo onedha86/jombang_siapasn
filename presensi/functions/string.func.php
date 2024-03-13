@@ -838,9 +838,13 @@ function jenisjamkerja()
 {
 	$arrField= array(
 	  array("id"=>"normal_5_hari", "nama"=>"Normal 5 Hari Kerja")
-	  , array("id"=>"normal_6_hari_pendidikan", "nama"=>"Normal 6 Hari Kerja Pendidikan")
-	  , array("id"=>"normal_6_hari_kesehatan", "nama"=>"Normal 6 Hari Kerja Kesehatan")
-	  , array("id"=>"shift_5_hari", "nama"=>"Shift 5 Hari Kerja")
+	  , array("id"=>"normal_5_hk_smpn", "nama"=>"Normal 5 HK SMPN")
+	  , array("id"=>"normal_5_hk_sdn", "nama"=>"Normal 5 HK SDN")
+	  , array("id"=>"normal_5_hk_tk", "nama"=>"Normal 5 HK TK/PAUD")
+	  , array("id"=>"normal_5_hk_kesehatan", "nama"=>"Normal 5 HK Kesehatan")
+	  // , array("id"=>"normal_6_hari_pendidikan", "nama"=>"Normal 6 Hari Kerja Pendidikan")
+	  // , array("id"=>"normal_6_hari_kesehatan", "nama"=>"Normal 6 Hari Kerja Kesehatan")
+	  // , array("id"=>"shift_5_hari", "nama"=>"Shift 5 Hari Kerja")
 	);
 	return $arrField;
 }

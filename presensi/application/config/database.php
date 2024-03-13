@@ -49,11 +49,12 @@ $active_group = 'default';
 $active_record = TRUE;
 
 $db['default'] = array(
-	'dsn'	   => 'pgsql:host=localhost;port=5432;dbname=simpeg_jombang20220905;user=postgres;password=root',
+	// 'dsn'	   => 'pgsql:host=localhost;port=5432;dbname=simpeg_jombang20220905;user=postgres;password=root',
+	'dsn'	   => 'pgsql:host=192.168.88.100;port=5432;dbname=simpeg_jombang;user=postgres;password=root',
 	// 'dsn'	   => 'pgsql:host=localhost;port=5433;dbname=db_simpeg_absensi;user=postgres;password=root',
 	// 'dsn'	   => 'pgsql:host=192.168.88.100;port=5432;dbname=siappro_absensi_dev;user=postgres;password=root',
-	// 'hostname' => '192.168.88.100',
-	'hostname' => 'localhost',
+	'hostname' => '192.168.88.100',
+	// 'hostname' => 'localhost',
 	// 'port' => '5433',
 	// 'port' => '5432',
 	'username' => 'postgres',
@@ -61,7 +62,8 @@ $db['default'] = array(
 	// 'database' => 'siappro_absensi',
 	// 'database' => 'db_simpeg_absensi',db_siappro1
 	'password' => 'root',
-	'database' => 'simpeg_jombang20220905',
+	// 'database' => 'simpeg_jombang20220905',
+	'database' => 'simpeg_jombang',
 	'dbdriver' => 'postgre',
 	'dbprefix' => '',
 	'pconnect' => TRUE,
