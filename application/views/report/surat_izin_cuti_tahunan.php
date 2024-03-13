@@ -27,11 +27,14 @@ $ttdnama= $set->getField("NAMA_KEPALA");
 
 $reqNomor= $set->getField("VALID_NOMOR");
 $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
+
+$infobaseurl= base_url();
+$fileqrname= "uploads/cuti/".$reqId.'/qr.png';
 ?>
-<link href="<?= base_url() ?>css/gaya-surat.css" rel="stylesheet" type="text/css">
+<link href="<?=$infobaseurl?>css/gaya-surat.css" rel="stylesheet" type="text/css">
 <style>
   body{
-      background-image:url('<?= base_url() ?>images/bg_cetak.jpg')  ;
+      background-image:url('<?=$infobaseurl?>images/bg_cetak.jpg')  ;
       background-image-resize:6;
       background-size: cover;
   }
@@ -126,8 +129,15 @@ $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
 
     <tr>
       <td colspan="3">
-        <img src="<?=base_url()?>images/contohqrcode.png" height="100px">
+        <?
+        if(file_exists($fileqrname))
+        {
+        ?>
+        <img src="<?=$infobaseurl.$fileqrname?>" height="100px">
         <br>
+        <?
+        }
+        ?>
       </td>
     </tr>
     <tr>

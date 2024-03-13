@@ -44,8 +44,10 @@ class bio_json extends CI_Controller {
 		FROM 
 		(
 			SELECT
-				ID, EMP_CODE PEGAWAI_ID,
-				to_char(punch_time, 'yyyy-mm-dd hh24:mi:ss') JAM, PUNCH_STATE TIPE_ABSEN, STATUS_TARIK, verify_type, terminal_sn, terminal_alias, area_alias, terminal_id, to_char(upload_time, 'yyyy-mm-dd hh24:mi:ss') upload_times
+				ID, EMP_CODE PEGAWAI_ID
+				, to_char(punch_time AT TIME ZONE 'Etc/GMT+8' AT TIME ZONE 'Etc/GMT+7', 'yyyy-mm-dd hh24:mi:ss') JAM
+				, PUNCH_STATE TIPE_ABSEN, STATUS_TARIK, verify_type, terminal_sn, terminal_alias, area_alias, terminal_id
+				, to_char(upload_time, 'yyyy-mm-dd hh24:mi:ss') upload_times
 			FROM iclock_transaction
 			WHERE 1=1
 			AND STATUS_TARIK = '0'

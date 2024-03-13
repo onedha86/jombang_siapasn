@@ -37,6 +37,7 @@ $config['settingurlapi'] = $config['base_url']."api/api-bkn/";
 $config['ttd_url']= "103.142.14.156";
 $config['ttd_username']= "esign";
 $config['ttd_password']= "qwerty";
+$config['ttd_enkrip']= "4psCut1j0mb4ng";
 /*
 |--------------------------------------------------------------------------
 | Index File
