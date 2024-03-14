@@ -179,74 +179,82 @@ class ReportPDF
   		// echo $set->query;exit;
   		$reqJenisCutiId= $set->getField("JENIS_CUTI_ID");
   		$reqJenisCutiDetailId= $set->getField("JENIS_CUTI_DETAIL_ID");
-
+  		$vtte= $set->getField("VALID_TTE");
   		// echo $reqJenisCutiId;exit;
-  		$template= "";
-  		if($reqJenisCutiId == 1)
+
+  		if(empty($vtte))
   		{
-			$template="surat_izin_cuti_tahunan";
-  		}
-  		else if($reqJenisCutiId == 3)
-  		{
-  			$template="surat_izin_cuti_sakit";
-  		}
-  		else if($reqJenisCutiId == 4)
-  		{
-  			$template="surat_izin_cuti_melahirkan";
-  		}
-  		else if($reqJenisCutiId == 5)
-  		{
-  			$template="surat_izin_cuti_alasan_penting";
-  		}
+	  		$template= "";
+	  		if($reqJenisCutiId == 1)
+	  		{
+				$template="surat_izin_cuti_tahunan";
+	  		}
+	  		else if($reqJenisCutiId == 3)
+	  		{
+	  			$template="surat_izin_cuti_sakit";
+	  		}
+	  		else if($reqJenisCutiId == 4)
+	  		{
+	  			$template="surat_izin_cuti_melahirkan";
+	  		}
+	  		else if($reqJenisCutiId == 5)
+	  		{
+	  			$template="surat_izin_cuti_alasan_penting";
+	  		}
 
-  		if(empty($template))
-  		{
-	  		echo "Template surat belum dibuat.";
-	  		exit;
-  		}
-		// echo $template; exit;
+	  		if(empty($template))
+	  		{
+		  		echo "Template surat belum dibuat.";
+		  		exit;
+	  		}
+			// echo $template; exit;
 
-		$basereport= $CI->config->item('base_report');
-		$urllink=  $basereport."report/loadUrl/report/".$template."/?reqId=".$reqId;
-		// echo $urllink;exit;
+			$basereport= $CI->config->item('base_report');
+			$urllink=  $basereport."report/loadUrl/report/".$template."/?reqId=".$reqId;
+			// echo $urllink;exit;
 
-		$arrContextOptions=array(
-			"ssl"=>array(
-				"verify_peer"=>false,
-				"verify_peer_name"=>false,
-			),
-		);
+			$arrContextOptions=array(
+				"ssl"=>array(
+					"verify_peer"=>false,
+					"verify_peer_name"=>false,
+				),
+			);
 
-		$html.= file_get_contents($urllink, false, stream_context_create($arrContextOptions));
-		// echo $html;exit;
+			$html.= file_get_contents($urllink, false, stream_context_create($arrContextOptions));
+			// echo $html;exit;
 
-		$wkhtmltopdf = new PDF($html);
-		$wkhtmltopdf->setOptions(
-		   array(
-		   	'page-width'     => '210mm',
-    		'page-height'     => '297mm',      
-	      	// 'background-image' => base_url().'bg_cetak.jpg',
-	      	'header-html' => base_url().'report/loadUrl/report/header',
-	      	'footer-html' => base_url().'report/loadUrl/report/footer',
-		    )
-		);
+			$wkhtmltopdf = new PDF($html);
+			$wkhtmltopdf->setOptions(
+			   array(
+			   	'page-width'     => '210mm',
+	    		'page-height'     => '297mm',      
+		      	// 'background-image' => base_url().'bg_cetak.jpg',
+		      	'header-html' => base_url().'report/loadUrl/report/header',
+		      	'footer-html' => base_url().'report/loadUrl/report/footer',
+			    )
+			);
 
-		$saveAs= "draft.pdf";
-		if(file_exists($FILE_DIR.$saveAs))
+			$saveAs= "draft.pdf";
+			if(file_exists($FILE_DIR.$saveAs))
+			{
+				unlink($FILE_DIR.$saveAs);
+			}
+
+			$wkhtmltopdf->saveAs($FILE_DIR.$saveAs);
+			// exit;
+
+			if (!$wkhtmltopdf->saveAs($FILE_DIR.$saveAs)) {
+			    $error = $wkhtmltopdf->getError();
+			    // ... handle error here
+			    echo $error;
+			}
+
+			return $saveAs;
+		}
+		else
 		{
-			unlink($FILE_DIR.$saveAs);
+			
 		}
-
-		$wkhtmltopdf->saveAs($FILE_DIR.$saveAs);
-		// exit;
-
-		if (!$wkhtmltopdf->saveAs($FILE_DIR.$saveAs)) {
-		    $error = $wkhtmltopdf->getError();
-		    // ... handle error here
-		    echo $error;
-		}
-
-		return $saveAs;
 		exit;
 	}
 }

@@ -728,14 +728,17 @@ class cuti_baru_json extends CI_Controller {
 		$reqJenis= "cuti-".$reqId;
 		$arrparam= array("reqId"=>$reqId, "reqJenis"=>$reqJenis, "reqPassphrase"=>$reqPassphrase);
 		$infosimpan= $vfpeg->settoken($arrparam);
+		// print_r($infosimpan);exit;
+		$status= $infosimpan["status"];
+		$info= $infosimpan["info"];
 
-		if($infosimpan == "1")
+		if($status == "1")
 		{
-			echo "-Data berhasil.";
+			echo "###Data berhasil.";
 		}
 		else
 		{
-			echo "xxx-Data gagal.";
+			echo "xxx###".$info;
 		}
 	}
 

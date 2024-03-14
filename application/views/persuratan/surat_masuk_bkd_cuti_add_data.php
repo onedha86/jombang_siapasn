@@ -301,6 +301,20 @@ if(!empty($reqStatusTms))
   }
 }
 
+$lihatfilett= "";
+if(!empty($reqRowId))
+{
+  $filelokasi= "uploads/cuti/".$reqRowId."/";
+  $filehasiltt= $filelokasi.'draft_tt.pdf';
+
+  if(file_exists($filehasiltt))
+  {
+    $aksisimpan= $aksikirim= $aksibatalkirim= $aksiverifikator= $aksiapproval= $aksiteken= "";
+    $disabledpenandatangan= $disabledmenu= "disabled";
+    $lihatfilett= "1";
+  }
+}
+
 if(!empty($reqRowId) && $reqStatusBerkas > 1 && empty($m))
 {
   // echo "9";
@@ -784,6 +798,17 @@ if(!empty($aksiteken))
                       <input type="hidden" id="reqStatusTms" value="" />
                       <button class="btn pink waves-effect waves-light reqbataltms" style="font-size:9pt" type="button">BATAL TMS
                         <i class="mdi-content-inbox left hide-on-small-only"></i>
+                      </button>
+                      <?
+                      }
+                      ?>
+
+                      <?
+                      if(!empty($lihatfilett))
+                      {
+                      ?>
+                      <button class="btn blue waves-effect waves-light reqttfile" style="font-size:9pt" type="button">Lihat File TT
+                        <i class="mdi-editor-attach-file left hide-on-small-only"></i>
                       </button>
                       <?
                       }
@@ -1950,8 +1975,9 @@ $(function(){
             var s_url= "cuti_baru_json/token_tte?reqId=<?=$reqRowId?>&reqPassphrase="+encodeURIComponent(reqalasan);
             // console.log(s_url);return false;
             $.ajax({'url': s_url,'success': function(dataajax){
+              // console.log(dataajax);return false;
               dataajax= String(dataajax);
-              dataajax= dataajax.split('-'); 
+              dataajax= dataajax.split('###'); 
 
               rowid= dataajax[0];
               info= dataajax[1];
@@ -2088,6 +2114,17 @@ $(function(){
   });
 
   // ;aksiteken
+
+  <?
+  if(!empty($lihatfilett))
+  {
+  ?>
+  $(".reqttfile").click(function() { 
+    parent.openModal('<?=$filehasiltt?>')
+  });
+  <?
+  }
+  ?>
 
   $(".reqdraft").click(function() { 
     parent.openModal('report/loadUrl/report/templatecuti?reqId=<?=$reqRowId?>')

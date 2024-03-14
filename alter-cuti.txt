@@ -1241,7 +1241,16 @@ begin
     ) a;
 
     nextvalidnomor:= dtkode || '/' || dtbulan || '.'  || nextvalidsubnomor || '/' || dtnomenklatur || '/' || dttahun;
-    raise notice 'sql %',nextvalidnomor;
+    --raise notice 'sql %',nextvalidnomor;
+    --raise notice 'sql %',dtperiode;
+    --raise notice 'sql %',nextvalidsubnomor;
+
+    --update data nomor
+    update cuti_usulan set
+    valid_nomor = nextvalidnomor
+    , valid_periode = dtperiode
+    , valid_sub_nomor = nextvalidsubnomor
+    where cuti_usulan_id = pcutiusulanid;
   end if;
   --select pcutinomorvalid(1);
   

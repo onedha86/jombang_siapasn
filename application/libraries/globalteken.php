@@ -45,6 +45,7 @@ class globalteken
 	{
 		$CI = &get_instance();
 		$CI->load->model("base-cuti/CutiUsulan");
+		$CI->load->model("base-cuti/CutiUrutan");
 		$CI->load->model("PegawaiFile");
 		$CI->load->library('ReportPDF');
 
@@ -71,11 +72,12 @@ class globalteken
 		$vnomor= $set->getField("VALID_NOMOR");
 		$vperiode= $set->getField("VALID_PERIODE");
 		$vsubnomor= $set->getField("VALID_SUB_NOMOR");
+		$vmenupenandatanganid= $set->getField("MENU_PENANDA_TANGAN_ID");
 
 		$infoid= $reqId;
 		$filelokasi= "uploads/cuti/".$infoid."/";
-		// kalau masih vtte kosong maka proses tte
-		if(empty($vtte))
+		// kalau masih vnomor kosong maka proses tte
+		if(empty($vnomor))
 		{
 			$report= new ReportPDF();
 			$arrparam= ["reqId"=>$infoid];
@@ -90,109 +92,178 @@ class globalteken
 		$reqkunci= $arrgetsessionuser["ttd_enkrip"];
 		$vbaseurl= $arrgetsessionuser["base_url"];
 
-		// harus ada file template, simpan data ke pegawai file yg nnti nya di ubah kl sudah valid
-		if(file_exists($infourl))
+		// harus nomor kosong untuk generate
+		if(empty($vnomor))
 		{
-			$reqRiwayatTable= "CUTI_USULAN_TTE";
-			$reqRiwayatField= $reqKategoriFileId= "";
-			$reqRiwayatId= $reqId;
-			$reqKualitasFileId= "1";
-			$infoext= getExtension($infourl);
-
-			$statementdetil= " AND A.RIWAYAT_TABLE = 'CUTI_USULAN_TTE' AND A.RIWAYAT_ID = ".$reqRiwayatId;
-			$setdetil= new PegawaiFile();
-			$setdetil->selectByParamsFile(array(), -1, -1, $statementdetil, $vpegawaiid);
-			$setdetil->firstRow();
-			$reqDokumenFileId= $setdetil->getField("PEGAWAI_FILE_ID");
-			// echo $reqDokumenFileId;exit;
-
-			$setfile= new PegawaiFile();
-			$setfile->setField("PEGAWAI_ID", $vpegawaiid);
-			$setfile->setField("RIWAYAT_TABLE", $reqRiwayatTable);
-			$setfile->setField("RIWAYAT_FIELD", $reqRiwayatField);
-			$setfile->setField("FILE_KUALITAS_ID", ValToNullDB($reqKualitasFileId));
-			$setfile->setField("KATEGORI_FILE_ID", ValToNullDB($reqKategoriFileId));
-			$setfile->setField("RIWAYAT_ID", ValToNullDB($reqRiwayatId));
-			
-			$setfile->setField("LAST_LEVEL", $sessionloginlevel);
-			$setfile->setField("LAST_USER", $sessionloginuser);
-			$setfile->setField("USER_LOGIN_ID", $sessionloginid);
-			$setfile->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($sessionloginpegawaiid));
-			$setfile->setField("LAST_DATE", "NOW()");
-
-			$setfile->setField("IPCLIENT", sfgetipaddress());
-			$setfile->setField("MACADDRESS", sfgetmac());
-			$setfile->setField("NAMACLIENT", getHostName());
-			$setfile->setField("PRIORITAS", $reqPrioritas);
-			$setfile->setField("EXT", $infoext);
-			$setfile->setField("PEGAWAI_FILE_ID", $reqDokumenFileId);
-
-			if(empty($reqDokumenFileId))
+			// harus ada file template, simpan data ke pegawai file yg nnti nya di ubah kl sudah valid
+			if(file_exists($infourl))
 			{
-				if($setfile->insert())
+				$reqRiwayatTable= "CUTI_USULAN_TTE";
+				$reqRiwayatField= $reqKategoriFileId= "";
+				$reqRiwayatId= $infoid;
+				$reqKualitasFileId= "1";
+				$infoext= getExtension($infourl);
+
+				$statementdetil= " AND A.RIWAYAT_TABLE = 'CUTI_USULAN_TTE' AND A.RIWAYAT_ID = ".$reqRiwayatId;
+				$setdetil= new PegawaiFile();
+				$setdetil->selectByParamsFile(array(), -1, -1, $statementdetil, $vpegawaiid);
+				$setdetil->firstRow();
+				$reqDokumenFileId= $setdetil->getField("PEGAWAI_FILE_ID");
+				// echo $reqDokumenFileId;exit;
+
+				$setfile= new PegawaiFile();
+				$setfile->setField("PEGAWAI_ID", $vpegawaiid);
+				$setfile->setField("RIWAYAT_TABLE", $reqRiwayatTable);
+				$setfile->setField("RIWAYAT_FIELD", $reqRiwayatField);
+				$setfile->setField("FILE_KUALITAS_ID", ValToNullDB($reqKualitasFileId));
+				$setfile->setField("KATEGORI_FILE_ID", ValToNullDB($reqKategoriFileId));
+				$setfile->setField("RIWAYAT_ID", ValToNullDB($reqRiwayatId));
+				
+				$setfile->setField("LAST_LEVEL", $sessionloginlevel);
+				$setfile->setField("LAST_USER", $sessionloginuser);
+				$setfile->setField("USER_LOGIN_ID", $sessionloginid);
+				$setfile->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($sessionloginpegawaiid));
+				$setfile->setField("LAST_DATE", "NOW()");
+
+				$setfile->setField("IPCLIENT", sfgetipaddress());
+				$setfile->setField("MACADDRESS", sfgetmac());
+				$setfile->setField("NAMACLIENT", getHostName());
+				$setfile->setField("PRIORITAS", $reqPrioritas);
+				$setfile->setField("EXT", $infoext);
+				$setfile->setField("PEGAWAI_FILE_ID", $reqDokumenFileId);
+
+				if(empty($reqDokumenFileId))
 				{
+					if($setfile->insert())
+					{
+					}
+				}
+
+				$enkrip_1= $reqDokumenFileId."_".$vpegawaiid;
+				$enkrip_1= mencrypt($enkrip_1, $reqkunci);
+				$enkrip_2= "viewfile-".$enkrip_1;
+				$enkrip_2= mencrypt($enkrip_2, $reqkunci);
+				$enkrip= $enkrip_2;
+
+				// buat qrcode sesuai link enkrip
+				$fileqrname= $filelokasi.'qr.png';
+				if(!file_exists($fileqrname))
+				{
+					$filepath=  $fileqrname;
+					$infolokasiqr= $vbaseurl.'qrcode'.'?data='.$enkrip;
+					// echo $infolokasiqr;exit;
+
+					$errorCorrectionLevel = 'H';
+					$matrixPointSize = 2;
+
+					QRcode::png($infolokasiqr, $fileqrname, $errorCorrectionLevel, $matrixPointSize, 2);   
+
+					// Apabila mengunakan logo Kecil di tengah
+					$logothumps= "images/qr_logo.png";
+					$pngqr= imagecreatefrompng($filepath);
+					$logo= imagecreatefromstring(file_get_contents($logothumps));
+					imagecolortransparent($logo , imagecolorallocatealpha($logo , 0, 0, 0, 127));
+					imagealphablending($logo , false);
+					imagesavealpha($logo , true);
+
+					$infoqrwidth= imagesx($pngqr);
+					$infoqrheight= imagesy($pngqr);
+
+					$logo_width= imagesx($logo);
+					$logo_height= imagesy($logo);
+					// Scale logo to fit in the QR Code
+
+					$pembagian= 3;
+					$logo_qr_width= $infoqrwidth / $pembagian;
+					$scale= ($logo_width / $logo_qr_width)*1.1;
+					$logo_qr_height= $logo_height / $scale;
+					imagecopyresampled($pngqr, $logo, $infoqrwidth / $pembagian, $infoqrheight / $pembagian, 0, 0, $logo_qr_width, $logo_qr_height, $logo_width, $logo_height);
+					
+					// Save QR code again, but with logo on it
+					imagepng($pngqr,$filepath);
+				}
+
+				// menempelkan url qr baru
+				if(file_exists($fileqrname))
+				{
+					$stnm= new CutiUsulan();
+					$stnm->setField("VID", $infoid);
+					$stnm->validcutinomor();
+					unset($stnm);
+
+					$report= new ReportPDF();
+					$arrparam= ["reqId"=>$infoid];
+					$docPDF= $report->generatecuti($arrparam);
 				}
 			}
+		}
+		else
+		{
+			$fileuntukditt= $filelokasi.'draft.pdf';
+			$filehasiltt= $filelokasi.'draft_tt.pdf';
 
-			$enkrip_1= $reqDokumenFileId."_".$vpegawaiid;
-			$enkrip_1= mencrypt($enkrip_1, $reqkunci);
-			$enkrip_2= "viewfile-".$enkrip_1;
-			$enkrip_2= mencrypt($enkrip_2, $reqkunci);
-			$enkrip= $enkrip_2;
-
-			// buat qrcode sesuai link enkrip
-			$fileqrname= $filelokasi.'qr.png';
-			if(!file_exists($fileqrname))
+			if(!file_exists($filehasiltt))
 			{
-				$filepath=  $fileqrname;
-				$infolokasiqr= $vbaseurl.'qrcode'.'?data='.$enkrip;
-				// echo $infolokasiqr;exit;
+				$vttdurl= $arrgetsessionuser["ttd_url"];
+				$vttdusername= $arrgetsessionuser["ttd_username"];
+				$vttdpassword= $arrgetsessionuser["ttd_password"];
 
-				$errorCorrectionLevel = 'H';
-				$matrixPointSize = 2;
+				/*if (function_exists('curl_file_create')) 
+				{
+					$cfile= curl_file_create($fileuntukditt);
+				}
+				else 
+				{ 
+					$cfile= '@'.realpath($fileuntukditt);
+				}*/
+				$cfile = new CURLFile(realpath($fileuntukditt), "application/pdf");
+				// print_r($cfile);exit;
 
-				QRcode::png($infolokasiqr, $fileqrname, $errorCorrectionLevel, $matrixPointSize, 2);   
+				// misal user kepala bkpsdm kan tahu siapa pns nya, itu di cari di tabel pegawai, nik nya brapa
+				// di menu setting urutan cuti
+				$statementcari= " AND A1.MENU_ID = '".$vmenupenandatanganid."'";
+				$setp= new CutiUrutan();
+				$setp->selectByParams(array(), -1,-1, $statementcari);
+				$setp->firstRow();
+				$vttenik= $setp->getField("NIP_BARU");
+				$vttepassphrase= $reqPassphrase;
 
-				// Apabila mengunakan logo Kecil di tengah
-				$logothumps= "images/qr_logo.png";
-				$pngqr= imagecreatefrompng($filepath);
-				$logo= imagecreatefromstring(file_get_contents($logothumps));
-				imagecolortransparent($logo , imagecolorallocatealpha($logo , 0, 0, 0, 127));
-				imagealphablending($logo , false);
-				imagesavealpha($logo , true);
+				// untuk cek hardcode dl untuk dummy
+				$vttenik= "0803202100007062";
+				// $vttepassphrase= "Hantek1234.!";
 
-				$infoqrwidth= imagesx($pngqr);
-				$infoqrheight= imagesy($pngqr);
+				$vparamdata= array(
+					"file"=> $cfile
+					, "nik"=> $vttenik
+					, "passphrase"=> $vttepassphrase
+					, "tampilan"=> "invisible"
+				);
+				// print_r($vparamdata);exit;
 
-				$logo_width= imagesx($logo);
-				$logo_height= imagesy($logo);
-				// Scale logo to fit in the QR Code
+				// "method"=> "get"
+				// , "urldetil"=> "/api/user/status/0803202100007062"
+				$arrparam= [];
+				$arrparam= array(
+					"method"=> "post"
+					, "lihat"=> ""
+					, "url"=> $vttdurl
+					, "urldetil"=> "/api/sign/pdf"
+					, "username"=> $vttdusername
+					, "password"=> $vttdpassword
+					, "vdata"=> $vparamdata
+					, "filehasiltt"=> $filehasiltt
+				);
 
-				$pembagian= 3;
-				$logo_qr_width= $infoqrwidth / $pembagian;
-				$scale= ($logo_width / $logo_qr_width)*1.1;
-				$logo_qr_height= $logo_height / $scale;
-				imagecopyresampled($pngqr, $logo, $infoqrwidth / $pembagian, $infoqrheight / $pembagian, 0, 0, $logo_qr_width, $logo_qr_height, $logo_width, $logo_height);
-				
-				// Save QR code again, but with logo on it
-				imagepng($pngqr,$filepath);
-			}
-
-			// menempelkan url qr baru
-			if(file_exists($fileqrname))
-			{
-				$report= new ReportPDF();
-				$arrparam= ["reqId"=>$infoid];
-				$docPDF= $report->generatecuti($arrparam);
+				$rsapi= $this->esign($arrparam);
+				$verror= $rsapi["error"];
+				if(!empty($verror))
+				{
+					$infologdata= "1";
+					$reqLogKeterangan= $verror;
+				}
 			}
 		}
-		exit;
-		/*if($reqPassphrase == "gagal")
-		{
-			$infologdata= "1";
-		}*/
-
-		echo $infologdata;exit;
+		// exit;
 
 		if($infologdata == "1")
 		{
@@ -202,7 +273,7 @@ class globalteken
 
 			$CI = &get_instance();
 			$CI->load->model("TekenLog");
-			$reqLogKeterangan= "coba log gagal";
+			// $reqLogKeterangan= "coba log gagal";
 
 			$set_detil= new TekenLog();
 			$set_detil->setField("JENIS", $reqJenis);
@@ -225,6 +296,79 @@ class globalteken
 			$infosimpan= "1";
 		}
 
-		return $infosimpan;
+		$vreturn= [];
+		$vreturn= array(
+			"info"=> $reqLogKeterangan
+			, "status"=> $infosimpan
+		);
+
+		return $vreturn;
+	}
+
+	function esign($arrparam)
+	{
+		// signpdf
+		$vmethod= $arrparam["method"];
+		$vlihat= $arrparam["lihat"];
+		$vurl= $arrparam["url"];
+		$vurldetil= $arrparam["urldetil"];
+		$vusername= $arrparam["username"];
+		$vpassword= $arrparam["password"];
+		$vdata= $arrparam["vdata"];
+		$vfilehasiltt= $arrparam["filehasiltt"];
+		// print_r($arrparam);exit;
+
+		if(!empty($vurldetil))
+		{
+			$vurl.= $vurldetil;
+		}
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $vurl);
+		if($vmethod == "post")
+		{
+			curl_setopt($ch, CURLOPT_POST, 1);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $vdata);
+		}
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($ch, CURLOPT_USERPWD, $vusername.':'.$vpassword);
+
+		// execute post
+		$result= curl_exec($ch);
+		// close connection
+		curl_close($ch);
+
+		if($vlihat == "1")
+		{
+			print_r($result);exit();
+		}
+
+		$rs= json_decode($result);
+		if($vlihat == "2")
+		{
+			print_r($rs);exit;
+		}
+
+		$verror= $rs["error"];
+		if(empty($verror) && !empty($vfilehasiltt))
+		{
+			file_put_contents($vfilehasiltt, $result);
+		}
+
+		return $this->object_to_array($rs);
+	}
+
+	function object_to_array($data)
+	{
+	    $result = [];
+	    foreach ($data as $key => $value)
+	    {
+	        $result[$key] = (is_array($value) || is_object($value)) ? object_to_array($value) : $value;
+	    }
+	    return $result;
 	}
 }

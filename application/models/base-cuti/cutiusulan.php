@@ -180,6 +180,16 @@ DESCRIPTION			:
 		return $this->execQuery($str);
     }
 
+    function validcutinomor()
+	{
+        $str = "
+		SELECT pcutinomorvalid(".$this->getField("VID").")
+		"; 
+		$this->query = $str;
+		// echo $str;exit();
+        return $this->execQuery($str);
+    }
+
 	function delete()
 	{
         $str = "
