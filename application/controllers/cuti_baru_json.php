@@ -734,11 +734,12 @@ class cuti_baru_json extends CI_Controller {
 
 		if($status == "1")
 		{
-			echo "###Data berhasil.";
+			echo "###Data berhasil teken.";
 		}
 		else
 		{
-			echo "xxx###".$info;
+			// echo "xxx###".$info;
+			echo "xxx###Data gagal di teken.";
 		}
 	}
 
