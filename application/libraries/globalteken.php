@@ -254,8 +254,13 @@ class globalteken
 					, "filehasiltt"=> $filehasiltt
 				);
 
+				$verror= "";
 				$rsapi= $this->esign($arrparam);
-				$verror= $rsapi["error"];
+				if(isset($rsapi) && property_exists($rsapi,"error"))
+				{
+					$verror= $rsapi["error"];
+				}
+
 				if(!empty($verror))
 				{
 					$infologdata= "1";
@@ -353,13 +358,21 @@ class globalteken
 			print_r($rs);exit;
 		}
 
-		$verror= $rs["error"];
+		$verror= "";
+		if(isset($rs) && property_exists($rs,"error"))
+		{
+			$verror= $rs["error"];
+		}
+
 		if(empty($verror) && !empty($vfilehasiltt))
 		{
 			file_put_contents($vfilehasiltt, $result);
 		}
 
-		return $this->object_to_array($rs);
+		if(!empty($verror))
+			return $this->object_to_array($rs);
+		else
+			return "";
 	}
 
 	function object_to_array($data)
