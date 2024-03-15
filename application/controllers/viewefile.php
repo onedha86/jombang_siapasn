@@ -21,16 +21,30 @@ class viewefile extends CI_Controller {
 		{
 			$dekrip= mdecrypt($vdata, $reqkunci);
 
-			$data = array(
+			/*$data = array(
 				'dekrip' => $dekrip
 			);
 			// print_r($data);exit;
 
-			$this->load->view('fileview/templateviewfile');
+			$this->load->view('fileview/templateviewfile');*/
+
+			$view = array(
+				'dekrip' => $dekrip
+			);
+
+			$data = array(
+				'content' => $this->load->view("fileview/templateviewfile", $view, TRUE)
+			);
+			// print_r($view);exit;
+			
+			$this->load->view('fileview/index', $data);
+		}
+		else
+		{
+			// kalau lolos maka masuk no page
+			$this->load->view('nopage/index', $data);
 		}
 
-		// kalau lolos maka masuk no page
-		$this->load->view('nopage/index', $data);
 	}
 
 }

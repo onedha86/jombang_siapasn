@@ -25,7 +25,8 @@ class bio_json extends CI_Controller {
 			$m= "hari_ini";
 		}
 
-		$today= date('d-m-Y');
+		//$today= date('d-m-Y');
+		$today= date('11-03-2024');
 
 		/*$db_handle = pg_connect("host=103.142.14.15 port=7496 dbname=biotime user=postgres password=absensi201910");
 		if ($db_handle) {
@@ -57,7 +58,8 @@ class bio_json extends CI_Controller {
 
 		if($m == "hari_ini")
 		{
-			$infoquery.= " AND TO_CHAR(TO_DATE(A.JAM, 'YYYY-MM-DD'), 'DD-MM-YYYY') = '".$today."'";
+			//$infoquery.= " AND TO_CHAR(TO_DATE(A.JAM, 'YYYY-MM-DD'), 'DD-MM-YYYY') = '".$today."'";
+			$infoquery.= " AND TO_CHAR(TO_DATE(A.JAM, 'YYYY-MM-DD'), 'DD-MM-YYYY') >= '".$today."'";
 		}
 
 
@@ -77,6 +79,7 @@ class bio_json extends CI_Controller {
 		{
 			print_r($arrdataabsensi);exit;
 		}
+
 		foreach ($arrdataabsensi as $k => $v)
 		{
 			$vabsensi_id= $v["absensi_id"];
@@ -90,6 +93,12 @@ class bio_json extends CI_Controller {
             $varea_alias= $v["area_alias"];
             $vterminal_id= $v["terminal_id"];
             $vupload_times= datetimeToPage($v["upload_times"], "datetime");
+
+            // kalau ada data tarik 1 maka stop semua proses, untk di lanjutkan ke proses selanjutnya
+            if($vstatus_tarik == 1)
+            {
+            	break;
+            }
 
             $instquery="
             INSERT INTO presensi.ABSENSI(ABSENSI_ID, PEGAWAI_ID, JAM, TIPE_ABSEN, VALIDASI, LAST_CREATE_DATE, verify_type, terminal_sn, terminal_alias, area_alias, terminal_id, upload_time)
