@@ -7,9 +7,34 @@
 flush();
 ob_flush();
 
-// header("Content-type:application/pdf");
+$arrid= explode("_", $dekrip);
+$pegawaifileid= $arrid[0];
+$pegawaiid= $arrid[1];
 
-$url= 'uploads/cuti/1/draft_tt.pdf';
+if(!is_numeric($pegawaifileid))
+{
+	$pegawaifileid= -1;
+}
+
+if(!is_numeric($pegawaiid))
+{
+	$pegawaiid= -1;
+}
+
+$infocheckquery= "
+SELECT
+	PATH
+FROM pegawai_file
+WHERE 1=1 AND PEGAWAI_ID = ".$pegawaiid." AND PEGAWAI_FILE_ID = ".$pegawaifileid."
+";
+
+$qc= $this->db->query($infocheckquery);
+$arrdt= $qc->result_array();
+// print_r($arrdt);exit;
+
+if(empty($arrdt)) exit;
+
+$url= $arrdt[0]["path"];
 // echo $url;exit;
 $content = file_get_contents($url);
 // echo $content;exit();

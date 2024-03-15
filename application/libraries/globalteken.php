@@ -220,11 +220,11 @@ class globalteken
 		$vtte= $set->getField("VALID_TTE");
 		$vnomor= $set->getField("VALID_NOMOR");
 
+		$fileuntukditt= $filelokasi.'draft.pdf';
+		$filehasiltt= $filelokasi.'draft_tt.pdf';
+
 		if(!empty($vnomor))
 		{
-			$fileuntukditt= $filelokasi.'draft.pdf';
-			$filehasiltt= $filelokasi.'draft_tt.pdf';
-
 			if(!file_exists($filehasiltt))
 			{
 				$vttdurl= $arrgetsessionuser["ttd_url"];
@@ -288,6 +288,56 @@ class globalteken
 				{
 					$infologdata= "1";
 					$reqLogKeterangan= $verror;
+				}
+			}
+		}
+
+		// update status tte, dan pindah e file lokasi
+		if(empty($vtte) && file_exists($filehasiltt))
+		{
+			$reqRiwayatId= $infoid;
+			$statementdetil= " AND A.RIWAYAT_TABLE = 'CUTI_USULAN_TTE' AND A.RIWAYAT_ID = ".$reqRiwayatId;
+			$setdetil= new PegawaiFile();
+			$setdetil->selectByParamsFile(array(), -1, -1, $statementdetil, $vpegawaiid);
+			$setdetil->firstRow();
+			// echo $setdetil->query;exit;
+			$reqDokumenFileId= $setdetil->getField("PEGAWAI_FILE_ID");
+			$ext= $setdetil->getField("EXT");
+			// echo $reqDokumenFileId;exit;
+
+			$target_dir= "uploads/".$vpegawaiid."/";
+			if(file_exists($target_dir)){}
+			else
+			{
+				makedirs($target_dir);
+			}
+
+			$namagenerate= generateRandomString().".".$ext;
+			$target_file_generate= $target_dir.$namagenerate;
+			// echo $target_file_generate;exit;
+
+			// update status tte
+			$statusupdatette= "";
+			if(copy($filehasiltt,$target_file_generate))
+			{
+				$pathasli= "CUTI_TTE_".$vnomor;
+				$instquery="
+				update pegawai_file set
+					path = '".$target_file_generate."'
+					, path_asli = '".$pathasli."'
+				where pegawai_file_id = '".$reqDokumenFileId."'
+				";
+				$res= $CI->db->query($instquery);
+				if($res)
+				{
+					$statusupdatette= "1";
+
+					$instquery="
+					update cuti_usulan set
+						valid_tte = 1
+					where cuti_usulan_id = '".$reqId."'
+					";
+					$res= $CI->db->query($instquery);
 				}
 			}
 		}

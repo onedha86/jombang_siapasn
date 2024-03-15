@@ -25,8 +25,10 @@ class bio_json extends CI_Controller {
 			$m= "hari_ini";
 		}
 
-		//$today= date('d-m-Y');
-		$today= date('11-03-2024');
+		// $today= date('11-03-2024');
+		$tglnow= $today= date('d-m-Y');
+		$today= strtotime("-3 months", strtotime($today));
+		$today= date("d-m-Y", $today);
 
 		/*$db_handle = pg_connect("host=103.142.14.15 port=7496 dbname=biotime user=postgres password=absensi201910");
 		if ($db_handle) {
@@ -59,7 +61,11 @@ class bio_json extends CI_Controller {
 		if($m == "hari_ini")
 		{
 			//$infoquery.= " AND TO_CHAR(TO_DATE(A.JAM, 'YYYY-MM-DD'), 'DD-MM-YYYY') = '".$today."'";
-			$infoquery.= " AND TO_CHAR(TO_DATE(A.JAM, 'YYYY-MM-DD'), 'DD-MM-YYYY') >= '".$today."'";
+			// $infoquery.= " AND TO_CHAR(TO_DATE(A.JAM, 'YYYY-MM-DD'), 'DD-MM-YYYY') >= '".$today."'";
+			$infoquery.= "
+			AND TO_DATE(A.JAM, 'YYYY-MM-DD') >= TO_DATE('".dateToPageCheck($today)."','YYYY/MM/DD')
+			AND TO_DATE(A.JAM, 'YYYY-MM-DD') <= TO_DATE('".dateToPageCheck($tglnow)."','YYYY/MM/DD')
+			";
 		}
 
 
@@ -93,6 +99,18 @@ class bio_json extends CI_Controller {
             $varea_alias= $v["area_alias"];
             $vterminal_id= $v["terminal_id"];
             $vupload_times= datetimeToPage($v["upload_times"], "datetime");
+
+            // ambil data terbaru
+            $infocheckquery= "
+            SELECT
+				STATUS_TARIK
+			FROM iclock_transaction
+			WHERE 1=1 AND ID IN (".$vabsensi_id.")
+			";
+
+			$qc= $this->conbio->query($infocheckquery);
+			$arrqc= $qc->result_array();
+			$vstatus_tarik= $arrqc[0]["status_tarik"];
 
             // kalau ada data tarik 1 maka stop semua proses, untk di lanjutkan ke proses selanjutnya
             if($vstatus_tarik == 1)
