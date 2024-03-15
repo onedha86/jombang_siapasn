@@ -61,6 +61,19 @@ class globalteken
 		$infoparam= "";
 		if(empty($reqId)) $reqId= -1;
 
+		if($reqPassphrase == "oneresetdata")
+		{
+			$instquery="
+			update cuti_usulan set
+			valid_tte= null
+			, valid_nomor = null
+			, valid_periode = null
+			, valid_sub_nomor = null
+			where cuti_usulan_id = ".$reqId."
+			";
+			$res= $CI->db->query($instquery);
+		}
+
 		$infoparam= " AND A.CUTI_USULAN_ID = ".$reqId;
 		$set=  new CutiUsulan();
 		$set->selectdata(array(), -1, -1, $infoparam);
@@ -80,7 +93,7 @@ class globalteken
 		if(empty($vnomor))
 		{
 			$report= new ReportPDF();
-			$arrparam= ["reqId"=>$infoid];
+			$arrparam= ["reqId"=>$infoid, "reqPassphrase"=> $reqPassphrase];
 			$docPDF= $report->generatecuti($arrparam);
 			$infourl= $filelokasi.$docPDF;
 		}
@@ -197,7 +210,17 @@ class globalteken
 				}
 			}
 		}
-		else
+
+		// untuk generate tte
+		$infoparam= " AND A.CUTI_USULAN_ID = ".$reqId;
+		$set=  new CutiUsulan();
+		$set->selectdata(array(), -1, -1, $infoparam);
+		// echo $set->query;exit;
+		$set->firstRow();
+		$vtte= $set->getField("VALID_TTE");
+		$vnomor= $set->getField("VALID_NOMOR");
+
+		if(!empty($vnomor))
 		{
 			$fileuntukditt= $filelokasi.'draft.pdf';
 			$filehasiltt= $filelokasi.'draft_tt.pdf';

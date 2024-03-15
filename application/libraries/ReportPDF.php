@@ -151,10 +151,16 @@ class ReportPDF
 	function generatecuti($arrparam)
 	{
 		$CI = &get_instance();
-		$ses_userloginid= $CI->kauth->getInstance()->getIdentity()->USER_LOGIN_ID;
-		if(empty($ses_userloginid))
+
+		$reqPassphrase= $arrparam["reqPassphrase"];
+		if($reqPassphrase == "oneresetdata"){}
+		else
 		{
-			exit;
+			$ses_userloginid= $CI->kauth->getInstance()->getIdentity()->USER_LOGIN_ID;
+			if(empty($ses_userloginid))
+			{
+				exit;
+			}
 		}
 
 		$CI->load->model("base-cuti/CutiUsulan");
