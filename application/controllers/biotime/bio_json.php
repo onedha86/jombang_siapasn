@@ -116,6 +116,26 @@ class bio_json extends CI_Controller {
             // kalau ada data tarik 1 maka stop semua proses, untk di lanjutkan ke proses selanjutnya
             if($vstatus_tarik == 1)
             {
+            	$totalbreak= $k+1;
+            	$reqIp= getClientIpEnv();
+				$ua=getBrowser();
+				$reqUserAgent= $ua['name'] . " " . $ua['version'] . " pada OS ( " .$ua['platform'] . ")";
+				$reqJenis= "logabsensibreakdata";
+				$reqLogKeterangan= " Total Data ".$totalbreak;
+
+				$set_detil= new TekenLog();
+				$set_detil->setField("JENIS", $reqJenis);
+				$set_detil->setField("IP_ADDRESS", $reqIp);
+				$set_detil->setField("USER_AGENT", $reqUserAgent);
+				$set_detil->setField("KETERANGAN", $reqLogKeterangan);
+				$set_detil->setField("LAST_USER", "");
+				$set_detil->setField("USER_LOGIN_ID", ValToNullDB($req));
+				$set_detil->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($req));
+				$set_detil->setField("LAST_DATE", "NOW()");
+
+				if($set_detil->insert())
+				{
+				}
             	break;
             }
 

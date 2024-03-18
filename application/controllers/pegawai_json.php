@@ -311,7 +311,12 @@ class pegawai_json extends CI_Controller {
 			$allRecordFilter = $allRecord;
 		else	
 			$allRecordFilter = $set->getCountByParamsMonitoring(array(), $statement.$searchJson);
-		//echo $set->query;exit;
+
+		if($cekquery == "jml")
+		{
+			echo $set->query;exit;
+		}
+		
 		$set->selectByParamsMonitoringPegawai(array(), $dsplyRange, $dsplyStart, $statement.$searchJson, $sOrder);
 		if(!empty($cekquery))
 		{
