@@ -26,6 +26,7 @@ class bio_json extends CI_Controller {
 		}
 
 		// $today= date('11-03-2024');
+		//$tglnow= $today= date('d-m-Y');
 		$tglnow= $today= date('d-m-Y');
 		$today= strtotime("-3 months", strtotime($today));
 		$today= date("d-m-Y", $today);
@@ -105,7 +106,7 @@ class bio_json extends CI_Controller {
             SELECT
 				STATUS_TARIK
 			FROM iclock_transaction
-			WHERE 1=1 AND ID IN (".$vabsensi_id.")
+			WHERE 1=1 AND ID ='".$vabsensi_id."'
 			";
 
 			$qc= $this->conbio->query($infocheckquery);
@@ -141,6 +142,28 @@ class bio_json extends CI_Controller {
 			$res= $this->db->query($instquery);
 			if(!$res)
 		    {
+		    	// check data absensi presensi apa sudah ada, kalau ada update status tarik
+	            $infocheckquery= "
+	            SELECT
+					*
+				FROM presensi.absensi
+				WHERE 1=1 AND absensi_id IN (".$vabsensi_id.")
+				AND status_manual = 0
+				";
+
+				$presensiqc= $this->db->query($infocheckquery);
+				$arrpresensiqc= $presensiqc->result_array();
+				// print_r($arrpresensiqc);exit;
+				$vcheckupdate= $arrpresensiqc[0]["absensi_id"];
+				// echo $vcheckupdate;exit;
+				if(!empty($vcheckupdate))
+				{
+					// UPDATE STATUS TARIK
+			    	$instquery="
+					update iclock_transaction set STATUS_TARIK = '1' where ID = '".$vabsensi_id."'
+					";
+					$res= $this->conbio->query($instquery);
+				}
 		        // $error= $this->db->error();
 		    }
 		    else
