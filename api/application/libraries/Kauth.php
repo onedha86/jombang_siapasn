@@ -99,15 +99,16 @@ class kauth {
         $CI =& get_instance();        
         $CI->load->model("UserLoginLog");
 
-        /*
-        tutup karena sudah model baru
-        $setdetil= new UserLoginLog();
+        
+        // tutup karena sudah model baru
+        /*$setdetil= new UserLoginLog();
         $setdetil->setField("LOGIN_PASS", $credential);
         $setdetil->setField("LOGIN_USER", $username);
-        $setdetil->updatepass();
+        $setdetil->updatepass();*/
 
         $user_login = new UserLoginLog();
-        $statement= " AND A.LOGIN_USER = '".$username."' AND A.LOGIN_PASS = CRYPT('".$credential."', A.LOGIN_PASS)";
+        // $statement= " AND A.LOGIN_USER = '".$username."' AND A.LOGIN_PASS = CRYPT('".$credential."', A.LOGIN_PASS)";
+        $statement= " AND A.LOGIN_USER = '".$username."'";
         $user_login->selectByParamsLogin(array(), -1,-1, $statement);
         // echo $user_login->query;exit;
         // echo $user_login->errorMsg;exit();
@@ -126,9 +127,7 @@ class kauth {
         {
             return "";
             // return "Login gagal.";
-        }*/
-
-        return "";
+        }
     }
 
     public function portalAuthenticate($username,$credential)
