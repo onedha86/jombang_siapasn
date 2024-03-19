@@ -215,6 +215,10 @@ class bio_json extends CI_Controller {
 		if($set_detil->insert())
 		{
 		}
+
+		// tutup koneksi
+		$this->conbio->close();
+		$this->db->close();
 	}
 
 }
