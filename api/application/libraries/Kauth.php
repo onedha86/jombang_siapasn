@@ -91,7 +91,7 @@ class kauth {
             return false;
         }
     }
-	
+    
     public function localCryptAuthenticate($username,$credential) {
         $auth = Zend_Auth::getInstance();
         $auth->clearIdentity();
@@ -99,6 +99,8 @@ class kauth {
         $CI =& get_instance();        
         $CI->load->model("UserLoginLog");
 
+        /*
+        tutup karena sudah model baru
         $setdetil= new UserLoginLog();
         $setdetil->setField("LOGIN_PASS", $credential);
         $setdetil->setField("LOGIN_USER", $username);
@@ -111,34 +113,36 @@ class kauth {
         // echo $user_login->errorMsg;exit();
         if($user_login->firstRow())
         {
-            /*$identity = new stdClass();
-            $identity->PERSONAL_USER_LOGIN_ID= $user_login->getField("USER_LOGIN_ID");
-            $identity->PERSONAL_LOGIN_USER= $user_login->getField("LOGIN_USER");
-            $identity->PERSONAL_PEGAWAI_ID= $user_login->getField("PEGAWAI_ID");
+            // $identity = new stdClass();
+            // $identity->PERSONAL_USER_LOGIN_ID= $user_login->getField("USER_LOGIN_ID");
+            // $identity->PERSONAL_LOGIN_USER= $user_login->getField("LOGIN_USER");
+            // $identity->PERSONAL_PEGAWAI_ID= $user_login->getField("PEGAWAI_ID");
 
-            // echo $identity->PERSONAL_USER_LOGIN_ID;exit();
-            $auth->getStorage()->write($identity);*/
+            // // echo $identity->PERSONAL_USER_LOGIN_ID;exit();
+            // $auth->getStorage()->write($identity);
             return 1;
         }
         else
         {
             return "";
             // return "Login gagal.";
-        }
+        }*/
+
+        return "";
     }
 
     public function portalAuthenticate($username,$credential)
     {
-		ini_set ('soap.wsdl_cache_enabled', 0);
+        ini_set ('soap.wsdl_cache_enabled', 0);
         kloader::load('Zend_Soap_Client');
         $wsdl = base_url().'portal_login?wsdl';
         $CI =& get_instance();
-		
+        
         $cl = new SoapClient($wsdl);
-		//$rv = $cl->__soapCall("loginAplikasi", array('aplikasiId'=>1,'userLogin'=>"xxx",'userPassword'=>$credential));
+        //$rv = $cl->__soapCall("loginAplikasi", array('aplikasiId'=>1,'userLogin'=>"xxx",'userPassword'=>$credential));
         /*BACKUP NVN*/
         $rv = $cl->loginAplikasi(1, $username, $credential);
-		//print_r($rv); exit;
+        //print_r($rv); exit;
         // $rv->RESPONSE = "PAGE";
         // $rv->NID = $username;
         // $rv->APLIKASI_ID = '1';
@@ -152,99 +156,99 @@ class kauth {
         {
             return $rv;
         }
-    }	
+    }   
 
     public function autoAuthenticate($username,$credential)
     {
-		ini_set ('soap.wsdl_cache_enabled', 0);
+        ini_set ('soap.wsdl_cache_enabled', 0);
         kloader::load('Zend_Soap_Client');
         $wsdl = base_url().'portal_login?wsdl';
         $CI =& get_instance();
-		
+        
         $cl = new SoapClient($wsdl);
         $rv = $cl->loginToken(1, $username, $credential);
         if($rv->RESPONSE == "1")
         {
             $this->getLoginInformation($rv, $credential);
-			return $rv;
-		}
-		else
-			return $rv;
-				
-    }	
+            return $rv;
+        }
+        else
+            return $rv;
+                
+    }   
 
     public function autoGroupAuthenticate($username,$credential, $reqGroupId)
     {
-		ini_set ('soap.wsdl_cache_enabled', 0);
+        ini_set ('soap.wsdl_cache_enabled', 0);
         kloader::load('Zend_Soap_Client');
         $wsdl = base_url().'portal_login?wsdl';
         $CI =& get_instance();
-		
+        
         $cl = new SoapClient($wsdl);
         $rv = $cl->loginGroup(1, $username, $credential, $reqGroupId);
         if($rv->RESPONSE == "1")
         {
             $this->getLoginInformation($rv, $credential);
-			return $rv;
-		}
-		else
-			return $rv;
-				
-    }	
-	
-	public function getLoginInformation($rv, $credential)
-	{
+            return $rv;
+        }
+        else
+            return $rv;
+                
+    }   
+    
+    public function getLoginInformation($rv, $credential)
+    {
         $auth = Zend_Auth::getInstance();
         $auth->clearIdentity();
         
-		$identity = new stdClass();
-		$identity->NID = $rv->NID;
-		$identity->PASSWORD = mencrypt($credential);
-		
-		if($rv->KODE_GROUP == "")
-		{
-			/* CHECK APAKAH PEGAWAI TERKAIT BISA MANAGE APLIKASI */	
-	        $CI =& get_instance();
-			$CI->load->model("portal/AplikasiPenanggungjawab");
-			$aplikasi_penanggungjawab = new AplikasiPenanggungjawab();
-			$aplikasiId = $aplikasi_penanggungjawab->getAplikasiIdByNID($rv->NID);
-			if($aplikasiId == "")
-			{
-				$identity->KODE_GROUP = "PEGAWAI";
-				$identity->NAMA_GROUP = "Pegawai";
-			}
-			else
-			{
-				$identity->KODE_GROUP = "APLIKASI";
-				$identity->NAMA_GROUP = "Manajemen Aplikasi";
-				$identity->APLIKASI_ID = $aplikasiId;
-			}
-		}
-		else
-		{
-			$identity->KODE_GROUP = $rv->KODE_GROUP;
-			$identity->NAMA_GROUP = $rv->NAMA_GROUP;
-		}
-		$identity->PEGAWAI = $rv->PEGAWAI;
-		$identity->JABATAN = $rv->JABATAN;
-		$identity->UNIT_KERJA = $rv->UNIT_KERJA;
-		$identity->DIREKTORAT = $rv->DIREKTORAT;
-		$identity->FUNGSI = $rv->FUNGSI;
-		$identity->STAFF = $rv->STAFF;
-		$identity->SUBDIT = $rv->SUBDIT;
-		$identity->UNIT_KERJA_DESC = $rv->UNIT_KERJA_DESC;
-		$identity->DIREKTORAT_DESC = $rv->DIREKTORAT_DESC;
-		$identity->FUNGSI_DESC = $rv->FUNGSI_DESC;
-		$identity->STAFF_DESC = $rv->STAFF_DESC;
-		$identity->SUBDIT_DESC = $rv->SUBDIT_DESC;
-		$identity->UMUR = $rv->UMUR;
-		$identity->MASA_KERJA = $rv->MASA_KERJA;
-		
-		$auth->getStorage()->write($identity);
-				
-	}
+        $identity = new stdClass();
+        $identity->NID = $rv->NID;
+        $identity->PASSWORD = mencrypt($credential);
+        
+        if($rv->KODE_GROUP == "")
+        {
+            /* CHECK APAKAH PEGAWAI TERKAIT BISA MANAGE APLIKASI */ 
+            $CI =& get_instance();
+            $CI->load->model("portal/AplikasiPenanggungjawab");
+            $aplikasi_penanggungjawab = new AplikasiPenanggungjawab();
+            $aplikasiId = $aplikasi_penanggungjawab->getAplikasiIdByNID($rv->NID);
+            if($aplikasiId == "")
+            {
+                $identity->KODE_GROUP = "PEGAWAI";
+                $identity->NAMA_GROUP = "Pegawai";
+            }
+            else
+            {
+                $identity->KODE_GROUP = "APLIKASI";
+                $identity->NAMA_GROUP = "Manajemen Aplikasi";
+                $identity->APLIKASI_ID = $aplikasiId;
+            }
+        }
+        else
+        {
+            $identity->KODE_GROUP = $rv->KODE_GROUP;
+            $identity->NAMA_GROUP = $rv->NAMA_GROUP;
+        }
+        $identity->PEGAWAI = $rv->PEGAWAI;
+        $identity->JABATAN = $rv->JABATAN;
+        $identity->UNIT_KERJA = $rv->UNIT_KERJA;
+        $identity->DIREKTORAT = $rv->DIREKTORAT;
+        $identity->FUNGSI = $rv->FUNGSI;
+        $identity->STAFF = $rv->STAFF;
+        $identity->SUBDIT = $rv->SUBDIT;
+        $identity->UNIT_KERJA_DESC = $rv->UNIT_KERJA_DESC;
+        $identity->DIREKTORAT_DESC = $rv->DIREKTORAT_DESC;
+        $identity->FUNGSI_DESC = $rv->FUNGSI_DESC;
+        $identity->STAFF_DESC = $rv->STAFF_DESC;
+        $identity->SUBDIT_DESC = $rv->SUBDIT_DESC;
+        $identity->UMUR = $rv->UMUR;
+        $identity->MASA_KERJA = $rv->MASA_KERJA;
+        
+        $auth->getStorage()->write($identity);
+                
+    }
     
-	public function reAuthenticate($roleID='',$roleDESC='')
+    public function reAuthenticate($roleID='',$roleDESC='')
     {
         $auth = Zend_Auth::getInstance();
         
@@ -254,12 +258,12 @@ class kauth {
             $identity->NAME = $auth->getIdentity()->NAME;
             $identity->USERNAME = $auth->getIdentity()->USERNAME;
             $identity->HAK = $roleID;
-			$identity->ID_GROUP = $roleDESC;
+            $identity->ID_GROUP = $roleDESC;
             $identity->KD_DIT = $auth->getIdentity()->KD_DIT;
             $identity->KD_SUB = $auth->getIdentity()->KD_SUB;
             $identity->KD_SEK = $auth->getIdentity()->KD_SEK;
             $identity->KD_CAB = $auth->getIdentity()->KD_CAB; //'3';
-			$auth->clearIdentity();
+            $auth->clearIdentity();
             $auth->getStorage()->write($identity);
             return true;
         }
@@ -268,18 +272,18 @@ class kauth {
             return FALSE;
         }
     }
-	
+    
     public function localAuthenticate($username,$credential) {
         $auth = Zend_Auth::getInstance();
         $auth->clearIdentity();
-		
-		$CI =& get_instance();
-		$CI->load->model("portal/Users");
-		
-		$users = new Users();
-		$users->selectByIdPassword($username, md5($credential));
-		if($users->firstRow())
-		{
+        
+        $CI =& get_instance();
+        $CI->load->model("portal/Users");
+        
+        $users = new Users();
+        $users->selectByIdPassword($username, md5($credential));
+        if($users->firstRow())
+        {
             $identity = new stdClass();
             $identity->ID = $users->getField("USER_LOGIN_ID");
             $identity->PEGAWAI_ID = $users->getField("PEGAWAI_ID");
@@ -291,14 +295,14 @@ class kauth {
             $identity->AKSES_APP_HELPDESK_ID = $users->getField("AKSES_APP_HELPDESK_ID");
             $identity->HAK_AKSES = $users->getField("HAK_AKSES");
             $identity->HAK_AKSES_DESC = $users->getField("HAK_AKSES_DESC");
-			
+            
             $auth->getStorage()->write($identity);
-            return true;			
-		}
-		else
-			return false;
+            return true;            
+        }
+        else
+            return false;
     }
-	
+    
     public function getInstance(){
         return Zend_Auth::getInstance();
     }
