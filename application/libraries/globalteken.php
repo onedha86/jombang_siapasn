@@ -252,7 +252,7 @@ class globalteken
 				$vttepassphrase= $reqPassphrase;
 
 				// untuk cek hardcode dl untuk dummy
-				$vttenik= "0803202100007062";
+				// $vttenik= "0803202100007062";
 				// $vttepassphrase= "Hantek1234.!";
 
 				$vparamdata= array(
