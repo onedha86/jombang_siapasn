@@ -279,7 +279,8 @@ class globalteken
 
 				$verror= "";
 				$rsapi= $this->esign($arrparam);
-				if(isset($rsapi) && property_exists($rsapi,"error"))
+				// print_r($rsapi);exit;
+				if(!empty($rsapi))
 				{
 					$verror= $rsapi["error"];
 				}
@@ -434,7 +435,8 @@ class globalteken
 		$verror= "";
 		if(isset($rs) && property_exists($rs,"error"))
 		{
-			$verror= $rs["error"];
+			// $verror= $rs["error"];
+			$verror= $rs->error;
 		}
 
 		if(empty($verror) && !empty($vfilehasiltt))
