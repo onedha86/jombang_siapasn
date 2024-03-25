@@ -1,3 +1,70 @@
+CREATE OR REPLACE FUNCTION presensi.vpegawailibur(mulai date, selesai date, jenisjamkerja character varying, ppegawaiid character varying)
+  RETURNS numeric AS
+$BODY$
+DECLARE
+
+DAY_COUNT numeric := 0;
+LIBUR numeric := 0;
+infolewati numeric := 0;
+CURR_DATE DATE;
+infohari character varying;
+vhari character varying;
+vperiode character varying;
+vcheck numeric := 0;
+
+BEGIN 
+    CURR_DATE := MULAI;
+    WHILE CURR_DATE <= SELESAI   LOOP
+  vhari:= TO_CHAR(CURR_DATE,'DD');
+  vperiode:= TO_CHAR(CURR_DATE,'MMYYYY');
+  infohari:= TO_CHAR(CURR_DATE,'Dy');
+  --raise notice 'sql %', vperiode;
+
+  infolewati:= 0;
+  if jenisjamkerja in ('normal_5_hari', 'normal_5_hk_smpn', 'normal_5_hk_sdn', 'normal_5_hk_tk', 'normal_5_hk_kesehatan') and NOT TO_CHAR(CURR_DATE,'Dy') IN ('Sat','Sun', 'Sab ','Ming') then
+    infolewati:= 1;
+  elsif jenisjamkerja in ('normal_6_hari_pendidikan', 'normal_6_hari_kesehatan') and NOT TO_CHAR(CURR_DATE,'Dy') IN ('Sun', 'Ming') then
+    infolewati:= 1;
+  end if;
+
+  --kalau ada data shift maka increment daycount
+  select count(1) into vcheck from presensi.kerja_jam_shift_pegawai where pegawai_id = ppegawaiid and hari = vhari and periode = vperiode;
+  if vcheck > 0 then
+    infolewati:= 0;
+    DAY_COUNT := DAY_COUNT + 1;
+  end if;
+
+  --kalau ada data libur atau awfh maka increment daycount
+  select status into vcheck from presensi.kerja_jam_awfh_pegawai where pegawai_id = ppegawaiid and hari = vhari and periode = vperiode;
+  if vcheck is not null then
+    infolewati:= 0;
+    DAY_COUNT := vcheck;
+  end if;
+  
+        IF infolewati = 1 THEN
+           /*  CHECK TANGGAL MERAH */
+            SELECT 1 INTO LIBUR FROM HARI_LIBUR WHERE (((CURR_DATE) BETWEEN TANGGAL_AWAL AND TANGGAL_AKHIR) OR TANGGAL_FIX = TO_CHAR(CURR_DATE, 'DDMM'))
+            UNION ALL
+            SELECT 1 FROM HARI_LIBUR WHERE (((CURR_DATE) BETWEEN TANGGAL_AWAL AND TANGGAL_AKHIR) OR TANGGAL_FIX = TO_CHAR(CURR_DATE, 'DDMM'))
+            ;
+            
+            IF LIBUR IS NULL THEN
+                DAY_COUNT := DAY_COUNT + 1;
+            END IF;
+        END IF;
+        CURR_DATE := CURR_DATE + 1;
+    
+    END LOOP;
+    
+    RETURN DAY_COUNT;
+END;
+
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION presensi.vpegawailibur(date, date, character varying, character varying)
+  OWNER TO postgres;
+  
 CREATE OR REPLACE FUNCTION pegawai_pangkat_riwayat()
   RETURNS trigger AS
 $BODY$

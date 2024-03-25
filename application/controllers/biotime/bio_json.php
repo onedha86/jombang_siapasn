@@ -188,11 +188,27 @@ class bio_json extends CI_Controller {
 		    }
 		    else
 		    {
-		    	// UPDATE STATUS TARIK
-		    	$instquery="
-				update iclock_transaction set STATUS_TARIK = '1' where ID = '".$vabsensi_id."'
+		    	$infocheckquery= "
+	            SELECT
+					*
+				FROM presensi.absensi
+				WHERE 1=1 AND absensi_id IN (".$vabsensi_id.")
+				AND status_manual = 0
 				";
-				$res= $this->conbio->query($instquery);
+
+				$presensiqc= $this->db->query($infocheckquery);
+				$arrpresensiqc= $presensiqc->result_array();
+				// print_r($arrpresensiqc);exit;
+				$vcheckupdate= $arrpresensiqc[0]["absensi_id"];
+				// echo $vcheckupdate;exit;
+				if(!empty($vcheckupdate))
+				{
+			    	// UPDATE STATUS TARIK
+			    	$instquery="
+					update iclock_transaction set STATUS_TARIK = '1' where ID = '".$vabsensi_id."'
+					";
+					$res= $this->conbio->query($instquery);
+				}
 		    }
 		}
 
