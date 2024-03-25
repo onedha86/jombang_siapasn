@@ -44,7 +44,7 @@ $fileqrname= "uploads/cuti/".$reqId.'/qr.png';
   <div class="nomor-naskah" style=" text-align: center;font-size: 14px;">Nomor : <?=$reqNomor?></div>
 </div>
 
-<div class="isi-naskah">
+<div class="isi-naskah" style="left:8%; width: 84% !important">
   <p style="font-size: 14px;">Diberikan Cuti Karena Alasan Penting untuk Tahun 2023 kepada Pegawai Negeri Sipil :<br></p>
 
   <p>

@@ -44,7 +44,7 @@ $fileqrname= "uploads/cuti/".$reqId.'/qr.png';
   <div class="nomor-naskah" style=" text-align: center;font-size: 14px;">Nomor : <?=$reqNomor?></div>
 </div>
 
-<div class="isi-naskah">
+<div class="isi-naskah" style="left:8%; width: 84% !important">
   <p style="font-size: 14px;">Berdasarkan Surat KEPALA_ODP  NO_SURAT tanggal TANGGAL_SURAT dan Surat Keterangan Istirahat dari SURAT_KET_RS, maka dengan ini diberikan Cuti Sakit, kepada Pegawai Negeri Sipil :<br></p>
 
   <p>
