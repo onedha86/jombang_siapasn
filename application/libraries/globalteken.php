@@ -204,9 +204,9 @@ class globalteken
 					$stnm->validcutinomor();
 					unset($stnm);
 
-					$report= new ReportPDF();
+					/*$report= new ReportPDF();
 					$arrparam= ["reqId"=>$infoid];
-					$docPDF= $report->generatecuti($arrparam);
+					$docPDF= $report->generatecuti($arrparam);*/
 				}
 			}
 		}
@@ -227,6 +227,18 @@ class globalteken
 		{
 			if(!file_exists($filehasiltt))
 			{
+				$instquery="
+				update cuti_usulan set
+					last_date= now()
+				where cuti_usulan_id = ".$infoid;
+				$res= $CI->db->query($instquery);
+				if($res)
+				{
+					$report= new ReportPDF();
+					$arrparam= ["reqId"=>$infoid];
+					$docPDF= $report->generatecuti($arrparam);
+				}
+			
 				$vttdurl= $arrgetsessionuser["ttd_url"];
 				$vttdusername= $arrgetsessionuser["ttd_username"];
 				$vttdpassword= $arrgetsessionuser["ttd_password"];

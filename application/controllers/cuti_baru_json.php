@@ -738,8 +738,8 @@ class cuti_baru_json extends CI_Controller {
 		}
 		else
 		{
-			// echo "xxx###".$info;
-			echo "xxx###Data gagal di teken.";
+			echo "xxx###Data gagal di teken, karena ".$info;
+			// echo "xxx###Data gagal di teken.";
 		}
 	}
 

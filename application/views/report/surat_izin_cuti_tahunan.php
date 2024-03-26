@@ -27,6 +27,7 @@ $ttdnama= $set->getField("NAMA_KEPALA");
 
 $reqNomor= $set->getField("VALID_NOMOR");
 $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
+$reqTanggalTte= getFormattedDateTimeCheck($set->getField("LAST_DATE"), false);
 
 $infobaseurl= base_url();
 $fileqrname= "uploads/cuti/".$reqId.'/qr.png';
@@ -117,7 +118,12 @@ $fileqrname= "uploads/cuti/".$reqId.'/qr.png';
       <td>Pada tanggal</td>
       <td>:</td>
       <td>
-        
+        <?
+        if(file_exists($fileqrname))
+        {
+          echo $reqTanggalTte;
+        }
+        ?>
       </td>
     </tr>
     <tr>
@@ -155,78 +161,4 @@ $fileqrname= "uploads/cuti/".$reqId.'/qr.png';
 
 </div>
 <!-- End Isi Naskah -->
-
-
-<!-- Start Tembusan -->
-<?
-if ($suratmasukinfo->TEMBUSAN == "") {
-} else {
-?>
-  <!-- <div class="tembusan" style="font-size:14px"> -->
-  <div class="tembusan" style="font-size: 9px;font-family: 'FrutigerCnd-Normal'">
-
-    <b style="font-size:14px" ><u>Tembusan Yth. :</u></b>
-    <br>
-    <?
-    $arrTembusan = explode(",", $suratmasukinfo->TEMBUSAN);
-    ?>
-    <ol type="1">
-      <?
-      for ($i = 0; $i < count($arrTembusan); $i++) {
-      ?>
-        <li><?= $arrTembusan[$i] ?></li>
-      <?
-      }
-      ?>
-    </ol>
-  </div>
-<?
-}
-?>
-
-<?
-if($jumlahkepada > 4)
-{
-?>
-<pagebreak />
-<div class="isi-naskah">
-  <table width="100%">
-    <tr>
-      <td style="width: 150px;"><b>Lampiran No</b></td>
-      <td width="5%">:</td>
-      <td width="65%" align="justify"><?=$suratmasukinfo->NOMOR?></td>
-    </tr>
-    <tr>
-      <td><b>Tanggal</b></td>
-      <td>:</td>
-       <!--  <td align="justify"><?=$suratmasukinfo->TANGGAL?></td> -->
-      <td align="justify"><?=getFormattedDate2($suratmasukinfo->TANGGAL, false)?></td>
-    </tr>
-    <tr>
-      <td><b>Tentang</b></td>
-      <td>:</td>
-      <td align="justify"><?=$suratmasukinfo->PERIHAL?></td>
-    </tr>
-    <tr>
-      <td style="padding-top: 50px"><b>Kepada Yth. </b></td>
-      <td style="padding-top: 50px">:</td>
-      <td style="padding-top: 50px" align="justify">
-        <ol>
-          <?
-          foreach ($infokepada as $itemKepada) 
-          {
-          ?>
-          <li><?= $itemKepada ?></li>
-          <?
-          }
-          ?>
-        </ol>
-      </td>
-    </tr>
-  </table>
-</div>
-<?
-}
-?>
-
 </body>

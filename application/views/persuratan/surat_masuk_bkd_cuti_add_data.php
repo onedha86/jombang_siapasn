@@ -1088,7 +1088,7 @@ if(!empty($aksiteken))
     </div>
   </div>
 
-<div class="preloader-wrapper big active loader">
+<div style="z-index: 99999;" class="preloader-wrapper big active loader">
   <div class="spinner-layer spinner-blue-only">
     <div class="circle-clipper left">
       <div class="circle"></div>
@@ -1941,6 +1941,16 @@ $(function(){
     info= "Masukkan Passphrase, untuk Teken surat !!!";
     info+= '<input placeholder="" type="text" autocomplete="off" id="reqalasan" class="easyui-validatebox" readonly onfocus=\'this.removeAttribute("readonly");\' />';
 
+    setTimeout(function() {
+      vid= '#reqalasan';
+      var elem_position= $(vid).offset().top;
+      var window_height= $(window).height();
+      var y = elem_position - window_height / 4;
+
+      window.top.scrollTo(0,y);
+      $(vid).focus();
+    }, 100);
+
     mbox.custom({
       message: info,
       options: {close_speed: 100},
@@ -1974,7 +1984,8 @@ $(function(){
             // kl ada isi maka set token
             var s_url= "cuti_baru_json/token_tte?reqId=<?=$reqRowId?>&reqPassphrase="+encodeURIComponent(reqalasan);
             // console.log(s_url);return false;
-            $.ajax({'url': s_url,'success': function(dataajax){
+            $.ajax({'url': s_url, beforeSend: function () { $(".preloader-wrapper").show(); }, 'success': function(dataajax){
+              $(".preloader-wrapper").hide();
               // console.log(dataajax);return false;
               dataajax= String(dataajax);
               dataajax= dataajax.split('###'); 
