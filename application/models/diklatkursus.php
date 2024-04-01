@@ -151,22 +151,19 @@ DESCRIPTION			:
     {
 		$str = "		
 		UPDATE DIKLAT_KURSUS
-		SET    
-		
-		 PEGAWAI_ID= '".$this->getField("PEGAWAI_ID")."'
-		, TIPE_KURSUS_ID= ".$this->getField("TIPE_KURSUS_ID")."
-		, NAMA= '".$this->getField("NAMA")."'
-		, REF_JENIS_KURSUS_ID= ".$this->getField("REF_JENIS_KURSUS_ID")."
-		, TAHUN= '".$this->getField("TAHUN")."'
-		, NO_SERTIFIKAT= '".$this->getField("NO_SERTIFIKAT")."'
-		, TANGGAL_SELESAI= ".$this->getField("TANGGAL_SELESAI")."
-		, TANGGAL_MULAI= ".$this->getField("TANGGAL_MULAI")."
-		, TANGGAL_SERTIFIKAT= ".$this->getField("TANGGAL_SERTIFIKAT")."
-		, REF_INSTANSI_NAMA= '".$this->getField("REF_INSTANSI_NAMA")."'
-		, JUMLAH_JAM= ".$this->getField("JUMLAH_JAM")."
-		
-		 	
-		 	, LAST_DATE= NOW()
+		SET
+			PEGAWAI_ID= '".$this->getField("PEGAWAI_ID")."'
+			, TIPE_KURSUS_ID= ".$this->getField("TIPE_KURSUS_ID")."
+			, NAMA= '".$this->getField("NAMA")."'
+			, REF_JENIS_KURSUS_ID= ".$this->getField("REF_JENIS_KURSUS_ID")."
+			, TAHUN= '".$this->getField("TAHUN")."'
+			, NO_SERTIFIKAT= '".$this->getField("NO_SERTIFIKAT")."'
+			, TANGGAL_SELESAI= ".$this->getField("TANGGAL_SELESAI")."
+			, TANGGAL_MULAI= ".$this->getField("TANGGAL_MULAI")."
+			, TANGGAL_SERTIFIKAT= ".$this->getField("TANGGAL_SERTIFIKAT")."
+			, REF_INSTANSI_NAMA= '".$this->getField("REF_INSTANSI_NAMA")."'
+			, JUMLAH_JAM= ".$this->getField("JUMLAH_JAM")."
+			, LAST_DATE= NOW()
 		WHERE  DIKLAT_KURSUS_ID = ".$this->getField("DIKLAT_KURSUS_ID")."
 		"; 
 		$this->query = $str;
@@ -181,6 +178,22 @@ DESCRIPTION			:
 		SET
 		ID_SAPK= '".$this->getField("ID_SAPK")."'
 		WHERE  DIKLAT_KURSUS_ID = ".$this->getField("DIKLAT_KURSUS_ID")."
+		"; 
+		$this->query = $str;
+	 	// echo "xxx-".$str;exit;
+		return $this->execQuery($str);
+    }
+
+    function updateStatusSync()
+	{
+		$str = "		
+		UPDATE DIKLAT_KURSUS
+		SET
+			SYNC_ID= '".$this->getField("SYNC_ID")."'
+			, SYNC_NAMA= '".$this->getField("SYNC_NAMA")."'
+			, SYNC_WAKTU= NOW()
+			, SYNC_STATUS= '".$this->getField("SYNC_STATUS")."'
+		WHERE DIKLAT_KURSUS_ID = ".$this->getField("DIKLAT_KURSUS_ID")."
 		"; 
 		$this->query = $str;
 	 	// echo "xxx-".$str;exit;

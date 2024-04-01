@@ -1,0 +1,3 @@
+alter table diklat_kursus drop column if exists sync_id; alter table diklat_kursus drop column if exists sync_nama; alter table diklat_kursus drop column if exists sync_waktu; alter table diklat_kursus drop column if exists sync_status;
+alter table diklat_kursus add column sync_id integer, add column sync_nama character varying, add column sync_waktu timestamp without time zone, add column sync_status character varying;
+--========================================================================

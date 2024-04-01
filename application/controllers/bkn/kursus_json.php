@@ -21,6 +21,7 @@ class kursus_json extends CI_Controller {
         $this->LOGIN_LEVEL= $this->kauth->getInstance()->getIdentity()->LOGIN_LEVEL;
         $this->LOGIN_ID= $this->kauth->getInstance()->getIdentity()->LOGIN_ID;
         $this->LOGIN_PEGAWAI_ID= $this->kauth->getInstance()->getIdentity()->LOGIN_PEGAWAI_ID;
+        $this->USER_LOGIN_ID= $this->kauth->getInstance()->getIdentity()->USER_LOGIN_ID;
     }
 
     function kirim_data_all_siapan_bkn(){
@@ -173,25 +174,32 @@ class kursus_json extends CI_Controller {
         $returnId= $response->result->mapData->rwKursusId;
 
         $simpan="";
+        $statusKirim="GAGAL";
         if($returnStatus == "success")
         {
             $reqId= $returnId;
             $simpan=1;
-
+            $statusKirim="SUKSES";
             $arrparam= ["reqRiwayatId"=>$reqRiwayatId, "id"=>$reqId];
             $this->setidsapk($arrparam);
         }
 
         if($simpan == "1")
         {
-           
-             $arrDataStatus =array("PESAN"=>'Data berhasil disimpan',"code"=>200);
+            $arrDataStatus =array("PESAN"=>'Data berhasil disimpan',"code"=>200);
         }
         else
         {
-              $arrDataStatus =array("PESAN"=>'Data gagal disimpan',"code"=>400);
-           
+            $arrDataStatus =array("PESAN"=>'Data gagal disimpan',"code"=>400);
         }
+
+        // update sesuai table
+        $set= new DiklatKursus();
+        $set->setField("SYNC_ID", $this->USER_LOGIN_ID);
+        $set->setField("SYNC_NAMA", $this->LOGIN_USER);
+        $set->setField("SYNC_STATUS", $statusKirim);
+        $set->setField("DIKLAT_KURSUS_ID", $reqRiwayatId);
+        $set->updateStatusSync();
 
         echo json_encode( $arrDataStatus,true);
     }
