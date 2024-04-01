@@ -1,2 +1,416 @@
 alter table presensi.kerja_jam add column status_aktif character varying(1);
 update presensi.kerja_jam set status_aktif = '1' where jenis_jam_kerja != 'normal_5_hari';
+
+CREATE OR REPLACE FUNCTION presensi.vpegawailibur(mulai date, selesai date, jenisjamkerja character varying, ppegawaiid character varying)
+  RETURNS numeric AS
+$BODY$
+DECLARE
+
+DAY_COUNT numeric := 0;
+LIBUR numeric := 0;
+infolewati numeric := 0;
+CURR_DATE DATE;
+infohari character varying;
+vhari character varying;
+vperiode character varying;
+vcheck numeric := 0;
+
+BEGIN 
+    CURR_DATE := MULAI;
+    WHILE CURR_DATE <= SELESAI   LOOP
+	vhari:= TO_CHAR(CURR_DATE,'DD');
+	vperiode:= TO_CHAR(CURR_DATE,'MMYYYY');
+	infohari:= TO_CHAR(CURR_DATE,'Dy');
+	--raise notice 'sql %', vperiode;
+
+	infolewati:= 0;
+	if jenisjamkerja in ('normal_5_hari', 'normal_5_hk_smpn', 'normal_5_hk_sdn', 'normal_5_hk_tk', 'normal_5_hk_kesehatan') and NOT TO_CHAR(CURR_DATE,'Dy') IN ('Sat','Sun', 'Sab ','Ming') then
+		infolewati:= 1;
+	elsif jenisjamkerja in ('normal_6_hari_pendidikan', 'normal_6_hari_kesehatan') and NOT TO_CHAR(CURR_DATE,'Dy') IN ('Sun', 'Ming') then
+		infolewati:= 1;
+	end if;
+
+	--kalau ada data shift maka increment daycount
+	select count(1) into vcheck from presensi.kerja_jam_shift_pegawai where pegawai_id = ppegawaiid and hari = vhari and periode = vperiode;
+	if vcheck > 0 then
+		infolewati:= 0;
+		DAY_COUNT := DAY_COUNT + 1;
+	end if;
+
+	--kalau ada data libur atau awfh maka increment daycount
+	select status into vcheck from presensi.kerja_jam_awfh_pegawai where pegawai_id = ppegawaiid and hari = vhari and periode = vperiode;
+	if vcheck is not null then
+		infolewati:= 0;
+		DAY_COUNT := vcheck;
+	end if;
+	
+        IF infolewati = 1 THEN
+           /*  CHECK TANGGAL MERAH */
+            SELECT 1 INTO LIBUR FROM HARI_LIBUR WHERE (((CURR_DATE) BETWEEN TANGGAL_AWAL AND TANGGAL_AKHIR) OR TANGGAL_FIX = TO_CHAR(CURR_DATE, 'DDMM'))
+            UNION ALL
+            SELECT 1 FROM HARI_LIBUR WHERE (((CURR_DATE) BETWEEN TANGGAL_AWAL AND TANGGAL_AKHIR) OR TANGGAL_FIX = TO_CHAR(CURR_DATE, 'DDMM'))
+            ;
+            
+            IF LIBUR IS NULL THEN
+                DAY_COUNT := DAY_COUNT + 1;
+            END IF;
+        END IF;
+        CURR_DATE := CURR_DATE + 1;
+    
+    END LOOP;
+    
+    RETURN DAY_COUNT;
+END;
+
+$BODY$
+LANGUAGE plpgsql VOLATILE COST 100;
+ALTER FUNCTION presensi.vpegawailibur(date, date, character varying, character varying) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION presensi.klarifikasi_detil_p()
+  RETURNS trigger AS
+$BODY$
+DECLARE
+    jenislupaabsen text;
+    valjenislupaabsen text;
+    temp_absensi_in character varying;
+    temp_absensi_out character varying;
+
+    pegawaiid character varying;
+    jenisklarifikasi character varying;
+    infostatus character varying;
+    infoperiode character varying(6);
+    infohari character varying;
+    fieldhari character varying;
+    infokode character varying;
+    infoubahstatus character varying;
+    infomasuk character varying;
+    valmasuk character varying;
+    infopulang character varying;
+    valpulang character varying;
+    adadata integer;
+    thequery character varying;
+
+    currdate date;
+
+    infotanggalmulai date;
+    infotanggalselesai date;
+
+    infotipeid integer;
+    infostatuskhususdinas integer;
+    infoinsatuankerja character varying;
+    infotanggalparam character varying;
+
+    vcheckdata integer;
+
+    rec record;
+    BEGIN
+
+	pegawaiid:= new.pegawai_id;
+	jenisklarifikasi:= new.jenis_klarifikasi;
+	infostatus:= new.status;
+	infoperiode:= to_char(new.tanggal_mulai, 'mmyyyy');
+	infokode:= new.kode;
+	infoubahstatus:= new.ubah_status;
+
+	infohari:= to_char(new.tanggal_mulai, 'dd');
+	fieldhari:= cast(cast(infohari as numeric) as character varying);
+	
+	--raise notice 'sql %', 'jenisklarifikasi:' || jenisklarifikasi;
+	if jenisklarifikasi in ('klarifikasi_masuk_pulang', 'klarifikasi_lupa', 'klarifikasi_pakta_integritas') then
+		if lower(coalesce(nullif(infostatus, ''), 'x')) = 'y' then
+			perform presensi.klarifikasiproses(infoperiode, pegawaiid, jenisklarifikasi, infohari, fieldhari, infokode, infoubahstatus);
+			
+			return new;
+		else
+			return new;
+		end if;
+	elsif jenisklarifikasi in ('klarifikasi_ganti_status') then
+		if lower(coalesce(nullif(infostatus, ''), 'x')) = 'y' then
+			thequery := ' update presensi.absensi set tipe_absen = ''' || new.tipe_absen_revisi || ''' where absensi_id = ' || cast(infokode as numeric);
+			--raise notice 'sql %', thequery;
+			if coalesce(nullif(thequery, ''), null) is not null then
+				execute thequery;
+			end if;
+
+			select count(1) into vcheckdata
+			from presensi.absensi where tipe_absen = new.tipe_absen_awal and pegawai_id = pegawaiid
+			and to_char(jam, 'ddmmyyyy') = infohari || infoperiode
+			--and validasi = 1
+			;
+
+			--raise notice 'sql %', vcheckdata;
+			if coalesce(vcheckdata,0) = 0 then
+				if new.tipe_absen_awal = '1' then
+					thequery := '
+					update presensi.absensi_koreksi
+					set
+					pulang_'||fieldhari||'= ''AP'', status_pulang_'||fieldhari||'= null
+					where pegawai_id = '''||pegawaiid||''' and periode = '''||infoperiode||'''
+					';
+				else
+					thequery := '
+					update presensi.absensi_koreksi
+					set
+					masuk_'||fieldhari||'= ''AM'', status_masuk_'||fieldhari||'= null
+					where pegawai_id = '''||pegawaiid||''' and periode = '''||infoperiode||'''
+					';
+				end if;
+				--raise notice 'sql %', thequery;
+				if coalesce(nullif(thequery, ''), null) is not null then
+					execute thequery;
+				end if;
+			end if;
+
+			/*if new.tipe_absen_awal = '2' then
+				thequery :=
+				'update presensi.absensi_rekap set
+				ex_in_' || fieldhari || ' = null
+				, ex_dt_' || fieldhari || ' = null
+				, ex_auth_in_' || fieldhari || ' = null
+				where pegawai_id = ''' || pegawaiid || ''' 
+				and periode = ''' || infoperiode || '''
+				';
+				if thequery is not null then
+					execute thequery;
+				end if;
+				raise notice 'sql %', thequery;
+			end if;*/
+
+			--pegawai_id = ''' || pegawaiid || ''' and tipe_absen = ''' || new.tipe_absen_awal || '''
+			--and jam = to_timestamp(''' || new.jam || ''', ''yyyy-mm-dd hh24:mi:ss'')
+			--and validasi = 1
+			
+			--, validasi = 0
+			--and to_char(jam, ''yyyy-mm-dd hh24:mi:ss'') = to_char(to_timestamp(''' || new.jam || ''', ''yyyy-mm-dd hh24:mi:ss''), ''yyyy-mm-dd hh24:mi:ss'')
+			--and to_char(jam, ''yyyy-mm-dd hh24:mi:ss'') = ''' || new.jam || '''
+			--and jam = to_timestamp(''' || new.jam || ''', ''yyyy-mm-dd hh24:mi:ss'')
+
+			/*thequery := ' update presensi.absensi set
+			tipe_absen = ''' || new.tipe_absen_revisi || '''
+			, validasi = 1
+			where pegawai_id = ''' || pegawaiid || ''' and jam = to_timestamp(''' || new.jam || ''', ''yyyy-mm-dd hh24:mi:ss'')
+			and validasi = 0
+			';
+			--raise notice 'sql %', thequery;
+			execute thequery;*/
+		end if;
+		
+		return new;
+	elsif jenisklarifikasi in ('klarifikasi_kalkulasi_ulang') then
+		if lower(coalesce(nullif(infostatus, ''), 'x')) = 'y' then
+
+			if infokode in ('normal_6_hari_kesehatan', 'normal_6_hari_pendidikan') then
+				update presensi.kerja_jam_pegawai set jenis_jam_kerja = infokode where pegawai_id = new.pegawai_id::text;
+
+				thequery:= '
+				select
+				absensi_id, jam, tipe_absen, pegawai_id, mesin_id, kode_auth
+				from presensi.absensi a 
+				where pegawai_id = ''' || new.pegawai_id || '''
+				and validasi = 1
+				and to_timestamp(to_char(jam, ''yyyy-mm-dd hh24:mi:ss''), ''yyyy-mm-dd hh24:mi:ss'') >= to_timestamp(''' || to_char(new.tanggal_mulai, 'yyyy-mm-dd hh24:mi:ss') || ''', ''yyyy-mm-dd hh24:mi:ss'')
+				and to_timestamp(to_char(jam, ''yyyy-mm-dd hh24:mi:ss''), ''yyyy-mm-dd hh24:mi:ss'') <= to_timestamp(''' || to_char(new.tanggal_selesai, 'yyyy-mm-dd hh24:mi:ss') || ''', ''yyyy-mm-dd hh24:mi:ss'')
+				order by jam
+				';
+				--raise notice 'sql %', thequery;
+				for rec in execute thequery
+				loop
+					thequery := ' update presensi.absensi set pegawai_id = ''' || rec.pegawai_id || ''' where absensi_id = ' || rec.absensi_id;
+					--raise notice 'sql %', thequery;
+					if coalesce(nullif(thequery, ''), null) is not null then
+						execute thequery;
+					end if;
+					--perform presensi.proseshitungabsensi(rec.absensi_id, rec.jam, rec.tipe_absen, rec.pegawai_id, rec.mesin_id, rec.kode_auth, infokode, 'klarifikasi');
+					--raise notice 'sql %', rec.absensi_id;
+				end loop;
+			else
+				--reset field in out
+				thequery:= '
+				select
+				*
+				from
+				(
+					select
+					pegawai_id, hari
+					, sum(case when tipe_absen = ''0'' then 1 else 0 end) tipe_0
+					, sum(case when tipe_absen = ''1'' then 1 else 0 end) tipe_1
+					, count(1) jumlah
+					from
+					(
+						select
+						pegawai_id, to_char(jam, ''ddmmyyyy'') hari, tipe_absen
+						from presensi.absensi
+						where pegawai_id = ''' || new.pegawai_id || '''
+						and tipe_absen in (''0'',''1'')
+						and validasi = 1
+						and to_timestamp(to_char(jam, ''yyyy-mm-dd hh24:mi:ss''), ''yyyy-mm-dd hh24:mi:ss'') >= to_timestamp(''' || to_char(new.tanggal_mulai, 'yyyy-mm-dd hh24:mi:ss') || ''', ''yyyy-mm-dd hh24:mi:ss'')
+						and to_timestamp(to_char(jam, ''yyyy-mm-dd hh24:mi:ss''), ''yyyy-mm-dd hh24:mi:ss'') <= to_timestamp(''' || to_char(new.tanggal_selesai, 'yyyy-mm-dd hh24:mi:ss') || ''', ''yyyy-mm-dd hh24:mi:ss'')
+						group by pegawai_id, to_char(jam, ''ddmmyyyy''), tipe_absen
+					) a
+					group by pegawai_id, hari
+				) a
+				where jumlah = 1
+				order by pegawai_id, hari
+				';
+				--raise notice 'sql %', thequery;
+				for rec in execute thequery
+				loop
+					infomasuk:= cast(rec.tipe_0 as text);
+					infopulang:= cast(rec.tipe_1 as text);
+					infohari:= substring(rec.hari,1,2);
+					infohari:= cast(cast(infohari as numeric) as character varying);
+					infoperiode:= substring(rec.hari,3,6);
+
+					--if infomasuk = '0' then
+						--thequery := ' update presensi.absensi set pegawai_id = ''' || rec.pegawai_id || ''' where absensi_id = ' || rec.absensi_id;
+					--elsif infopulang = '0' then
+						thequery := ' update presensi.absensi_rekap set in_'||infohari||' = '''', out_'||infohari||' = '''' where periode = ''' || infoperiode || ''' and pegawai_id = ''' || rec.pegawai_id || '''';
+						--raise notice 'sql %', thequery;
+						if coalesce(nullif(thequery, ''), null) is not null then
+							execute thequery;
+						end if;
+
+						thequery := ' update presensi.absensi_koreksi set masuk_'||infohari||' = '''', pulang_'||infohari||' = '''' where periode = ''' || infoperiode || ''' and pegawai_id = ''' || rec.pegawai_id || '''';
+						--raise notice 'sql %', thequery;
+						if coalesce(nullif(thequery, ''), null) is not null then
+							execute thequery;
+						end if;
+					--end if;
+				end loop;
+				
+				thequery:= '
+				select
+				absensi_id, jam, tipe_absen, pegawai_id, mesin_id, kode_auth
+				from presensi.absensi a 
+				where pegawai_id = ''' || new.pegawai_id || '''
+				and validasi = 1
+				and to_timestamp(to_char(jam, ''yyyy-mm-dd hh24:mi:ss''), ''yyyy-mm-dd hh24:mi:ss'') >= to_timestamp(''' || to_char(new.tanggal_mulai, 'yyyy-mm-dd hh24:mi:ss') || ''', ''yyyy-mm-dd hh24:mi:ss'')
+				and to_timestamp(to_char(jam, ''yyyy-mm-dd hh24:mi:ss''), ''yyyy-mm-dd hh24:mi:ss'') <= to_timestamp(''' || to_char(new.tanggal_selesai, 'yyyy-mm-dd hh24:mi:ss') || ''', ''yyyy-mm-dd hh24:mi:ss'')
+				order by jam
+				';
+				--raise notice 'sql %', thequery;
+				for rec in execute thequery
+				loop
+					thequery := ' update presensi.absensi set pegawai_id = ''' || rec.pegawai_id || ''' where absensi_id = ' || rec.absensi_id;
+					--raise notice 'sql %', thequery;
+					if coalesce(nullif(thequery, ''), null) is not null then
+						execute thequery;
+					end if;
+					--perform presensi.proseshitungabsensi(rec.absensi_id, rec.jam, rec.tipe_absen, rec.pegawai_id, rec.mesin_id, rec.kode_auth, new.kode, 'klarifikasi');
+					--raise notice 'sql %', new.kode;
+				end loop;
+
+				--set hari libur
+				PERFORM presensi.pabsenharilibur(infoperiode, pegawaiid, new.kode);
+
+				--set reset absensi
+				infotanggalmulai:= to_date(to_char(new.tanggal_mulai, 'yyyy-mm-dd'), 'yyyy-mm-dd');
+				infotanggalselesai:= to_date(to_char(new.tanggal_selesai, 'yyyy-mm-dd'), 'yyyy-mm-dd');
+				PERFORM presensi.presetabsen(infotanggalmulai, infotanggalselesai, pegawaiid, new.kode);
+				--raise notice 'sql %', infotanggalmulai ||';'|| infotanggalselesai ||';'|| pegawaiid ||';'|| new.kode;
+			end if;
+		end if;
+		return new;
+
+		--return false;
+	elsif jenisklarifikasi in ('klarifikasi_dinas_luar', 'klarifikasi_ijin_sakit', 'klarifikasi_tugas_belajar', 'klarifikasi_diklat', 'klarifikasi_masuk_pulang_individu') then
+		if lower(coalesce(nullif(infostatus, ''), 'x')) = 'y' then
+			if jenisklarifikasi = 'klarifikasi_masuk_pulang_individu' then
+				infokode:= new.jenis_fm;
+			end if;
+			
+			currdate:= to_date(to_char(new.tanggal_mulai, 'yyyy-mm-dd'), 'yyyy-mm-dd');
+			while currdate <= to_date(to_char(new.tanggal_selesai, 'yyyy-mm-dd'), 'yyyy-mm-dd') loop
+
+				infohari:= to_char(currdate, 'dd');
+				fieldhari:= cast(cast(infohari as numeric) as character varying);
+				--raise notice 'sql %', 'fieldhari:' || fieldhari;
+				infoperiode:= to_char(currdate, 'mmyyyy');
+				--raise notice 'sql %', 'infoperiode:' || infoperiode;
+				--raise notice 'sql %', 'infokode:' || infokode;
+
+				--buat parstisi
+				PERFORM presensi.PARTISITABLE(infoperiode);
+
+				--set hari libur
+				PERFORM presensi.pabsenharilibur(infoperiode, pegawaiid, '');
+				
+				perform presensi.klarifikasiproses(infoperiode, pegawaiid, jenisklarifikasi, infohari, fieldhari, infokode, infoubahstatus);
+				currdate:= currdate + 1;
+			end loop;
+		end if;
+		return new;
+	elsif jenisklarifikasi in ('klarifikasi_masuk_pulang_satuan_kerja') then
+		if lower(coalesce(nullif(infostatus, ''), 'x')) = 'y' then
+			select tipe_id, status_khusus_dinas into infotipeid, infostatuskhususdinas from satuan_kerja where satuan_kerja_id = new.satuan_kerja_id;
+			--raise notice 'sql %', 'infotipeid:' || infotipeid;
+			--raise notice 'sql %', 'infostatuskhususdinas:' || infostatuskhususdinas;
+
+			--kalau infostatuskhususdinas 1 maka info tipe ikut entrian klarifikasi satuan kerja status
+			if infostatuskhususdinas = 1 then
+				if new.satuan_kerja_status = '1' then
+					select replace(replace(cast(ambil_id_satuan_kerja_tree_array_tipe(new.satuan_kerja_id, 1) as text), '{',''), '}','') into infoinsatuankerja;
+				else
+					select replace(replace(cast(ambil_id_satuan_kerja_tree_array(new.satuan_kerja_id) as text), '{',''), '}','') into infoinsatuankerja;
+				end if;
+			else
+				select replace(replace(cast(ambil_id_satuan_kerja_tree_array(new.satuan_kerja_id) as text), '{',''), '}','') into infoinsatuankerja;
+			end if;
+			--raise notice 'sql %', 'infoinsatuankerja:' || infoinsatuankerja;
+			
+			if coalesce(nullif(infoinsatuankerja, ''), null) is null then
+				infoinsatuankerja:= new.satuan_kerja_id::character varying;
+			end if;
+			--raise notice 'sql %', 'infoinsatuankerja:' || infoinsatuankerja;
+
+			infotanggalparam:= to_char(new.tanggal_mulai, 'dd') || '-' || to_char(new.tanggal_mulai, 'mm') || '-' || to_char(new.tanggal_mulai, 'yyyy');
+			--raise notice 'sql %', 'infotanggalparam:' || infotanggalparam;
+
+			infokode:= new.jenis_fm;
+			--raise notice 'sql %', 'infokode:' || infokode;
+
+			currdate:= to_date(to_char(new.tanggal_mulai, 'yyyy-mm-dd'), 'yyyy-mm-dd');
+			while currdate <= to_date(to_char(new.tanggal_selesai, 'yyyy-mm-dd'), 'yyyy-mm-dd') loop
+
+				thequery:= '
+				select
+				a.pegawai_id
+				from pinfoberjalan(''' || infotanggalparam || ''') a
+				where 1=1
+				and a.s_kerja_id in ('||infoinsatuankerja||')
+				order by a.pegawai_id
+				';
+				--raise notice 'sql %', thequery;
+				for rec in execute thequery
+				loop
+					pegawaiid:= rec.pegawai_id::character varying;
+					--raise notice 'sql %', 'pegawaiid:' || pegawaiid;
+					
+					infohari:= to_char(currdate, 'dd');
+					fieldhari:= cast(cast(infohari as numeric) as character varying);
+					--raise notice 'sql %', 'fieldhari:' || fieldhari;
+					infoperiode:= to_char(currdate, 'mmyyyy');
+					--raise notice 'sql %', 'infoperiode:' || infoperiode;
+
+					--buat parstisi
+					PERFORM presensi.PARTISITABLE(infoperiode);
+
+					--set hari libur
+					PERFORM presensi.pabsenharilibur(infoperiode, pegawaiid, '');
+					
+					perform presensi.klarifikasiproses(infoperiode, pegawaiid, jenisklarifikasi, infohari, fieldhari, infokode, infoubahstatus);
+				end loop;
+				currdate:= currdate + 1;
+			end loop;
+		end if;
+		return new;
+	else
+		return new;
+	end if;
+	
+	RETURN NEW;
+		 
+    END;
+$BODY$
+LANGUAGE plpgsql VOLATILE COST 100;
+ALTER FUNCTION presensi.klarifikasi_detil_p() OWNER TO postgres;
