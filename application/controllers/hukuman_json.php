@@ -264,6 +264,7 @@ class hukuman_json extends CI_Controller {
 			
 			$set_detil->setField('JABATAN_FU_ID', ValToNullDB($reqJabatanFuJabatanFuId));
 			$set_detil->setField('JABATAN_FT_ID', ValToNullDB($req));
+			$set_detil->setField('BIDANG_JABATAN_TERKAIT_ID', ValToNullDB($reqBidangJabatanTerkaitId));
 			
 			$set_detil->setField('SATKER_ID', ValToNullDB($reqJabatanFuSatkerId));
 			$set_detil->setField('SATKER_NAMA', $reqJabatanFuSatker);
@@ -489,6 +490,7 @@ class hukuman_json extends CI_Controller {
 			
 			$set_detil->setField('JABATAN_FU_ID', ValToNullDB($reqJabatanStrukturalJabatanFuId));
 			$set_detil->setField('JABATAN_FT_ID', ValToNullDB($req));
+			$set_detil->setField('BIDANG_JABATAN_TERKAIT_ID', ValToNullDB($reqBidangJabatanTerkaitId));
 			
 			$set_detil->setField('SATKER_ID', ValToNullDB($reqJabatanStrukturalSatkerId));
 			$set_detil->setField('SATKER_NAMA', $reqJabatanStrukturalSatker);
@@ -1234,6 +1236,7 @@ class hukuman_json extends CI_Controller {
 			
 			$set_detil->setField('JABATAN_FU_ID', ValToNullDB($reqJabatanFuJabatanFuId));
 			$set_detil->setField('JABATAN_FT_ID', ValToNullDB($req));
+			$set_detil->setField('BIDANG_JABATAN_TERKAIT_ID', ValToNullDB($reqBidangJabatanTerkaitId));
 			
 			$set_detil->setField('SATKER_ID', ValToNullDB($reqJabatanFuSatkerId));
 			$set_detil->setField('SATKER_NAMA', $reqJabatanFuSatker);
@@ -1427,6 +1430,7 @@ class hukuman_json extends CI_Controller {
 			
 			$set_detil->setField('JABATAN_FU_ID', ValToNullDB($reqJabatanStrukturalJabatanFuId));
 			$set_detil->setField('JABATAN_FT_ID', ValToNullDB($req));
+			$set_detil->setField('BIDANG_JABATAN_TERKAIT_ID', ValToNullDB($reqBidangJabatanTerkaitId));
 			
 			$set_detil->setField('SATKER_ID', ValToNullDB($reqJabatanStrukturalSatkerId));
 			$set_detil->setField('SATKER_NAMA', $reqJabatanStrukturalSatker);
