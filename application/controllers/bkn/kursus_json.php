@@ -225,9 +225,9 @@ class kursus_json extends CI_Controller {
 
         $html= file_get_contents($url, false, stream_context_create($arrContextOptions));
       
-        $arrData = json_decode($html,true);
+        $arrData= json_decode($html,true);
       
-        $arrResult = $arrData['result'];
+        $arrResult= $arrData['result'];
 
         $id= $arrResult['id'];
         $idPns= $arrResult['idPns'];
@@ -273,9 +273,8 @@ class kursus_json extends CI_Controller {
         
         if(!empty($jenisKursusId))
         {
-               $sql = " SELECT * from sapk.ref_jenis_kursus where ref_jenis_kursus_id_sapk='".$jenisKursusId."' ";
-               $jenisKursusIdx = $this->db->query($sql)->row()->ref_jenis_kursus_id;
-
+            $sql = " SELECT * from sapk.ref_jenis_kursus where ref_jenis_kursus_id_sapk='".$jenisKursusId."' ";
+            $jenisKursusIdx = $this->db->query($sql)->row()->ref_jenis_kursus_id;
         }
 
         $set= new DiklatKursus();
@@ -297,13 +296,19 @@ class kursus_json extends CI_Controller {
         
         if(empty($reqRiwayatId))
         {
-              $set->insertDataBkn();
-              $reqRiwayatId= $set->id;
+            $set->insertDataBkn();
+            $reqRiwayatId= $set->id;
         }
         else
         {
-             $set->updateDataBkn();
+            $set->updateDataBkn();
         }
+
+        // update ke efile
+        $this->load->library('globalfilesycnbkn');
+        $vsycn= new globalfilesycnbkn();
+        $arrparam= array("vpath"=>$path, "pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"874");
+        $vsycn->cptofile($arrparam);
 
         $arrparam= ["reqRiwayatId"=>$reqRiwayatId, "id"=>$id];
         $this->setidsapk($arrparam);

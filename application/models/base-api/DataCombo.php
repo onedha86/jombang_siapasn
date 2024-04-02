@@ -13,15 +13,15 @@ class DataCombo extends CurlData{
 
   function selectby($token, $mode, $arrdata=[], $lihat="", $lihathasil="")
   {
-  	$infoparam= "&reqMode=".$mode;
-  	if(!empty($arrdata))
-  	{
+    $infoparam= "&reqMode=".$mode;
+    if(!empty($arrdata))
+    {
       $vurl= $arrdata["vurl"];
-  		foreach ($arrdata as $key => $value)
-  		{
-        		$infoparam.= "&".$key."=".urlencode($value);
-      	}
-      	// print_r($infoparam);exit;
+      foreach ($arrdata as $key => $value)
+      {
+            $infoparam.= "&".$key."=".urlencode($value);
+        }
+        // print_r($infoparam);exit;
     }
 
     $arrhasil= array("json", "file");
@@ -46,6 +46,7 @@ class DataCombo extends CurlData{
     $vid= $arrparam["vid"];
     $rowid= $arrparam["rowid"];
     $nip= $arrparam["nip"];
+    $vlink= $arrparam["vlink"];
     // echo $nip;exit;
 
     if(!empty($id))
@@ -63,6 +64,11 @@ class DataCombo extends CurlData{
     if(!empty($vid))
     {
       $token.= "&id=".$vid;
+    }
+    if(!empty($vlink))
+    {
+      $vlink= urlencode($vlink);
+      $token.= "&vlink=".$vlink;
     }
     $this->selectLimit($vurl, $token, $lihat, $lihathasil);
   }

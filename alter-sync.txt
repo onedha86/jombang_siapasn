@@ -1,3 +1,12 @@
 alter table diklat_kursus drop column if exists sync_id; alter table diklat_kursus drop column if exists sync_nama; alter table diklat_kursus drop column if exists sync_waktu; alter table diklat_kursus drop column if exists sync_status;
 alter table diklat_kursus add column sync_id integer, add column sync_nama character varying, add column sync_waktu timestamp without time zone, add column sync_status character varying;
 --========================================================================
+
+drop view if exists ref_bkn_file;
+create or replace view ref_bkn_file as
+select
+874 id, 'Riwayat Diklat'::text detail_layanan_nama, 'Dok Sertifikat Diklat'::text vdocument
+, 'DIKLAT_KURSUS' riwayat_table, ''::text riwayat_field, 25 kategori_file_id
+union all
+select null id, 'Tambah sesuai kebutuahn'::text detail_layanan_nama, ''::text vdocument
+, '' riwayat_table, ''::text riwayat_field, null kategori_file_id

@@ -147,17 +147,13 @@ while($set->nextRow())
 
 // untuk urut tanggal desc
 // usort($arrkunci, "sortdatefunctiondesc");
-
 array_unique($arrkunci);
+rsort($arrkunci);
 usort($arrkunci, "sortdatefunctiondescCostum");
 
-
-
-
-
 // untuk urut tanggal asc
-// usort($arrkunci, "sortdatefunctiondesc");
-
+// usort($arrkunci, "sortdatefunctionasc");
+// print_r($arrkunci);exit;
 ?>
 <html>
 <head>
