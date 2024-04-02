@@ -30,6 +30,7 @@ class viewefile extends CI_Controller {
 
 			$view = array(
 				'dekrip' => $dekrip
+				, 'vdata' => $vdata
 			);
 
 			$data = array(

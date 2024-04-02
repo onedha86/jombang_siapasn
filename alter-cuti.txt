@@ -1048,6 +1048,8 @@ WHERE 1 = 1
 ;
 ALTER TABLE riwayat_file OWNER TO postgres;
 
+alter table pegawai_file add column vqr character varying;
+
 CREATE TABLE jenis_cuti (
   jenis_cuti_id numeric NOT NULL,
   nama varchar(50) NULL,

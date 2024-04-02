@@ -32,6 +32,19 @@ $qc= $this->db->query($infocheckquery);
 $arrdt= $qc->result_array();
 // print_r($arrdt);exit;
 
+if(empty($arrdt))
+{
+	$infocheckquery= "
+	SELECT
+		PATH
+	FROM pegawai_file
+	WHERE 1=1 AND PEGAWAI_ID = ".$pegawaiid." AND VQR = '".$vdata."'
+	";
+
+	$qc= $this->db->query($infocheckquery);
+	$arrdt= $qc->result_array();
+}
+
 if(empty($arrdt)) exit;
 
 $url= $arrdt[0]["path"];

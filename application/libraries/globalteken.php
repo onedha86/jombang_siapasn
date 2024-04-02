@@ -348,6 +348,7 @@ class globalteken
 					$instquery="
 					update cuti_usulan set
 						valid_tte = 1
+						, vqr= '".$enkrip_1."'
 					where cuti_usulan_id = '".$reqId."'
 					";
 					$res= $CI->db->query($instquery);
@@ -431,6 +432,12 @@ class globalteken
 		// execute post
 		$result= curl_exec($ch);
 		// close connection
+
+		$curerror= "";
+		if(curl_errno($ch))
+		{
+			$curerror= curl_error($ch);
+		}
 		curl_close($ch);
 
 		if($vlihat == "1")
@@ -451,9 +458,17 @@ class globalteken
 			$verror= $rs->error;
 		}
 
-		if(empty($verror) && !empty($vfilehasiltt))
+		if(empty($verror) && !empty($vfilehasiltt) && empty($curerror))
 		{
 			file_put_contents($vfilehasiltt, $result);
+		}
+
+		// kalau ada error curl
+		if(!empty($curerror))
+		{
+			$arrerror= [];
+			$arrerror["error"]= $curerror;
+			return $arrerror;
 		}
 
 		if(!empty($verror))

@@ -75,10 +75,10 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	// 'dsn'	   => 'pgsql:host=localhost;port=5432;dbname=db_siappro1;user=postgres;password=b3rkarakt3rBerdayaS41ng',
-	'dsn'	   => 'pgsql:host=localhost;port=5432;dbname=simpeg_jombang;user=postgres;password=root',
+	'dsn'	   => 'pgsql:host=192.168.88.100;port=5432;dbname=simpeg_jombang;user=postgres;password=root',
 
 	'username' => 'postgres',
-	'hostname' => 'localhost',
+	'hostname' => '192.168.88.100',
 	// 'password' => 'b3rkarakt3rBerdayaS41ng',
 	'password' => 'root',
 	// 'database' => 'db_siappro1',
