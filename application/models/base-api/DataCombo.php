@@ -47,6 +47,7 @@ class DataCombo extends CurlData{
     $rowid= $arrparam["rowid"];
     $nip= $arrparam["nip"];
     $vlink= $arrparam["vlink"];
+    $m= $arrparam["m"];
     // echo $nip;exit;
 
     if(!empty($id))
@@ -70,7 +71,15 @@ class DataCombo extends CurlData{
       $vlink= urlencode($vlink);
       $token.= "&vlink=".$vlink;
     }
-    $this->selectLimit($vurl, $token, $lihat, $lihathasil);
+    if(!empty($m))
+    {
+      $token.= "&m=".$m;
+    }
+
+    if($lihathasil == "result")
+      return $this->selectLimit($vurl, $token, $lihat, $lihathasil);
+    else
+      $this->selectLimit($vurl, $token, $lihat, $lihathasil);
   }
 
   function updatepersonal($vrl, $data)

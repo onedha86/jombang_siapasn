@@ -91,4 +91,33 @@ class globalfilesycnbkn
 			}
 		}
 	}
+
+	function uptofile($arrparam)
+	{
+		$CI = &get_instance();
+		$CI->load->model('base-api/DataCombo');
+
+		// print_r($arrparam);exit;
+		$vpath= $arrparam["vpath"];
+		$refid= $arrparam["refid"];
+		$pegawaiid= $arrparam["pegawaiid"];
+		$rowid= $arrparam["rowid"];
+
+		if(!empty($rowid) && !empty($pegawaiid))
+		{
+			$arrparam= [
+				"id"=>$pegawaiid
+				, "rowid"=>$rowid
+				, "vid"=>$refid
+				, "m"=>"upload"
+				, "vurl"=>"Update_file_bkn"
+			]
+			;
+			// print_r($arrparam);exit;
+			$set= new DataCombo();
+			$vreturn= $set->selectdata($arrparam, "", "result");
+			// print_r($vreturn);exit;
+			return $vreturn;
+		}
+	}
 }

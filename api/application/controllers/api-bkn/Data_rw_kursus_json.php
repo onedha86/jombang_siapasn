@@ -54,7 +54,20 @@ class Data_rw_kursus_json extends REST_Controller {
         $object=$this->input->post('object');
         $slug=$this->input->post('slug');
 
+        $vpath= json_decode($this->input->post('path'));
+        $vd= $vpath[0];
+        $vdocid= (string)$vd->dok_id;
+        $vdocument= $vd->dok_nama;
+        $vbknlink= $vd->dok_uri;
+
+        $dok_id= $vdocid;
+        $dok_nama= $vdocument;
+        $dok_uri= $vbknlink;
+        $object= $vbknlink;
+        $slug= $vdocid;
+
         $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
+        // print_r($path);exit;
             
         $id=$id?$id:null;    
 
@@ -65,7 +78,7 @@ class Data_rw_kursus_json extends REST_Controller {
             , "jenisDiklatId"=>$jenisDiklatId
             , "jenisKursus"=>$jenisKursus
             , "jenisKursusSertipikat"=>$jenisKursusSertipikat
-            // , "path"=>$path
+            , "path"=>$path
             , "jumlahJam"=>$jumlahJam
             , "lokasiId"=>$lokasiId
             , "namaKursus"=>$namaKursus

@@ -13,11 +13,15 @@ class Update_file_bkn extends REST_Controller {
  
     // show data entitas
     function index_get() {
+        $this->load->model("base-new/PegawaiBknFile");
+
         $reqId= $this->input->get("reqId");
         $reqRowId= $this->input->get("reqRowId");
         $id= $this->input->get("id");
         $vlink= $this->input->get("vlink");
+        $vmode= $this->input->get("m");
 
+        if(empty($vmode)) $vmode= "download";
         if(empty($id)) $id= -1;
 
         $query= $this->db->query("select * from ref_bkn_file where id in (".$id.")");
@@ -26,108 +30,152 @@ class Update_file_bkn extends REST_Controller {
         // print_r($arrjenisbkn);exit;
 
         $vreturn= [];
-        if(!empty($arrjenisbkn) && !empty($vlink))
+
+        // khusus download
+        if($vmode == "download")
         {
-            $vjenisbkn= $arrjenisbkn[0];
-            $reqRiwayatTable= $vjenisbkn["riwayat_table"];
-            $reqRiwayatField= $vjenisbkn["riwayat_field"];
-            $reqKategoriFileId= $vjenisbkn["kategori_file_id"];
-            $reqKualitasFileId= 1;
-            $reqPrioritas= "1";
-            $reqRiwayatId= $reqRowId;
-
-            if(!empty($reqRiwayatTable))
+            if(!empty($arrjenisbkn) && !empty($vlink))
             {
-                $this->load->model("base-new/PegawaiBknFile");
+                $vjenisbkn= $arrjenisbkn[0];
+                $reqRiwayatTable= $vjenisbkn["riwayat_table"];
+                $reqRiwayatField= $vjenisbkn["riwayat_field"];
+                $reqKategoriFileId= $vjenisbkn["kategori_file_id"];
+                $reqKualitasFileId= 1;
+                $reqPrioritas= "1";
+                $reqRiwayatId= $reqRowId;
 
-                // cek kalau tidak ada di database lewati untuk simpan file
-                $statement= " AND A.V_BKN_LINK = '".$vlink."'";
-                $checkfile= new PegawaiBknFile();
-                $pernahsimpan= $checkfile->getCountByParams(array(), $statement);
-                // echo $pernahsimpan;exit;
-
-                if($pernahsimpan > 0)
+                if(!empty($reqRiwayatTable))
                 {
+                    // cek kalau tidak ada di database lewati untuk simpan file
+                    $statement= " AND A.V_BKN_LINK = '".$vlink."'";
+                    $checkfile= new PegawaiBknFile();
+                    // $pernahsimpan= $checkfile->getCountByParams(array(), $statement);
+                    $checkfile->selectparam(array(), -1, -1, $statement);
+                    $checkfile->firstRow();
+                    $reqDokumenFileId= $checkfile->getField("PEGAWAI_FILE_ID");
+                    // echo $pernahsimpan;exit;
 
-                }
-                else
-                {
-                    $configdata= $this->config;
-                    $settingurlupload= $configdata->config["settingurlupload"];
-
-                    $gp= new Gapi();
-                    $vlink= urldecode($vlink);
-                    $arrparam= ["detil"=>"download-dok?filePath=".$vlink];
-                    $getfile= urldecode($gp->getdatadownload($arrparam));
-
-                    $target_dir= $settingurlupload."uploads/".$reqId."/";
-                    if(file_exists($target_dir)){}
-                    else
+                    // kalau ada maka update untuk jadi prioritas
+                    if(!empty($reqDokumenFileId))
                     {
-                        makedirs($target_dir);
-                    }
-
-                    // untuk membuat file
-                    $infoext= pathinfo($vlink);
-                    // print_r($infoext);exit;
-                    $ext= $infoext["extension"];
-                    $target_file_asli= $infoext["basename"];
-                    $namagenerate= generateRandomString().".".$ext;
-                    // $namagenerate= "ye7SQ5WTFv.".$ext;
-                    $namafile= $target_dir.$namagenerate;
-                    file_put_contents($namafile, $getfile);
-
-                    $setfile= new PegawaiBknFile();
-                    $setfile->setField("PEGAWAI_ID", $reqId);
-                    $setfile->setField("RIWAYAT_TABLE", $reqRiwayatTable);
-                    $setfile->setField("RIWAYAT_FIELD", $reqRiwayatField);
-                    $setfile->setField("FILE_KUALITAS_ID", ValToNullDB($reqKualitasFileId));
-                    $setfile->setField("KATEGORI_FILE_ID", $reqKategoriFileId);
-                    $setfile->setField("RIWAYAT_ID", ValToNullDB($reqRiwayatId));
-                    $setfile->setField("LAST_LEVEL", ValToNullDB($LOGIN_LEVEL));
-                    $setfile->setField("LAST_USER", $LOGIN_USER);
-                    $setfile->setField("USER_LOGIN_ID", ValToNullDB($LOGIN_ID));
-                    $setfile->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($LOGIN_PEGAWAI_ID));
-                    $setfile->setField("LAST_DATE", "NOW()");
-                    $setfile->setField("V_BKN_LINK", $vlink);
-
-                    $setfile->setField("IPCLIENT", sfgetipaddress());
-                    $setfile->setField("MACADDRESS", sfgetmac());
-                    $setfile->setField("NAMACLIENT", getHostName());
-                    $setfile->setField("PRIORITAS", $reqPrioritas);
-
-                    $setfile->setField("PEGAWAI_FILE_ID", $reqDokumenFileId);
-
-                    $setfile->setField('PATH', str_replace($settingurlupload, "", $namafile));
-                    $setfile->setField('PATH_ASLI', $target_file_asli);
-                    $setfile->setField('EXT', $ext);
-
-                    if($setfile->noketinsert())
-                    {
-                        $reqDokumenFileId= $setfile->id;
+                        $setfile= new PegawaiBknFile();
+                        $setfile->setField("PEGAWAI_ID", $reqId);
+                        $setfile->setField("RIWAYAT_FIELD", $reqRiwayatField);
+                        $setfile->setField("KATEGORI_FILE_ID", $reqKategoriFileId);
+                        $setfile->setField("RIWAYAT_ID", ValToNullDB($reqRiwayatId));
+                        $setfile->setField("PRIORITAS", $reqPrioritas);
                         $setfile->setField("PEGAWAI_FILE_ID", $reqDokumenFileId);
-                        if($setfile->updateprioritas())
+                        if($setfile->updatebknprioritas())
                         {
+
                         }
                     }
-                }
+                    // kalau belum ada maka simpan data
+                    else
+                    {
+                        $configdata= $this->config;
+                        $settingurlupload= $configdata->config["settingurlupload"];
 
+                        $gp= new Gapi();
+                        $vlink= urldecode($vlink);
+                        $arrparam= ["detil"=>"download-dok?filePath=".$vlink];
+                        $getfile= urldecode($gp->getdatadownload($arrparam));
+
+                        $target_dir= $settingurlupload."uploads/".$reqId."/";
+                        if(file_exists($target_dir)){}
+                        else
+                        {
+                            makedirs($target_dir);
+                        }
+
+                        // untuk membuat file
+                        $infoext= pathinfo($vlink);
+                        // print_r($infoext);exit;
+                        $ext= $infoext["extension"];
+                        $target_file_asli= $infoext["basename"];
+                        $namagenerate= generateRandomString().".".$ext;
+                        // $namagenerate= "ye7SQ5WTFv.".$ext;
+                        $namafile= $target_dir.$namagenerate;
+                        file_put_contents($namafile, $getfile);
+
+                        $setfile= new PegawaiBknFile();
+                        $setfile->setField("PEGAWAI_ID", $reqId);
+                        $setfile->setField("RIWAYAT_TABLE", $reqRiwayatTable);
+                        $setfile->setField("RIWAYAT_FIELD", $reqRiwayatField);
+                        $setfile->setField("FILE_KUALITAS_ID", ValToNullDB($reqKualitasFileId));
+                        $setfile->setField("KATEGORI_FILE_ID", $reqKategoriFileId);
+                        $setfile->setField("RIWAYAT_ID", ValToNullDB($reqRiwayatId));
+                        $setfile->setField("LAST_LEVEL", ValToNullDB($LOGIN_LEVEL));
+                        $setfile->setField("LAST_USER", $LOGIN_USER);
+                        $setfile->setField("USER_LOGIN_ID", ValToNullDB($LOGIN_ID));
+                        $setfile->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($LOGIN_PEGAWAI_ID));
+                        $setfile->setField("LAST_DATE", "NOW()");
+                        $setfile->setField("V_BKN_LINK", $vlink);
+
+                        $setfile->setField("IPCLIENT", sfgetipaddress());
+                        $setfile->setField("MACADDRESS", sfgetmac());
+                        $setfile->setField("NAMACLIENT", getHostName());
+                        $setfile->setField("PRIORITAS", $reqPrioritas);
+
+                        $setfile->setField("PEGAWAI_FILE_ID", $reqDokumenFileId);
+
+                        $setfile->setField('PATH', str_replace($settingurlupload, "", $namafile));
+                        $setfile->setField('PATH_ASLI', $target_file_asli);
+                        $setfile->setField('EXT', $ext);
+
+                        if($setfile->noketinsert())
+                        {
+                            $reqDokumenFileId= $setfile->id;
+                            $setfile->setField("PEGAWAI_FILE_ID", $reqDokumenFileId);
+                            if($setfile->updateprioritas())
+                            {
+                            }
+                        }
+                    }
+
+                }
             }
         }
-        /*
+        else if($vmode == "upload")
+        {
+            if(!empty($arrjenisbkn))
+            {
+                $vjenisbkn= $arrjenisbkn[0];
+                $reqRiwayatTable= $vjenisbkn["riwayat_table"];
+                $reqRiwayatField= $vjenisbkn["riwayat_field"];
+                $reqKategoriFileId= $vjenisbkn["kategori_file_id"];
+                $vdocid= $vjenisbkn["id"];
+                $vdocument= $vjenisbkn["vdocument"];
 
-        if(!empty($id))
-        {
-            $arrparam= ["ctrl"=>"kursus/id", "value"=>$id];
-            $vreturn= $gp->getdataParam($arrparam);
+                $reqKualitasFileId= 1;
+                $reqPrioritas= "1";
+                $reqRiwayatId= $reqRowId;
+
+                // $statement= " AND A.V_BKN_LINK = '".$vlink."'";
+                $statement= " AND A.RIWAYAT_TABLE = '".$reqRiwayatTable."' AND A.PEGAWAI_ID = ".$reqId." AND A.RIWAYAT_ID = ".$reqRiwayatId;
+                $sorder= "ORDER BY A.RIWAYAT_TABLE, A.RIWAYAT_FIELD, CASE WHEN COALESCE(NULLIF(A.PRIORITAS, ''), NULL) IS NULL THEN '2' ELSE A.PRIORITAS END::NUMERIC, A.LAST_DATE DESC";
+                $checkfile= new PegawaiBknFile();
+                // $pernahsimpan= $checkfile->getCountByParams(array(), $statement);
+                $checkfile->selectparam(array(), -1, -1, $statement, $sorder);
+                // echo $checkfile->query;exit;
+                $checkfile->firstRow();
+                $vbknlink= $checkfile->getField("V_BKN_LINK");
+
+                if(!empty($vbknlink))
+                {
+                    $arrdata= [];
+                    $arrdata["dok_id"]= $vdocid;
+                    $arrdata["dok_nama"]= $vdocument;
+                    $arrdata["dok_uri"]= $vbknlink;
+                    $arrdata["object"]= $vbknlink;
+                    $arrdata["slug"]= $vdocid;
+                    array_push($vreturn, $arrdata);
+                }
+            }
         }
-        else
-        {
-            $arrparam= ["vjenis"=>"rw-kursus", "nip"=>$nip, "lihatdata"=>""];
-            $vreturn= $gp->getdata($arrparam);
-        }
+        
         // print_r($vreturn);exit;
-        $this->response(array('status' => 'success', 'message' => 'success', 'code' => 200, 'result' => $vreturn));*/
+        $this->response(array('status' => 'success', 'message' => 'success', 'code' => 200, 'result' => $vreturn));
     }
     
     // insert new data to entitas

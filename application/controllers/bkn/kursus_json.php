@@ -96,15 +96,12 @@ class kursus_json extends CI_Controller {
                 $arrparam= ["reqRiwayatId"=>$reqRiwayatId, "id"=>$reqId];
                 $this->setidsapk($arrparam);
             }
-
         
-         }
+        }
 
-
-          $arrDataStatus =array("PESAN"=>'Data berhasil di proses ',"code"=>200,"diklat_kursus_id"=>$arrDataIdRiwayat);
-          echo json_encode( $arrDataStatus,true);
+        $arrDataStatus =array("PESAN"=>'Data berhasil di proses ',"code"=>200,"diklat_kursus_id"=>$arrDataIdRiwayat);
+        echo json_encode( $arrDataStatus,true);
     }
-
 
     function siapasn_bkn()
     {
@@ -133,7 +130,31 @@ class kursus_json extends CI_Controller {
         $jumlahjam= $set->getField("JUMLAH_JAM");
         $pegawai_id_sapk= $set->getField("PEGAWAI_ID_SAPK");
 
-        $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
+        // update ke efile
+        $idPegawai = $set->getField('PEGAWAI_ID');
+        $this->load->library('globalfilesycnbkn');
+        $vsycn= new globalfilesycnbkn();
+        $arrparam= array("pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"874");
+        $ambilfiledata= $vsycn->uptofile($arrparam);
+        // print_r($ambilfiledata);exit;
+
+        // $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
+        $path= [];
+        foreach ($ambilfiledata as $kd => $vd) 
+        {
+            $vdocid= $vd->dok_id;
+            $vdocument= $vd->dok_nama;
+            $vbknlink= $vd->dok_uri;
+
+            $arrdata= [];
+            $arrdata["dok_id"]= $vdocid;
+            $arrdata["dok_nama"]= $vdocument;
+            $arrdata["dok_uri"]= $vbknlink;
+            $arrdata["object"]= $vbknlink;
+            $arrdata["slug"]= $vdocid;
+            array_push($path, $arrdata);
+        }
+        // print_r($path);exit;
 
         $sql = " SELECT * FROM INSTANSI WHERE instansi_id = '1' ";
         $row = $this->db->query($sql)->row();
@@ -154,7 +175,7 @@ class kursus_json extends CI_Controller {
             , "lokasiId"=>null
             , "namaKursus"=>$nama
             , "nomorSertipikat"=>$nosertifikat
-            , "path"=>$path
+            , "path"=> json_encode($path)
             , "pnsOrangId"=>$pegawai_id_sapk
             , "tahunKursus"=>$tahun
             , "tanggalKursus"=>$tanggalmulai

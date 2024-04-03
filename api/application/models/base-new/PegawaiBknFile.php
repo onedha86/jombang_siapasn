@@ -72,6 +72,33 @@ DESCRIPTION         :
         return $this->execQuery($str);
     }
 
+    function updatebknprioritas()
+    {
+        $str1= "        
+        UPDATE PEGAWAI_FILE
+        SET    
+            PRIORITAS= ''
+        WHERE PEGAWAI_ID = ".$this->getField("PEGAWAI_ID")."
+        AND KATEGORI_FILE_ID = ".$this->getField("KATEGORI_FILE_ID")."
+        AND RIWAYAT_ID = ".$this->getField("RIWAYAT_ID")."
+        AND RIWAYAT_FIELD = '".$this->getField("RIWAYAT_FIELD")."'
+        AND PEGAWAI_FILE_ID != ".$this->getField("PEGAWAI_FILE_ID")."
+        AND PRIORITAS = '".$this->getField("PRIORITAS")."'
+        ";
+        $this->execQuery($str1);
+
+        $str= "        
+        UPDATE PEGAWAI_FILE
+        SET    
+            PRIORITAS= '".$this->getField("PRIORITAS")."'
+        WHERE PEGAWAI_ID = ".$this->getField("PEGAWAI_ID")."
+        AND PEGAWAI_FILE_ID = ".$this->getField("PEGAWAI_FILE_ID")."
+        ";
+        $this->query = $str;
+        // echo $str;exit();
+        return $this->execQuery($str);
+    }
+
     function updateprioritas()
     {
         $str = "        
@@ -88,6 +115,24 @@ DESCRIPTION         :
         $this->query = $str;
         // echo $str;exit();
         return $this->execQuery($str);
+    }
+
+    function selectparam($paramsArray=array(),$limit=-1,$from=-1, $statement='',$order='')
+    {
+        $str = "
+        SELECT
+            A.*
+        FROM PEGAWAI_FILE A
+        WHERE 1 = 1 ".$statement;
+        
+        foreach ($paramsArray as $key => $val)
+        {
+            $str .= " AND $key = '$val' ";
+        }
+        
+        $str .= $statement." ".$order;
+        $this->query = $str;
+        return $this->selectLimit($str,$limit,$from);
     }
 
     function getCountByParams($paramsArray=array(), $statement='')

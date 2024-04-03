@@ -432,8 +432,21 @@ class Gapi
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $response= curl_exec($ch);
+        $verror= curl_errno($ch);
+        curl_close($ch);
 
-        return urlencode($response);
+        if($verror)
+        {
+            $ctoken= $this->dbtokengenerate();
+            if($ctoken == "1")
+            {
+                return $this->getdatadownload($arrparam);
+            }
+        }
+        else
+        {
+            return urlencode($response);
+        }
     }
 
     function enkripdekripkunci()

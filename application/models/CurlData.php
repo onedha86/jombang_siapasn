@@ -219,6 +219,10 @@ DESCRIPTION			:
 		{
 			return urldecode($rs->result);
 		}
+		else if($lihathasil == "result")
+		{
+			return $rs->result;
+		}
 		else if($lihathasil == "file")
 		{
 			$arrreturn= [];
