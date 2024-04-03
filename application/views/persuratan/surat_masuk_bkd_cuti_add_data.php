@@ -122,6 +122,7 @@ else
 
   $reqPegawaiPenandaTanganId= $set->getField("MENU_PENANDA_TANGAN_ID");
   $reqNomor= $set->getField("NOMOR");
+  $reqValidTte= $set->getField("VALID_TTE");
   $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
   /*
   $reqStatusCutiBesar= $this->input->post('reqStatusCutiBesar');
@@ -307,7 +308,7 @@ if(!empty($reqRowId))
   $filelokasi= "uploads/cuti/".$reqRowId."/";
   $filehasiltt= $filelokasi.'draft_tt.pdf';
 
-  if(file_exists($filehasiltt))
+  if(file_exists($filehasiltt) && !empty($reqValidTte))
   {
     $aksisimpan= $aksikirim= $aksibatalkirim= $aksiverifikator= $aksiapproval= $aksiteken= "";
     $disabledpenandatangan= $disabledmenu= "disabled";

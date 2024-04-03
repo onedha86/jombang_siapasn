@@ -102,256 +102,291 @@ class globalteken
 		$sessionloginuser= $arrgetsessionuser["sessionloginuser"];
 		$sessionloginid= $arrgetsessionuser["sessionloginid"];
 		$sessionloginpegawaiid= $arrgetsessionuser["sessionloginpegawaiid"];
+		if(empty($sessionloginpegawaiid)) $sessionloginpegawaiid= -1;
 		$reqkunci= $arrgetsessionuser["ttd_enkrip"];
 		$vbaseurl= $arrgetsessionuser["base_url"];
 
-		// harus nomor kosong untuk generate
-		if(empty($vnomor))
-		{
-			// harus ada file template, simpan data ke pegawai file yg nnti nya di ubah kl sudah valid
-			if(file_exists($infourl))
-			{
-				$reqRiwayatTable= "CUTI_USULAN_TTE";
-				$reqRiwayatField= $reqKategoriFileId= "";
-				$reqRiwayatId= $infoid;
-				$reqKualitasFileId= "1";
-				$infoext= getExtension($infourl);
+		$statementcari= " AND A1.MENU_ID = '".$vmenupenandatanganid."'";
+		$setp= new CutiUrutan();
+		$setp->selectByParams(array(), -1,-1, $statementcari);
+		$setp->firstRow();
+		$vttenik= $setp->getField("NIK");
 
+		$infocheckquery= "
+		SELECT
+			NIK
+		FROM pegawai
+		WHERE 1=1 AND PEGAWAI_ID = ".$sessionloginpegawaiid;
+
+		$qc= $CI->db->query($infocheckquery);
+		$arrdt= $qc->result_array();
+		$CI->db->close();
+		$vpegawainik= $arrdt[0]["nik"];
+		// echo $vpegawainik."--".$vttenik;exit;
+
+		// harus sama
+		if($vpegawainik !== $vttenik)
+		{
+			$infologdata= "1";
+			$reqLogKeterangan= " NIK : ".$vpegawainik." tidak berhak tte untuk berkas data ini.";
+		}
+		else
+		{
+			// harus nomor kosong untuk generate
+			if(empty($vnomor))
+			{
+				// harus ada file template, simpan data ke pegawai file yg nnti nya di ubah kl sudah valid
+				if(file_exists($infourl))
+				{
+					$reqRiwayatTable= "CUTI_USULAN_TTE";
+					$reqRiwayatField= $reqKategoriFileId= "";
+					$reqRiwayatId= $infoid;
+					$reqKualitasFileId= "1";
+					$infoext= getExtension($infourl);
+
+					$statementdetil= " AND A.RIWAYAT_TABLE = 'CUTI_USULAN_TTE' AND A.RIWAYAT_ID = ".$reqRiwayatId;
+					$setdetil= new PegawaiFile();
+					$setdetil->selectByParamsFile(array(), -1, -1, $statementdetil, $vpegawaiid);
+					$setdetil->firstRow();
+					$reqDokumenFileId= $setdetil->getField("PEGAWAI_FILE_ID");
+					// echo $reqDokumenFileId;exit;
+
+					$setfile= new PegawaiFile();
+					$setfile->setField("PEGAWAI_ID", $vpegawaiid);
+					$setfile->setField("RIWAYAT_TABLE", $reqRiwayatTable);
+					$setfile->setField("RIWAYAT_FIELD", $reqRiwayatField);
+					$setfile->setField("FILE_KUALITAS_ID", ValToNullDB($reqKualitasFileId));
+					$setfile->setField("KATEGORI_FILE_ID", ValToNullDB($reqKategoriFileId));
+					$setfile->setField("RIWAYAT_ID", ValToNullDB($reqRiwayatId));
+					
+					$setfile->setField("LAST_LEVEL", $sessionloginlevel);
+					$setfile->setField("LAST_USER", $sessionloginuser);
+					$setfile->setField("USER_LOGIN_ID", $sessionloginid);
+					$setfile->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($sessionloginpegawaiid));
+					$setfile->setField("LAST_DATE", "NOW()");
+
+					$setfile->setField("IPCLIENT", sfgetipaddress());
+					$setfile->setField("MACADDRESS", sfgetmac());
+					$setfile->setField("NAMACLIENT", getHostName());
+					$setfile->setField("PRIORITAS", $reqPrioritas);
+					$setfile->setField("EXT", $infoext);
+					$setfile->setField("PEGAWAI_FILE_ID", $reqDokumenFileId);
+
+					if(empty($reqDokumenFileId))
+					{
+						if($setfile->insert())
+						{
+							$reqDokumenFileId= $setfile->id;
+						}
+					}
+
+					$enkrip_1= $reqDokumenFileId."_".$vpegawaiid;
+					$enkrip_1= mencrypt($enkrip_1, $reqkunci);
+					$enkrip_2= "viewfile-".$enkrip_1;
+					$enkrip_2= mencrypt($enkrip_2, $reqkunci);
+					$enkrip= $enkrip_2;
+
+					$instquery="
+					update pegawai_file set
+						vqr= '".$enkrip_1."'
+					where pegawai_file_id = '".$reqDokumenFileId."'
+					";
+					$res= $CI->db->query($instquery);
+
+					// buat qrcode sesuai link enkrip
+					$fileqrname= $filelokasi.'qr.png';
+					if(!file_exists($fileqrname))
+					{
+						$filepath=  $fileqrname;
+						$infolokasiqr= $vbaseurl.'qrcode'.'?data='.$enkrip;
+						// echo $infolokasiqr;exit;
+
+						$errorCorrectionLevel = 'H';
+						$matrixPointSize = 2;
+
+						QRcode::png($infolokasiqr, $fileqrname, $errorCorrectionLevel, $matrixPointSize, 2);   
+
+						// Apabila mengunakan logo Kecil di tengah
+						$logothumps= "images/qr_logo.png";
+						$pngqr= imagecreatefrompng($filepath);
+						$logo= imagecreatefromstring(file_get_contents($logothumps));
+						imagecolortransparent($logo , imagecolorallocatealpha($logo , 0, 0, 0, 127));
+						imagealphablending($logo , false);
+						imagesavealpha($logo , true);
+
+						$infoqrwidth= imagesx($pngqr);
+						$infoqrheight= imagesy($pngqr);
+
+						$logo_width= imagesx($logo);
+						$logo_height= imagesy($logo);
+						// Scale logo to fit in the QR Code
+
+						$pembagian= 3;
+						$logo_qr_width= $infoqrwidth / $pembagian;
+						$scale= ($logo_width / $logo_qr_width)*1.1;
+						$logo_qr_height= $logo_height / $scale;
+						imagecopyresampled($pngqr, $logo, $infoqrwidth / $pembagian, $infoqrheight / $pembagian, 0, 0, $logo_qr_width, $logo_qr_height, $logo_width, $logo_height);
+						
+						// Save QR code again, but with logo on it
+						imagepng($pngqr,$filepath);
+					}
+
+					// menempelkan url qr baru
+					if(file_exists($fileqrname))
+					{
+						$stnm= new CutiUsulan();
+						$stnm->setField("VID", $infoid);
+						$stnm->validcutinomor();
+						unset($stnm);
+
+						/*$report= new ReportPDF();
+						$arrparam= ["reqId"=>$infoid];
+						$docPDF= $report->generatecuti($arrparam);*/
+					}
+				}
+			}
+
+			// untuk generate tte
+			$infoparam= " AND A.CUTI_USULAN_ID = ".$reqId;
+			$set=  new CutiUsulan();
+			$set->selectdata(array(), -1, -1, $infoparam);
+			// echo $set->query;exit;
+			$set->firstRow();
+			$vtte= $set->getField("VALID_TTE");
+			$vnomor= $set->getField("VALID_NOMOR");
+
+			$fileuntukditt= $filelokasi.'draft.pdf';
+			$filehasiltt= $filelokasi.'draft_tt.pdf';
+
+			if(!empty($vnomor))
+			{
+				if(!file_exists($filehasiltt))
+				{
+					$instquery="
+					update cuti_usulan set
+						last_date= now()
+					where cuti_usulan_id = ".$infoid;
+					$res= $CI->db->query($instquery);
+					if($res)
+					{
+						$report= new ReportPDF();
+						$arrparam= ["reqId"=>$infoid];
+						$docPDF= $report->generatecuti($arrparam);
+					}
+				
+					$vttdurl= $arrgetsessionuser["ttd_url"];
+					$vttdusername= $arrgetsessionuser["ttd_username"];
+					$vttdpassword= $arrgetsessionuser["ttd_password"];
+
+					/*if (function_exists('curl_file_create')) 
+					{
+						$cfile= curl_file_create($fileuntukditt);
+					}
+					else 
+					{ 
+						$cfile= '@'.realpath($fileuntukditt);
+					}*/
+					$cfile = new CURLFile(realpath($fileuntukditt), "application/pdf");
+					// print_r($cfile);exit;
+
+					// misal user kepala bkpsdm kan tahu siapa pns nya, itu di cari di tabel pegawai, nik nya brapa
+					// di menu setting urutan cuti
+					/*$statementcari= " AND A1.MENU_ID = '".$vmenupenandatanganid."'";
+					$setp= new CutiUrutan();
+					$setp->selectByParams(array(), -1,-1, $statementcari);
+					$setp->firstRow();
+					$vttenik= $setp->getField("NIK");*/
+					$vttepassphrase= $reqPassphrase;
+
+					// untuk cek hardcode dl untuk dummy
+					// $vttenik= "0803202100007062";
+					// $vttepassphrase= "Hantek1234.!";
+
+					$vparamdata= array(
+						"file"=> $cfile
+						, "nik"=> $vttenik
+						, "passphrase"=> $vttepassphrase
+						, "tampilan"=> "invisible"
+					);
+					// print_r($vparamdata);exit;
+
+					// "method"=> "get"
+					// , "urldetil"=> "/api/user/status/0803202100007062"
+					$arrparam= [];
+					$arrparam= array(
+						"method"=> "post"
+						, "lihat"=> ""
+						, "url"=> $vttdurl
+						, "urldetil"=> "/api/sign/pdf"
+						, "username"=> $vttdusername
+						, "password"=> $vttdpassword
+						, "vdata"=> $vparamdata
+						, "filehasiltt"=> $filehasiltt
+					);
+
+					$verror= "";
+					$rsapi= $this->esign($arrparam);
+					// print_r($rsapi);exit;
+					if(!empty($rsapi))
+					{
+						$verror= $rsapi["error"];
+					}
+
+					if(!empty($verror))
+					{
+						$infologdata= "1";
+						$reqLogKeterangan= $verror;
+					}
+				}
+			}
+
+			// update status tte, dan pindah e file lokasi
+			if(empty($vtte) && file_exists($filehasiltt))
+			{
+				$reqRiwayatId= $infoid;
 				$statementdetil= " AND A.RIWAYAT_TABLE = 'CUTI_USULAN_TTE' AND A.RIWAYAT_ID = ".$reqRiwayatId;
 				$setdetil= new PegawaiFile();
 				$setdetil->selectByParamsFile(array(), -1, -1, $statementdetil, $vpegawaiid);
 				$setdetil->firstRow();
+				// echo $setdetil->query;exit;
 				$reqDokumenFileId= $setdetil->getField("PEGAWAI_FILE_ID");
+				$ext= $setdetil->getField("EXT");
 				// echo $reqDokumenFileId;exit;
 
-				$setfile= new PegawaiFile();
-				$setfile->setField("PEGAWAI_ID", $vpegawaiid);
-				$setfile->setField("RIWAYAT_TABLE", $reqRiwayatTable);
-				$setfile->setField("RIWAYAT_FIELD", $reqRiwayatField);
-				$setfile->setField("FILE_KUALITAS_ID", ValToNullDB($reqKualitasFileId));
-				$setfile->setField("KATEGORI_FILE_ID", ValToNullDB($reqKategoriFileId));
-				$setfile->setField("RIWAYAT_ID", ValToNullDB($reqRiwayatId));
-				
-				$setfile->setField("LAST_LEVEL", $sessionloginlevel);
-				$setfile->setField("LAST_USER", $sessionloginuser);
-				$setfile->setField("USER_LOGIN_ID", $sessionloginid);
-				$setfile->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($sessionloginpegawaiid));
-				$setfile->setField("LAST_DATE", "NOW()");
-
-				$setfile->setField("IPCLIENT", sfgetipaddress());
-				$setfile->setField("MACADDRESS", sfgetmac());
-				$setfile->setField("NAMACLIENT", getHostName());
-				$setfile->setField("PRIORITAS", $reqPrioritas);
-				$setfile->setField("EXT", $infoext);
-				$setfile->setField("PEGAWAI_FILE_ID", $reqDokumenFileId);
-
-				if(empty($reqDokumenFileId))
+				$target_dir= "uploads/".$vpegawaiid."/";
+				if(file_exists($target_dir)){}
+				else
 				{
-					if($setfile->insert())
-					{
-					}
+					makedirs($target_dir);
 				}
 
-				$enkrip_1= $reqDokumenFileId."_".$vpegawaiid;
-				$enkrip_1= mencrypt($enkrip_1, $reqkunci);
-				$enkrip_2= "viewfile-".$enkrip_1;
-				$enkrip_2= mencrypt($enkrip_2, $reqkunci);
-				$enkrip= $enkrip_2;
+				$namagenerate= generateRandomString().".".$ext;
+				$target_file_generate= $target_dir.$namagenerate;
+				// echo $target_file_generate;exit;
 
-				// buat qrcode sesuai link enkrip
-				$fileqrname= $filelokasi.'qr.png';
-				if(!file_exists($fileqrname))
+				// update status tte
+				$statusupdatette= "";
+				if(copy($filehasiltt,$target_file_generate))
 				{
-					$filepath=  $fileqrname;
-					$infolokasiqr= $vbaseurl.'qrcode'.'?data='.$enkrip;
-					// echo $infolokasiqr;exit;
-
-					$errorCorrectionLevel = 'H';
-					$matrixPointSize = 2;
-
-					QRcode::png($infolokasiqr, $fileqrname, $errorCorrectionLevel, $matrixPointSize, 2);   
-
-					// Apabila mengunakan logo Kecil di tengah
-					$logothumps= "images/qr_logo.png";
-					$pngqr= imagecreatefrompng($filepath);
-					$logo= imagecreatefromstring(file_get_contents($logothumps));
-					imagecolortransparent($logo , imagecolorallocatealpha($logo , 0, 0, 0, 127));
-					imagealphablending($logo , false);
-					imagesavealpha($logo , true);
-
-					$infoqrwidth= imagesx($pngqr);
-					$infoqrheight= imagesy($pngqr);
-
-					$logo_width= imagesx($logo);
-					$logo_height= imagesy($logo);
-					// Scale logo to fit in the QR Code
-
-					$pembagian= 3;
-					$logo_qr_width= $infoqrwidth / $pembagian;
-					$scale= ($logo_width / $logo_qr_width)*1.1;
-					$logo_qr_height= $logo_height / $scale;
-					imagecopyresampled($pngqr, $logo, $infoqrwidth / $pembagian, $infoqrheight / $pembagian, 0, 0, $logo_qr_width, $logo_qr_height, $logo_width, $logo_height);
-					
-					// Save QR code again, but with logo on it
-					imagepng($pngqr,$filepath);
-				}
-
-				// menempelkan url qr baru
-				if(file_exists($fileqrname))
-				{
-					$stnm= new CutiUsulan();
-					$stnm->setField("VID", $infoid);
-					$stnm->validcutinomor();
-					unset($stnm);
-
-					/*$report= new ReportPDF();
-					$arrparam= ["reqId"=>$infoid];
-					$docPDF= $report->generatecuti($arrparam);*/
-				}
-			}
-		}
-
-		// untuk generate tte
-		$infoparam= " AND A.CUTI_USULAN_ID = ".$reqId;
-		$set=  new CutiUsulan();
-		$set->selectdata(array(), -1, -1, $infoparam);
-		// echo $set->query;exit;
-		$set->firstRow();
-		$vtte= $set->getField("VALID_TTE");
-		$vnomor= $set->getField("VALID_NOMOR");
-
-		$fileuntukditt= $filelokasi.'draft.pdf';
-		$filehasiltt= $filelokasi.'draft_tt.pdf';
-
-		if(!empty($vnomor))
-		{
-			if(!file_exists($filehasiltt))
-			{
-				$instquery="
-				update cuti_usulan set
-					last_date= now()
-				where cuti_usulan_id = ".$infoid;
-				$res= $CI->db->query($instquery);
-				if($res)
-				{
-					$report= new ReportPDF();
-					$arrparam= ["reqId"=>$infoid];
-					$docPDF= $report->generatecuti($arrparam);
-				}
-			
-				$vttdurl= $arrgetsessionuser["ttd_url"];
-				$vttdusername= $arrgetsessionuser["ttd_username"];
-				$vttdpassword= $arrgetsessionuser["ttd_password"];
-
-				/*if (function_exists('curl_file_create')) 
-				{
-					$cfile= curl_file_create($fileuntukditt);
-				}
-				else 
-				{ 
-					$cfile= '@'.realpath($fileuntukditt);
-				}*/
-				$cfile = new CURLFile(realpath($fileuntukditt), "application/pdf");
-				// print_r($cfile);exit;
-
-				// misal user kepala bkpsdm kan tahu siapa pns nya, itu di cari di tabel pegawai, nik nya brapa
-				// di menu setting urutan cuti
-				$statementcari= " AND A1.MENU_ID = '".$vmenupenandatanganid."'";
-				$setp= new CutiUrutan();
-				$setp->selectByParams(array(), -1,-1, $statementcari);
-				$setp->firstRow();
-				$vttenik= $setp->getField("NIP_BARU");
-				$vttepassphrase= $reqPassphrase;
-
-				// untuk cek hardcode dl untuk dummy
-				// $vttenik= "0803202100007062";
-				// $vttepassphrase= "Hantek1234.!";
-
-				$vparamdata= array(
-					"file"=> $cfile
-					, "nik"=> $vttenik
-					, "passphrase"=> $vttepassphrase
-					, "tampilan"=> "invisible"
-				);
-				// print_r($vparamdata);exit;
-
-				// "method"=> "get"
-				// , "urldetil"=> "/api/user/status/0803202100007062"
-				$arrparam= [];
-				$arrparam= array(
-					"method"=> "post"
-					, "lihat"=> ""
-					, "url"=> $vttdurl
-					, "urldetil"=> "/api/sign/pdf"
-					, "username"=> $vttdusername
-					, "password"=> $vttdpassword
-					, "vdata"=> $vparamdata
-					, "filehasiltt"=> $filehasiltt
-				);
-
-				$verror= "";
-				$rsapi= $this->esign($arrparam);
-				// print_r($rsapi);exit;
-				if(!empty($rsapi))
-				{
-					$verror= $rsapi["error"];
-				}
-
-				if(!empty($verror))
-				{
-					$infologdata= "1";
-					$reqLogKeterangan= $verror;
-				}
-			}
-		}
-
-		// update status tte, dan pindah e file lokasi
-		if(empty($vtte) && file_exists($filehasiltt))
-		{
-			$reqRiwayatId= $infoid;
-			$statementdetil= " AND A.RIWAYAT_TABLE = 'CUTI_USULAN_TTE' AND A.RIWAYAT_ID = ".$reqRiwayatId;
-			$setdetil= new PegawaiFile();
-			$setdetil->selectByParamsFile(array(), -1, -1, $statementdetil, $vpegawaiid);
-			$setdetil->firstRow();
-			// echo $setdetil->query;exit;
-			$reqDokumenFileId= $setdetil->getField("PEGAWAI_FILE_ID");
-			$ext= $setdetil->getField("EXT");
-			// echo $reqDokumenFileId;exit;
-
-			$target_dir= "uploads/".$vpegawaiid."/";
-			if(file_exists($target_dir)){}
-			else
-			{
-				makedirs($target_dir);
-			}
-
-			$namagenerate= generateRandomString().".".$ext;
-			$target_file_generate= $target_dir.$namagenerate;
-			// echo $target_file_generate;exit;
-
-			// update status tte
-			$statusupdatette= "";
-			if(copy($filehasiltt,$target_file_generate))
-			{
-				$pathasli= "CUTI_TTE_".$vnomor;
-				$instquery="
-				update pegawai_file set
-					path = '".$target_file_generate."'
-					, path_asli = '".$pathasli."'
-				where pegawai_file_id = '".$reqDokumenFileId."'
-				";
-				$res= $CI->db->query($instquery);
-				if($res)
-				{
-					$statusupdatette= "1";
-
+					$pathasli= "CUTI_TTE_".$vnomor;
 					$instquery="
-					update cuti_usulan set
-						valid_tte = 1
-						, vqr= '".$enkrip_1."'
-					where cuti_usulan_id = '".$reqId."'
+					update pegawai_file set
+						path = '".$target_file_generate."'
+						, path_asli = '".$pathasli."'
+					where pegawai_file_id = '".$reqDokumenFileId."'
 					";
 					$res= $CI->db->query($instquery);
+					if($res)
+					{
+						$statusupdatette= "1";
+
+						$instquery="
+						update cuti_usulan set
+							valid_tte = 1
+						where cuti_usulan_id = '".$reqId."'
+						";
+						$res= $CI->db->query($instquery);
+					}
 				}
 			}
 		}

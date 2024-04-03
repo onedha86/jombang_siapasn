@@ -1040,7 +1040,7 @@ class cuti_baru_json extends CI_Controller {
 				if($aColumns[$i] == "INFO_TANGGAL")
 				{
 					// $row[] = getFormattedDate($set->getField("TANGGAL_MULAI"))." s/d ".getFormattedDate($set->getField("TANGGAL_SELESAI"));
-					$row[] = getFormattedDate($set->getField("TANGGAL_MULAI"));
+					$row[] = getFormattedDate($set->getField($aColumns[$i]));
 				}
 				else if($aColumns[$i] == "AKSI")
 				{

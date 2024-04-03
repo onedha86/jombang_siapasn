@@ -1231,7 +1231,7 @@ begin
     ) a;
 
     select
-    (vnext + 1) vnext into nextvalidsubnomor
+    max(vnext + 1) vnext into nextvalidsubnomor
     from
     (
       select valid_sub_nomor vnext
@@ -1549,10 +1549,16 @@ BEGIN
         select coalesce(urut,0) + 1 urut
         from
         (
-          select
-          max(cast(substring(nomor from 13) as numeric)) urut
-          from cuti_usulan
-          where to_char(tanggal_kirim, 'yyyymm') = vperiode
+          select max(urut) urut
+          from
+          (
+            select
+            max(cast(substring(nomor from 13) as numeric)) urut
+            from cuti_usulan
+            where to_char(tanggal_kirim, 'yyyymm') = vperiode
+            union all
+            select 0 vnext
+          ) a
         ) a
       ) a;
       new.nomor:= vnomor;
