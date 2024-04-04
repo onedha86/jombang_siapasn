@@ -170,11 +170,18 @@ class Gapi
         // paggil ulang fungsi, sesuai token baru
         else
         {
-            // echo $vkode; print_r($rs);exit;
-            $ctoken= $this->dbtokengenerate();
-            if($ctoken == "1")
+            if(empty($rs->message))
             {
-                return $this->getdata($arrparam);
+                // echo $vkode; print_r($rs);exit;
+                $ctoken= $this->dbtokengenerate();
+                if($ctoken == "1")
+                {
+                    return $this->getdata($arrparam);
+                }
+            }
+            else
+            {
+                return [];
             }
         }
     }
@@ -232,6 +239,7 @@ class Gapi
         // pembaruan kode
         // $vkode= $rs->code;
         // echo $vkode;exit;
+
         if($rs)
         {
             return $rs;
@@ -243,7 +251,7 @@ class Gapi
             $ctoken= $this->dbtokengenerate();
             if($ctoken == "1")
             {
-              //  return $this->postdata($arrparam, $jsonPost);
+               return $this->postdata($arrparam, $jsonPost);
             }
         }
     }

@@ -159,6 +159,7 @@ class Update_file_bkn extends REST_Controller {
                 $checkfile->selectparam(array(), -1, -1, $statement, $sorder);
                 // echo $checkfile->query;exit;
                 $checkfile->firstRow();
+                $reqDokumenFileId= $checkfile->getField("PEGAWAI_FILE_ID");
                 $vbknlink= $checkfile->getField("V_BKN_LINK");
                 $vpath= $checkfile->getField("PATH");
 
@@ -215,6 +216,11 @@ class Update_file_bkn extends REST_Controller {
                     $arrdata["object"]= $vobject;
                     $arrdata["slug"]= $vslug;
                     array_push($vreturn, $arrdata);
+
+                    $instquery="
+                    update pegawai_file set v_bkn_link = '".$vdokuri."' where pegawai_file_id = ".$reqDokumenFileId;
+                    $res= $this->db->query($instquery);
+                    $this->db->close();
                 }
             }
         }
