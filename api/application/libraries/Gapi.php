@@ -190,12 +190,16 @@ class Gapi
         // $generatetokenauth= $this->generatetokenauth();
         // $generatetokenauthichation= $this->generatetokenauthichation();
 
+        $vmethod= "application/json";
+        if(!empty($arrparam["method"]))
+            $vmethod= $arrparam["method"];
+            
         $headers= [
             // 'User-Agent: NoBrowser v0.1 beta',
             'accept:application/json'
             , 'Auth:bearer ' . $generatetokenauth
             , 'Authorization:Bearer ' . $generatetokenauthichation
-            , 'Content-Type:application/json'
+            , 'Content-Type:'.$vmethod
         ];
 
         $ch = curl_init();
@@ -217,6 +221,7 @@ class Gapi
         curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonPost);
 
         $response= curl_exec($ch);
+        $verror= curl_errno($ch);
         $rs= json_decode($response);
         curl_close($ch);
          // print_r($rs);exit;
