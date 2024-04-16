@@ -134,7 +134,7 @@ class kursus_json extends CI_Controller {
         $idPegawai = $set->getField('PEGAWAI_ID');
         $this->load->library('globalfilesycnbkn');
         $vsycn= new globalfilesycnbkn();
-        $arrparam= array("pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"874");
+        $arrparam= array("pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"1");
         $ambilfiledata= $vsycn->uptofile($arrparam);
         // print_r($ambilfiledata);exit;
 
@@ -328,7 +328,7 @@ class kursus_json extends CI_Controller {
         // update ke efile
         $this->load->library('globalfilesycnbkn');
         $vsycn= new globalfilesycnbkn();
-        $arrparam= array("vpath"=>$path, "pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"874");
+        $arrparam= array("vpath"=>$path, "pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"1");
         $vsycn->cptofile($arrparam);
 
         $arrparam= ["reqRiwayatId"=>$reqRiwayatId, "id"=>$id];

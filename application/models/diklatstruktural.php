@@ -151,19 +151,33 @@ DESCRIPTION			:
 		$str = "		
 		UPDATE DIKLAT_STRUKTURAL
 		SET    
-		DIKLAT_ID= ".$this->getField("DIKLAT_ID")."
-		
-		, PENYELENGGARA= '".$this->getField("PENYELENGGARA")."'
-		, NO_STTPP= '".$this->getField("NO_STTPP")."'
-		, PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
-		, TAHUN= '".$this->getField("TAHUN")."'
-		, TANGGAL_MULAI= ".$this->getField("TANGGAL_MULAI")."
-		, TANGGAL_SELESAI= ".$this->getField("TANGGAL_SELESAI")."
-			
+			DIKLAT_ID= ".$this->getField("DIKLAT_ID")."
+			, PENYELENGGARA= '".$this->getField("PENYELENGGARA")."'
+			, NO_STTPP= '".$this->getField("NO_STTPP")."'
+			, PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
+			, TAHUN= '".$this->getField("TAHUN")."'
+			, TANGGAL_MULAI= ".$this->getField("TANGGAL_MULAI")."
+			, TANGGAL_SELESAI= ".$this->getField("TANGGAL_SELESAI")."
 		WHERE DIKLAT_STRUKTURAL_ID= ".$this->getField("DIKLAT_STRUKTURAL_ID")."
 		"; 
 		$this->query = $str;
 		// echo $str;exit;
+		return $this->execQuery($str);
+    }
+
+    function updateStatusSync()
+	{
+		$str = "		
+		UPDATE DIKLAT_STRUKTURAL
+		SET
+			SYNC_ID= '".$this->getField("SYNC_ID")."'
+			, SYNC_NAMA= '".$this->getField("SYNC_NAMA")."'
+			, SYNC_WAKTU= NOW()
+			, SYNC_STATUS= '".$this->getField("SYNC_STATUS")."'
+		WHERE DIKLAT_STRUKTURAL_ID = ".$this->getField("DIKLAT_STRUKTURAL_ID")."
+		"; 
+		$this->query = $str;
+	 	// echo "xxx-".$str;exit;
 		return $this->execQuery($str);
     }
     

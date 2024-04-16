@@ -129,6 +129,10 @@ class login_json extends REST_Controller {
                         {
                             if($reqGeneratePassword == $reqPasswd || $reqGeneratePassword == $reqPasswd)
                             {
+                                $hapusdatalama= new UserLoginPersonal();
+                                $hapusdatalama->setField("PEGAWAI_ID", $reqPegawaiId);
+                                $hapusdatalama->delete();
+                                
                                 $respon= 1;
                             }
                             else

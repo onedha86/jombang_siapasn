@@ -170,7 +170,8 @@ class Gapi
         // paggil ulang fungsi, sesuai token baru
         else
         {
-            if(empty($rs->message))
+            $vpesan= $rs->message;
+            if(empty($vpesan) || $vpesan == "Invalid Credentials")
             {
                 // echo $vkode; print_r($rs);exit;
                 $ctoken= $this->dbtokengenerate();

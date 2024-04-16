@@ -24,7 +24,7 @@ class Update_file_bkn extends REST_Controller {
         if(empty($vmode)) $vmode= "download";
         if(empty($id)) $id= -1;
 
-        $query= $this->db->query("select * from ref_bkn_file where id in (".$id.")");
+        $query= $this->db->query("select * from ref_bkn_file where idcari in (".$id.")");
         $arrjenisbkn= $query->result_array();
         $this->db->close();
         // print_r($arrjenisbkn);exit;
@@ -175,52 +175,74 @@ class Update_file_bkn extends REST_Controller {
                 }
                 else
                 {
-                    $fileName = $settingurlupload.$vpath;;
-                    $fileSize = filesize($fileName);
-
-                    if(!file_exists($fileName)) {
-                        /*$out['status'] = 'error';
-                        $out['message'] = 'File not found.';
-                        exit(json_encode($out));*/
+                    if(empty($vpath))
+                    {
+                        $arrdata= [];
+                        $arrdata["dok_id"]= "";
+                        $arrdata["dok_nama"]= "";
+                        $arrdata["dok_uri"]= "";
+                        $arrdata["object"]= "";
+                        $arrdata["slug"]= "";
+                        array_push($vreturn, $arrdata);
                     }
+                    else
+                    {
+                        $fileName = $settingurlupload.$vpath;;
+                        $fileSize = filesize($fileName);
 
-                    $finfo= finfo_open(FILEINFO_MIME_TYPE);
-                    $finfo= finfo_file($finfo, $fileName);
+                        if(!file_exists($fileName)) {
+                            /*$out['status'] = 'error';
+                            $out['message'] = 'File not found.';
+                            exit(json_encode($out));*/
+                        }
 
-                    // $cFile= new CURLFile($fileName, $finfo, basename($fileName));
-                    $cFile= new CURLFile(realpath($fileName));
+                        $finfo= finfo_open(FILEINFO_MIME_TYPE);
+                        $finfo= finfo_file($finfo, $fileName);
 
-                    $arrData = array(
-                        "id_ref_dokumen"=>$id
-                        , "file"=>$cFile
-                    );
-                    // $jsonData= json_encode($arrData);
-                    $jsonData= $arrData;
-                    // print_r($jsonData);exit;
+                        // $cFile= new CURLFile($fileName, $finfo, basename($fileName));
+                        $cFile= new CURLFile(realpath($fileName));
 
-                    $arrparam= ["ctrl"=>"upload-dok", "method"=> "multipart/form-data"];
-                    $gp= new gapi();
-                    $vdata= $gp->postdata($arrparam, $jsonData);
-                    $vdata= $vdata->data;
+                        $vjenisbkn= $arrjenisbkn[0];
+                        $vid= -1;
+                        if(!empty($vjenisbkn))
+                        {
+                            $vid= $vjenisbkn["id"];
+                        }
+                        // print_r($vjenisbkn);exit;
 
-                    $vdocid= $vdata->dok_id;
-                    $vdocument= $vdata->dok_nama;
-                    $vdokuri= $vdata->dok_uri;
-                    $vobject= $vdata->object;
-                    $vslug= $vdata->slug;
+                        $arrData = array(
+                            "id_ref_dokumen"=>$vid
+                            , "file"=>$cFile
+                        );
+                        // $jsonData= json_encode($arrData);
+                        $jsonData= $arrData;
+                        // print_r($jsonData);exit;
 
-                    $arrdata= [];
-                    $arrdata["dok_id"]= $vdocid;
-                    $arrdata["dok_nama"]= $vdocument;
-                    $arrdata["dok_uri"]= $vdokuri;
-                    $arrdata["object"]= $vobject;
-                    $arrdata["slug"]= $vslug;
-                    array_push($vreturn, $arrdata);
+                        $arrparam= ["ctrl"=>"upload-dok", "method"=> "multipart/form-data"];
+                        $gp= new gapi();
+                        $vdata= $gp->postdata($arrparam, $jsonData);
+                        // print_r($vdata);exit;
+                        $vdata= $vdata->data;
 
-                    $instquery="
-                    update pegawai_file set v_bkn_link = '".$vdokuri."' where pegawai_file_id = ".$reqDokumenFileId;
-                    $res= $this->db->query($instquery);
-                    $this->db->close();
+                        $vdocid= $vdata->dok_id;
+                        $vdocument= $vdata->dok_nama;
+                        $vdokuri= $vdata->dok_uri;
+                        $vobject= $vdata->object;
+                        $vslug= $vdata->slug;
+
+                        $arrdata= [];
+                        $arrdata["dok_id"]= $vdocid;
+                        $arrdata["dok_nama"]= $vdocument;
+                        $arrdata["dok_uri"]= $vdokuri;
+                        $arrdata["object"]= $vobject;
+                        $arrdata["slug"]= $vslug;
+                        array_push($vreturn, $arrdata);
+
+                        $instquery="
+                        update pegawai_file set v_bkn_link = '".$vdokuri."' where pegawai_file_id = ".$reqDokumenFileId;
+                        $res= $this->db->query($instquery);
+                        $this->db->close();
+                    }
                 }
             }
         }

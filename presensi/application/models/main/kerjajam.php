@@ -485,6 +485,10 @@ class KerjaJam extends Entity{
 			WHEN 'normal_6_hari_pendidikan' THEN 'Normal 6 Hari Kerja Pendidikan'
 			WHEN 'normal_6_hari_kesehatan' THEN 'Normal 6 Hari Kerja Kesehatan'
 			WHEN 'shift_5_hari' THEN 'Shift 5 Hari Kerja'
+			WHEN 'normal_5_hk_smpn' THEN 'Normal 5 HK SMPN'
+			WHEN 'normal_5_hk_sdn' THEN 'Normal 5 HK SDN'
+			WHEN 'normal_5_hk_tk' THEN 'Normal 5 HK TK/PAUD'
+			WHEN 'normal_5_hk_kesehatan' THEN 'Normal 5 HK Kesehatan'
 			ELSE 'Normal 5 Hari Kerja' END JENIS_JAM_KERJA_INFO
 			, AMBIL_SATKER_NAMA_DETIL(A.SATUAN_KERJA_ID) SATUAN_KERJA_INFO
 		FROM PINFOAKHIR() A

@@ -36,17 +36,43 @@ class diklat_json extends CI_Controller {
         $diklatstruktural->firstRow();
    
         $pegawai_id_sapk =$diklatstruktural->getField('PEGAWAI_ID_SAPK');
+
+        // update ke efile
+        $idPegawai = $diklatstruktural->getField('PEGAWAI_ID');
+        $this->load->library('globalfilesycnbkn');
+        $vsycn= new globalfilesycnbkn();
+        $arrparam= array("pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"2");
+        $ambilfiledata= $vsycn->uptofile($arrparam);
+        // print_r($ambilfiledata);exit;
+
+        // $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
+        $path= [];
+        foreach ($ambilfiledata as $kd => $vd) 
+        {
+            $vdocid= $vd->dok_id;
+            $vdocument= $vd->dok_nama;
+            $vbknlink= $vd->dok_uri;
+
+            $arrdata= [];
+            $arrdata["dok_id"]= $vdocid;
+            $arrdata["dok_nama"]= $vdocument;
+            $arrdata["dok_uri"]= $vbknlink;
+            $arrdata["object"]= $vbknlink;
+            $arrdata["slug"]= $vdocid;
+            array_push($path, $arrdata);
+        }
+        // print_r($path);exit;
              
-        $bobot =0;
-        $institusiPenyelenggara =$diklatstruktural->getField('PENYELENGGARA');
-        $jenisKompetensi =null;
-        $jumlahJam =$diklatstruktural->getField('JUMLAH_JAM');
-        $latihanStrukturalId =$diklatstruktural->getField('DIKLAT_ID');
-        $nomor =$diklatstruktural->getField('NO_STTPP');
-        $pnsOrangId =$pegawai_id_sapk;
-        $tahun =$diklatstruktural->getField('TAHUN');
-        $tanggal =$diklatstruktural->getField('TANGGAL_MULAI');
-        $tanggalSelesai =$diklatstruktural->getField('TANGGAL_SELESAI');
+        $bobot= 0;
+        $institusiPenyelenggara= $diklatstruktural->getField('PENYELENGGARA');
+        $jenisKompetensi= null;
+        $jumlahJam= $diklatstruktural->getField('JUMLAH_JAM');
+        $latihanStrukturalId= $diklatstruktural->getField('DIKLAT_ID');
+        $nomor= $diklatstruktural->getField('NO_STTPP');
+        $pnsOrangId= $pegawai_id_sapk;
+        $tahun= $diklatstruktural->getField('TAHUN');
+        $tanggal= $diklatstruktural->getField('TANGGAL_MULAI');
+        $tanggalSelesai= $diklatstruktural->getField('TANGGAL_SELESAI');
 
         $date= new DateTime($tanggal);
         $tanggal= $date->format('d-m-Y');
@@ -54,8 +80,6 @@ class diklat_json extends CI_Controller {
         $date= new DateTime($tanggalSelesai);
         $tanggalSelesai= $date->format('d-m-Y');
       
-        $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
-
         $arrData = array(
             "bobot"=>$bobot
             ,"id"=>$reqBknId
@@ -64,7 +88,7 @@ class diklat_json extends CI_Controller {
             , "jumlahJam"=>$jumlahJam
             , "latihanStrukturalId"=>$latihanStrukturalId
             , "nomor"=>$nomor
-            , "path"=>$path
+            , "path"=> json_encode($path)
             , "pnsOrangId"=>$pnsOrangId
             , "tahun"=>$tahun
             , "tanggal"=>$tanggal
@@ -100,6 +124,13 @@ class diklat_json extends CI_Controller {
         {
             $arrDataStatus =array("PESAN"=>$pesan,"code"=>400);
         }
+
+        $set = new DiklatStruktural();
+        $set->setField("SYNC_ID",$this->LOGIN_PEGAWAI_ID);
+        $set->setField("SYNC_NAMA", $this->LOGIN_USER);
+        $set->setField("SYNC_STATUS",$statusKirim);
+        $set->setField("DIKLAT_STRUKTURAL_ID",$reqRiwayatId);
+        $set->updateStatusSync();
 
         echo json_encode( $arrDataStatus,true);
     }
@@ -143,6 +174,7 @@ class diklat_json extends CI_Controller {
 
         $tanggalSelesai= $arrResult['tanggalSelesai'];
         $institusiPenyelenggara= $arrResult['institusiPenyelenggara'];
+        $path= $arrResult['path'];
 
         $pegawai = new Pegawai();
         $pegawai->selectByParams(array("A.PEGAWAI_ID_SAPK"=>$idPns));
@@ -170,6 +202,12 @@ class diklat_json extends CI_Controller {
            $set->updateBknData();
         }
         // echo $set->query;exit;
+
+        // update ke efile
+        $this->load->library('globalfilesycnbkn');
+        $vsycn= new globalfilesycnbkn();
+        $arrparam= array("vpath"=>$path, "pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"2");
+        $vsycn->cptofile($arrparam);
 
         $arrparam= ["reqRiwayatId"=>$reqRiwayatId, "id"=>$id];
         $this->setidsapk($arrparam);
