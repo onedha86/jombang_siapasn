@@ -9,6 +9,7 @@ ob_flush();
   
 $this->load->library('ReportPDF');
 $reqId= $this->input->get("reqId");
+$c= $this->input->get("c");
 
 if(empty($reqId))
 {
@@ -17,7 +18,7 @@ if(empty($reqId))
 }
 
 $report = new ReportPDF();
-$arrparam= ["reqId"=>$reqId];
+$arrparam= ["reqId"=>$reqId, "c"=>$c];
 $docPDF= $report->generatecuti($arrparam);
 
 $url= 'uploads/cuti/'.$reqId.'/'.$docPDF;

@@ -124,6 +124,10 @@ else
   $reqNomor= $set->getField("NOMOR");
   $reqValidTte= $set->getField("VALID_TTE");
   $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
+
+  $reqTambahanStatus= $set->getField("TAMBAHAN_STATUS");
+  $reqTambahanStatusNama= $set->getField("TAMBAHAN_STATUS_NAMA");
+  $reqTambahanKeterangan= $set->getField("TAMBAHAN_KETERANGAN");
   /*
   $reqStatusCutiBesar= $this->input->post('reqStatusCutiBesar');
   */
@@ -200,6 +204,7 @@ if(!empty($m))
   WHERE A.USER_LOGIN_ID = ".$this->USER_LOGIN_ID."
   AND A2.AKSES = UPPER('A') AND A2.MENU_ID = '".$m."'
   ";
+  // echo $vquery;exit;
   $jumlah_akses= $this->db->query($vquery)->row()->rowcount;
 
   $arrmenulewati= array('130106', '130107', '130108');
@@ -246,10 +251,16 @@ if($reqStatusBerkas == 2 && $m == "130105" && $jumlah_akses > 0)
 }
 
 $aksiteken= "";
-if($reqStatusBerkas == 3 && in_array($m, $arrmenulewati) && $jumlah_akses > 0)
+if($reqStatusBerkas == 3 && $jumlah_akses > 0)
 {
+  if(!empty($m))
+  {
+    if(in_array($m, $arrmenulewati))
+    {
+      $aksiteken= "1";
+    }
+  }
   // echo "3";
-  $aksiteken= "1";
 }
 
 $aksisimpan= "";
@@ -660,6 +671,51 @@ if(!empty($aksiteken))
                     </div>
                   </div>
                   <?
+                  }
+                  ?>
+
+                  <?php
+                  if(empty($disabledpenandatangan) && $m == "130104")
+                  {
+                  ?>
+                    <div class="row">
+                      <div class="input-field col s4">
+                        <select name="reqTambahanStatus" id="reqTambahanStatus">
+                          <option value="" <? if($reqTambahanStatus == "") echo "selected";?>>Tidak</option>
+                          <option value="1" <? if($reqTambahanStatus == "1") echo "selected";?>>Ya</option>
+                        </select>
+                        <label for="reqTambahanStatus">
+                          Tambahkan Keterangan tambahan ?
+                          <span style="color: red;"> *</span>
+                        </label>
+                      </div>
+
+                      <div class="input-field col s8" id="divtambahanketerangan">
+                        <label for="reqTambahanKeterangan">Keterangan Tambahan</label>
+                        <input placeholder="" type="text" class="easyui-validatebox" name="reqTambahanKeterangan" id="reqTambahanKeterangan" value="<?=$reqTambahanKeterangan?>" />
+                      </div>
+                    </div>
+                  <?php
+                  }
+                  else
+                  {
+                  ?>
+                    <div class="row">
+                      <div class="input-field col s4">
+                        <label for="reqTambahanStatus">
+                          Tambahkan Keterangan tambahan ?
+                          <span style="color: red;"> *</span>
+                        </label>
+                        <input type="hidden" id="reqTambahanStatus" name="reqTambahanStatus" value="<?=$reqTambahanStatus?>" />
+                        <input <?=$disabledmenu?> placeholder="" type="text" value="<?=$reqTambahanStatusNama?>" />
+                      </div>
+                      <div class="input-field col s8" id="divtambahanketerangan">
+                        <label for="reqTambahanKeterangan">Keterangan Tambahan</label>
+                        <input type="hidden" id="reqTambahanKeterangan" name="reqTambahanKeterangan" value="<?=$reqTambahanKeterangan?>" />
+                        <input <?=$disabledmenu?> placeholder="" type="text" value="<?=$reqTambahanKeterangan?>" />
+                      </div>
+                    </div>
+                  <?php
                   }
                   ?>
 
@@ -1275,6 +1331,27 @@ function selectalasanjenis(mode)
   $("#"+vinfoid).trigger('change');
 }
 
+function selecttambahanstatus(mode)
+{
+  reqTambahanStatus= "";
+  // kalau kosong maka load data
+  if(mode == "")
+  {
+    reqTambahanStatus= "<?=$reqTambahanStatus?>";
+  }
+  else
+  {
+    reqTambahanStatus= $("#reqTambahanStatus").val();
+  }
+  // console.log(reqTambahanStatus);
+
+  $("#divtambahanketerangan").hide();
+  if(reqTambahanStatus == "1")
+  {
+    $("#divtambahanketerangan").show();
+  }
+}
+
 function selectjenisdurasi(mode)
 {
   reqJenisDurasi= "";
@@ -1321,6 +1398,11 @@ $(document).ready(function() {
   selectjenisdurasi("");
   $("#reqAlasanJenis").change(function() { 
     selectjenisdurasi("change");
+  });
+
+  selecttambahanstatus("");
+  $("#reqTambahanStatus").change(function() { 
+    selecttambahanstatus("change");
   });
 
   $("#reqJenisDurasi").change(function() { 
@@ -1487,6 +1569,19 @@ $(function(){
   {
   ?>
   $(".reqsimpan").click(function() { 
+
+    reqTambahanStatus= $("#reqTambahanStatus").val();
+    if(reqTambahanStatus == ""){}
+    else
+    {
+      reqTambahanKeterangan= $("#reqTambahanKeterangan").val();
+      if(reqTambahanKeterangan == "")
+      {
+        mbox.alert("Isikan terlebih dahulu Keterangan Tambahan", {open_speed: 0});
+        return false;
+      }
+    }
+
     if($("#ff").form('validate') == false){
       return false;
     }
@@ -1799,7 +1894,14 @@ $(function(){
     },
     success:function(data){
       $(".preloader-wrapper").hide();
-      // console.log(data);return false;
+      <?
+      if(!empty($cekquery))
+      {
+      ?>
+      console.log(data);return false;
+      <?
+      }
+      ?>
       data = data.split("-");
       rowid= data[0];
       infodata= data[1];

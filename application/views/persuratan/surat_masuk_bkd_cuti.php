@@ -37,8 +37,12 @@ $tinggi = 156;
 
 		div.container { max-width: 100%;}
 
-		.pernahturun1kembali1style { background-color:#F0F; }
-		.pernahturun1kembali { background-color:#FB99E1; }
+		/*.pernahturun1kembali1style { background-color:#F0F; }
+		.pernahturun1kembali { background-color:#FB99E1; }*/
+		.pernahturun1kembali1style { background-color:#ff66b3; }
+		.pernahturun1kembali { background-color:#ffbf80; }
+		/*pink tua : #c25c8f
+		orange muda : #f7ae78*/
 
 	</style>
 	<script type="text/javascript" language="javascript" src="lib/DataTables-1.10.7/media/js/jquery.js"></script>
@@ -183,6 +187,13 @@ $tinggi = 156;
 			
 			oTable.fnReloadAjax("cuti_baru_json/inputdinas?&sSearch="+reqCariFilter);
 		});
+
+		$('#btnUnduh').on('click', function () {
+			vtemplate= encodeURIComponent("Formulir Cuti.docx");
+        	newWindow = window.open("template/"+vtemplate, 'Cetak');
+			newWindow.focus();
+
+        });
 
 		$("#reqCariFilter").keyup(function(e) {
 			var code = e.which;
@@ -329,6 +340,7 @@ function hapusdata(id)
                         <li>
                             <a href="#" id="btnCari" style="display:none" title="Cari">Cari</a>
                             <a id="btnAdd" title="Tambah"><img src="images/icon-tambah.png" /> Tambah</a>
+                            <a id="btnUnduh" title="Unduh Form Cuti"><img src="images/icon-lihat.png" /> Unduh Form Cuti</a>
                             <a id="btnEdit" title="Ubah"><img src="images/icon-edit.png" /> Ubah</a>
                             <a id="btnLog" title="Log"><img src="images/icon-lihat.png" /> Log</a>
                         </li>

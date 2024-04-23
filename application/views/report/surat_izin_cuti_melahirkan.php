@@ -26,6 +26,9 @@ $reqNomor= $set->getField("NOMOR");
 $reqTanggalKirim= dateToPageCheck($set->getField("TANGGAL_KIRIM"));
 $reqTanggalTte= getFormattedDateTimeCheck($set->getField("LAST_DATE"), false);
 
+$reqTambahanStatus= $set->getField("TAMBAHAN_STATUS");
+$reqTambahanKeterangan= $set->getField("TAMBAHAN_KETERANGAN");
+
 $infobaseurl= base_url();
 $fileqrname= "uploads/cuti/".$reqId.'/qr.png';
 ?>
@@ -92,6 +95,17 @@ $fileqrname= "uploads/cuti/".$reqId.'/qr.png';
         <td width="1%">b.</td>
         <td>Setelah menjalankan Cuti Melahirkan wajib melaporkan diri kepada atasan langsungnya dan bekerja kembali sebagaimana biasa.</td>
       </tr>
+      <?php
+      if($reqTambahanStatus == "1")
+      {
+      ?>
+      <tr>
+        <td width="1%">c.</td>
+        <td><?=$reqTambahanKeterangan?></td>
+      </tr>
+      <?php
+      }
+      ?>
     </table>
   </p>
 

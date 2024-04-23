@@ -1209,7 +1209,12 @@ declare
 begin
   select
   a.menu_penanda_tangan_id, a.valid_tte, a.valid_nomor
-  , case a.menu_penanda_tangan_id when '130106' then '415.41' else '' end nomenklatur, a1.kode
+  ,
+  case a.menu_penanda_tangan_id
+  when '130106' then '415.41'
+  when '130107' then '415.10'
+  when '130108' then '415.01'
+  else '' end nomenklatur, a1.kode
   into dtmenupenandatanganid, dtvalidtte, dtvalidnomor, dtnomenklatur, dtkode
   from cuti_usulan a
   inner join jenis_cuti a1 on a.jenis_cuti_id = a1.jenis_cuti_id
@@ -1323,6 +1328,8 @@ create table cuti_usulan
   last_level numeric,
   user_login_id numeric,
   user_login_pegawai_id numeric,
+  tambahan_status numeric,
+  tambahan_keterangan character varying,
   constraint pk_cuti_usulan primary key (cuti_usulan_id)
 );
 alter table cuti_usulan owner to postgres;

@@ -555,6 +555,11 @@ class cuti_baru_json extends CI_Controller {
 			}
 		}
 
+		if($cekquery == "q")
+		{
+			echo $set->query;exit;
+		}
+
 		if(!empty($cekquery))
 		{
 			echo $set->errorMsg;exit;
@@ -622,6 +627,7 @@ class cuti_baru_json extends CI_Controller {
 		$reqStatusSebelumBerkas= $this->input->post('reqStatusSebelumBerkas');
 		$reqRowId= $this->input->post('reqRowId');
 		$reqPegawaiPenandaTanganId= $this->input->post('reqPegawaiPenandaTanganId');
+		$cekquery= $this->input->post("cekquery");
 
 		$infopesan= "Data berhasil disimpan.";
 		if($reqStatusBerkas !== $reqStatusSebelumBerkas)
@@ -649,10 +655,27 @@ class cuti_baru_json extends CI_Controller {
 		$set->setField("USER_LOGIN_ID", $this->LOGIN_ID);
 		$set->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($this->LOGIN_PEGAWAI_ID));
 
+		$reqTambahanStatus= $this->input->post('reqTambahanStatus');
+		$reqTambahanKeterangan= $this->input->post('reqTambahanKeterangan');
+
+		$set->setField("TAMBAHAN_STATUS", ValToNullDB($reqTambahanStatus));
+		$set->setField("TAMBAHAN_KETERANGAN", setQuote($reqTambahanKeterangan, '1'));
+
 		$infosimpan= "";
 		if($set->updateverifikatorapproval())
 		{
 			$infosimpan= "1";
+		}
+
+		if($cekquery == "q")
+		{
+			echo $set->query;exit;
+		}
+
+		if(!empty($cekquery))
+		{
+			echo $set->errorMsg;exit;
+			echo $set->query;exit;
 		}
 
 		if($infosimpan == "1")

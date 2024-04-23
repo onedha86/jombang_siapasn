@@ -166,6 +166,7 @@ class ReportPDF
 		$CI->load->model("base-cuti/CutiUsulan");
 
 		$reqId= $arrparam["reqId"];
+		$cekquery= $arrparam["c"];
 		// $this->reqTemplate = $reqTemplate;
 		// $this->reqJenisReport = $reqJenisReport;
 
@@ -186,6 +187,7 @@ class ReportPDF
   		$reqJenisCutiId= $set->getField("JENIS_CUTI_ID");
   		$reqJenisCutiDetailId= $set->getField("JENIS_CUTI_DETAIL_ID");
   		$vtte= $set->getField("VALID_TTE");
+  		$reqPegawaiPenandaTanganId= $set->getField("MENU_PENANDA_TANGAN_ID");
   		// echo $reqJenisCutiId;exit;
 
   		if(empty($vtte))
@@ -217,7 +219,11 @@ class ReportPDF
 
 			$basereport= $CI->config->item('base_report');
 			$urllink=  $basereport."report/loadUrl/report/".$template."/?reqId=".$reqId;
-			// echo $urllink;exit;
+
+			if($cekquery == "url")
+			{
+				echo $urllink;exit;
+			}
 
 			$arrContextOptions=array(
 				"ssl"=>array(
@@ -235,8 +241,8 @@ class ReportPDF
 			   	'page-width'     => '210mm',
 	    		'page-height'     => '297mm',      
 		      	// 'background-image' => base_url().'bg_cetak.jpg',
-		      	'header-html' => base_url().'report/loadUrl/report/header',
-		      	'footer-html' => base_url().'report/loadUrl/report/footer',
+		      	'header-html' => base_url().'report/loadUrl/report/header?reqPegawaiPenandaTanganId='.$reqPegawaiPenandaTanganId,
+		      	'footer-html' => base_url().'report/loadUrl/report/footer?reqPegawaiPenandaTanganId='.$reqPegawaiPenandaTanganId,
 			    )
 			);
 

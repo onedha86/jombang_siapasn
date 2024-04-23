@@ -38,8 +38,12 @@ $tinggi = 156;
 
 		div.container { max-width: 100%;}
 
-		.pernahturun1kembali1style { background-color:#F0F; }
-		.pernahturun1kembali { background-color:#FB99E1; }
+		/*.pernahturun1kembali1style { background-color:#F0F; }
+		.pernahturun1kembali { background-color:#FB99E1; }*/
+		.pernahturun1kembali1style { background-color:#ff66b3; }
+		.pernahturun1kembali { background-color:#ffbf80; }
+		/*pink tua : #c25c8f
+		orange muda : #f7ae78*/
 
 	</style>
 	<script type="text/javascript" language="javascript" src="lib/DataTables-1.10.7/media/js/jquery.js"></script>
