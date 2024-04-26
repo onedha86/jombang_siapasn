@@ -75,7 +75,13 @@ class globalfilesycnbkn
 			}
 			else
 			{
-				$vdoc= $vpath[$refid];
+				$query= $CI->db->query("select * from ref_bkn_file where idcari in (".$refid.")");
+				$arrjenisbkn= $query->result_array();
+				$CI->db->close();
+				// print_r($arrjenisbkn);exit;
+				$keyrefindex= $arrjenisbkn[0]["id"];
+
+				$vdoc= $vpath[$keyrefindex];
 				// echo $vdoc["dok_nama"]."\n".$vdoc["dok_uri"];exit;
 				$arrparam= [
 					"id"=>$pegawaiid

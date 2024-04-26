@@ -95,6 +95,82 @@ DESCRIPTION			:
 		return $this->execQuery($str);
     }
 
+    function insertDataBkn()
+	{
+		/*Auto-generate primary key(s) by next max value (integer) */
+		$this->setField("PENGHARGAAN_ID", $this->getNextId("PENGHARGAAN_ID","PENGHARGAAN")); 
+
+		$str = "
+		INSERT INTO PENGHARGAAN
+     	(
+     		PENGHARGAAN_ID, PEGAWAI_ID, NO_SK, TANGGAL_SK, TAHUN, REF_PENGHARGAAN_ID, LAST_DATE
+     	) 
+     	VALUES
+     	(
+	     	".$this->getField("PENGHARGAAN_ID")."
+	     	, ".$this->getField("PEGAWAI_ID")."
+	     	, '".$this->getField("NO_SK")."'
+	     	, ".$this->getField("TANGGAL_SK")."
+	     	, ".$this->getField("TAHUN")."
+	     	, ".$this->getField("REF_PENGHARGAAN_ID")."
+	     	, NOW()
+     	)
+		";
+		// echo "xxx-".$str;exit;
+
+		$this->id = $this->getField("PENGHARGAAN_ID");
+		$this->query = $str;
+		// echo $str;exit;
+		return $this->execQuery($str);
+    }
+
+    function updateDataBkn()
+    {
+		$str = "		
+		UPDATE PENGHARGAAN
+		SET
+			PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
+			, NO_SK= '".$this->getField("NO_SK")."'
+			, TANGGAL_SK= ".$this->getField("TANGGAL_SK")."
+			, TAHUN= ".$this->getField("TAHUN")."
+			, REF_PENGHARGAAN_ID= ".$this->getField("REF_PENGHARGAAN_ID")."
+			, LAST_DATE= NOW()
+		WHERE PENGHARGAAN_ID= ".$this->getField("PENGHARGAAN_ID")."
+		"; 
+		$this->query = $str;
+	 	// echo "xxx-".$str;exit;
+		return $this->execQuery($str);
+    }
+
+    function updateIdSapk()
+	{
+		$str = "		
+		UPDATE PENGHARGAAN
+		SET
+		ID_SAPK= '".$this->getField("ID_SAPK")."'
+		WHERE PENGHARGAAN_ID= ".$this->getField("PENGHARGAAN_ID")."
+		"; 
+		$this->query = $str;
+	 	// echo "xxx-".$str;exit;
+		return $this->execQuery($str);
+    }
+
+    function updateStatusSync()
+	{
+		$str = "		
+		UPDATE PENGHARGAAN
+		SET
+			SYNC_ID= '".$this->getField("SYNC_ID")."'
+			, SYNC_NAMA= '".$this->getField("SYNC_NAMA")."'
+			, SYNC_WAKTU= NOW()
+			, SYNC_STATUS= '".$this->getField("SYNC_STATUS")."'
+		WHERE PENGHARGAAN_ID = ".$this->getField("PENGHARGAAN_ID")."
+		"; 
+		$this->query = $str;
+	 	// echo "xxx-".$str;exit;
+		return $this->execQuery($str);
+    }
+
     function updateStatus()
 	{
 		$str = "		
@@ -138,11 +214,12 @@ DESCRIPTION			:
 		// WHEN '2' THEN 'Satya Lencana Karya Satya XX (Perak)' WHEN '3' THEN 'Satya Lencana Karya Satya XXX (Emas)' ELSE 'Belum di tentukan' END NAMA_NAMA
 		$str = "
 		SELECT
-		RP.INFO_DETIL, RP.NAMA NAMA_NAMA, B.NAMA PEJABAT_PENETAP_NAMA
+		RP.INFO_DETIL, RP.NAMA NAMA_NAMA, B.NAMA PEJABAT_PENETAP_NAMA, RP.REF_PENGHARGAAN_ID_SAPK, CC.PEGAWAI_ID_SAPK
 		, A.*
 		FROM penghargaan A
 		LEFT JOIN pejabat_penetap B ON A.PEJABAT_PENETAP_ID = B.PEJABAT_PENETAP_ID
 		LEFT JOIN sapk.ref_penghargaan RP ON A.REF_PENGHARGAAN_ID = RP.REF_PENGHARGAAN_ID
+		LEFT JOIN pegawai CC ON CC.PEGAWAI_ID = A.PEGAWAI_ID
 		WHERE 1 = 1
 		"; 
 		

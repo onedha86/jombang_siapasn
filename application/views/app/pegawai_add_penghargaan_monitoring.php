@@ -21,8 +21,17 @@ $statementLevel= " AND (COALESCE(NULLIF(A.STATUS, ''), NULL) IS NULL OR A.STATUS
 
 $set= new Penghargaan();
 $set->selectByParams(array(), -1, -1, $statementLevel." AND A.PEGAWAI_ID = ".$reqId);
-?>
 
+// kondisi untuk menu
+$this->load->library('globalmenusapk');
+$vmenusapk= new globalmenusapk();
+$arrmenusapk= $vmenusapk->setmenusapk($tempMenuId);
+// print_r($arrmenusapk);exit;
+$lihatsapk= $arrmenusapk["lihat"];
+$kirimsapk= $arrmenusapk["kirim"];
+$tariksapk= $arrmenusapk["tarik"];
+$syncsapk= $arrmenusapk["sync"];
+?>
 <html>
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -146,6 +155,15 @@ $set->selectByParams(array(), -1, -1, $statementLevel." AND A.PEGAWAI_ID = ".$re
             {
             ?>
             <a style="cursor:pointer" onClick="parent.setload('pegawai_add_penghargaan_data?reqId=<?=$reqId?>&reqRowId=<?=$reqRowId?>')"> <i class="mdi-content-add-circle-outline"> <span class=" material-font">Tambah</span></i></a>
+            <?
+            }
+            ?>
+
+            <?
+            if(!empty($lihatsapk))
+            {
+            ?>
+              <a style="cursor:pointer; margin-left: 20px" onClick="parent.setload('pegawai_add_penghargaan_monitoring_bkn?reqId=<?=$reqId?>')"> <i class="mdi-action-view-list"> <span class=" material-font">BKN</span></i></a>
             <?
             }
             ?>
