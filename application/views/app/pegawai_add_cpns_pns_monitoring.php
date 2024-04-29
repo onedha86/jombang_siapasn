@@ -50,6 +50,17 @@ $pegawai_file->selectByParamsLastRiwayatTable(array(), -1,-1,$statement);
 $pegawai_file->firstRow();
 $tempPathSkPns= $pegawai_file->getField("PATH");
 
+$tempMenuId= "0102";
+// kondisi untuk menu
+$this->load->library('globalmenusapk');
+$vmenusapk= new globalmenusapk();
+$arrmenusapk= $vmenusapk->setmenusapk($tempMenuId);
+// print_r($arrmenusapk);exit;
+$lihatsapk= $arrmenusapk["lihat"];
+$kirimsapk= $arrmenusapk["kirim"];
+$tariksapk= $arrmenusapk["tarik"];
+$syncsapk= $arrmenusapk["sync"];
+
 ?>
 
 <html>
@@ -90,7 +101,17 @@ $tempPathSkPns= $pegawai_file->getField("PATH");
        <form id="ff" class="pad" method="post" enctype="multipart/form-data">
 
         <ul class="collection card">
-         <li class="collection-item ubah-color-warna">SK CPNS</li>
+         <li class="collection-item ubah-color-warna">
+          SK CPNS
+          <?
+          if(!empty($lihatsapk))
+          {
+          ?>
+            <a style="cursor:pointer; margin-left: 20px; color: white !important" onClick="parent.setload('pegawai_add_cpns_pns_bkn?reqId=<?=$reqId?>')"> <i class="mdi-action-view-list"> <span class=" material-font">BKN</span></i></a>
+          <?
+          }
+          ?>
+         </li>
          <li class="collection-item">
 
            <div class="row">
