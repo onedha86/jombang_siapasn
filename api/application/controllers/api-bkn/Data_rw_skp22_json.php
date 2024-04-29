@@ -12,7 +12,7 @@ class Data_rw_skp22_json extends REST_Controller {
     }
  
     // show data entitas
-	function index_get() {
+    function index_get() {
         $nip= $this->input->get("nip");
         $id= $this->input->get("id");
         $gp= new Gapi();
@@ -30,7 +30,7 @@ class Data_rw_skp22_json extends REST_Controller {
         // print_r($vreturn);exit;
         $this->response(array('status' => 'success', 'message' => 'success', 'code' => 200, 'result' => $vreturn));
     }
-	
+    
     // insert new data to entitas
     function index_post() {
         $hasilKinerjaNilai = (int)$this->input->post("hasilKinerjaNilai");
@@ -47,6 +47,18 @@ class Data_rw_skp22_json extends REST_Controller {
         $tahun = (int)$this->input->post("tahun");
          // $id=null;
         
+        $vpath= json_decode($this->input->post('path'));
+        $vd= $vpath[0];
+        $vdocid= (string)$vd->dok_id;
+        $vdocument= $vd->dok_nama;
+        $vbknlink= $vd->dok_uri;
+
+        $dok_id= $vdocid;
+        $dok_nama= $vdocument;
+        $dok_uri= $vbknlink;
+        $object= $vbknlink;
+        $slug= $vdocid;
+
         $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
 
         $id = $id?$id:null;

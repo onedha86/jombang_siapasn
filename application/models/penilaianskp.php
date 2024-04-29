@@ -284,6 +284,22 @@ DESCRIPTION			:
 	 	// echo "xxx-".$str;exit;
 		return $this->execQuery($str);
     }
+
+    function updateStatusSync()
+	{
+		$str = "		
+		UPDATE PENILAIAN_SKP
+		SET
+			SYNC_ID= '".$this->getField("SYNC_ID")."'
+			, SYNC_NAMA= '".$this->getField("SYNC_NAMA")."'
+			, SYNC_WAKTU= NOW()
+			, SYNC_STATUS= '".$this->getField("SYNC_STATUS")."'
+		WHERE PENILAIAN_SKP_ID = ".$this->getField("PENILAIAN_SKP_ID")."
+		"; 
+		$this->query = $str;
+	 	// echo "xxx-".$str;exit;
+		return $this->execQuery($str);
+    }
 	
     function updateStatus()
 	{

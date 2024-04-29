@@ -12,6 +12,9 @@ alter table sk_cpns add column id_sapk character varying, add column sync_id int
 
 alter table sk_pns drop column if exists id_sapk; alter table sk_pns drop column if exists sync_id; alter table sk_pns drop column if exists sync_nama; alter table sk_pns drop column if exists sync_waktu; alter table sk_pns drop column if exists sync_status;
 alter table sk_pns add column id_sapk character varying, add column sync_id integer, add column sync_nama character varying, add column sync_waktu timestamp without time zone, add column sync_status character varying;
+
+alter table penilaian_skp drop column if exists id_sapk; alter table penilaian_skp drop column if exists sync_id; alter table penilaian_skp drop column if exists sync_nama; alter table penilaian_skp drop column if exists sync_waktu; alter table penilaian_skp drop column if exists sync_status;
+alter table penilaian_skp add column id_sapk character varying, add column sync_id integer, add column sync_nama character varying, add column sync_waktu timestamp without time zone, add column sync_status character varying;
 --========================================================================
 
 drop view if exists ref_bkn_file;
@@ -27,6 +30,10 @@ union all
 select
 3 idcari, 892 id, 'Riwayat Penghargaan'::text detail_layanan_nama, 'Dok Sertifikat Penghargaan'::text vdocument
 , 'PENGHARGAAN' riwayat_table, ''::text riwayat_field, 22 kategori_file_id
+union all
+select
+4 idcari, 891 id, 'Riwayat SKP'::text detail_layanan_nama, 'Dok Realisasi SKP'::text vdocument
+, 'PENILAIAN_SKP' riwayat_table, ''::text riwayat_field, 7 kategori_file_id
 union all
 select null idcari, null id, 'Tambah sesuai kebutuahn'::text detail_layanan_nama, ''::text vdocument
 , '' riwayat_table, ''::text riwayat_field, null kategori_file_id

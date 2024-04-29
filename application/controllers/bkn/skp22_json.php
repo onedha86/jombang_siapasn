@@ -31,34 +31,58 @@ class skp22_json extends CI_Controller {
         $reqRiwayatId= $this->input->get('reqRiwayatId');
         $reqBknId= $this->input->get('reqBknId');
 
-        $penilaianskp = new PenilaianSkp();
-        $penilaianskp->selectByParams(array("A.PENILAIAN_SKP_ID"=>$reqRiwayatId));
-        $penilaianskp->firstRow();
+        $set = new PenilaianSkp();
+        $set->selectByParams(array("A.PENILAIAN_SKP_ID"=>$reqRiwayatId));
+        $set->firstRow();
          
-        $penilaianSkpId=$penilaianskp->getField('PENILAIAN_SKP_ID');
-        $pnsDinilaiOrang=$penilaianskp->getField('PEGAWAI_ID_SAPK');
-        $tahun=$penilaianskp->getField('TAHUN');
-        $penilaiNama =$penilaianskp->getField('PEGAWAI_PEJABAT_PENILAI_NAMA');
-        $penilaiNipNrp  =$penilaianskp->getField('PEGAWAI_PEJABAT_PENILAI_NIP');
-        $kuadranKinerjaNilai=1;
-        $statusPenilai  =$penilaianskp->getField('PEGAWAI_PEJABAT_PENILAI_ID');
-        $statusPenilai = $statusPenilai?'ASN':'NON ASN';
-        $perilakuKerjaNilai  =$penilaianskp->getField('NILAI_HASIL_PERILAKU');
-        $penilaiUnorNama  =$penilaianskp->getField('PEGAWAI_PEJABAT_PENILAI_UNOR_NAMA');
-        $penilaiJabatan  =$penilaianskp->getField('PEGAWAI_PEJABAT_PENILAI_JABATAN_NAMA');
-        $penilaiGolongan  =$penilaianskp->getField('PEGAWAI_PEJABAT_PENILAI_PANGKAT_ID');
-        $hasilKinerjaNilai  =$penilaianskp->getField('NILAI_HASIL_KERJA');
+        $penilaianSkpId= $set->getField('PENILAIAN_SKP_ID');
+        $pnsDinilaiOrang= $set->getField('PEGAWAI_ID_SAPK');
+        $tahun= $set->getField('TAHUN');
+        $penilaiNama= $set->getField('PEGAWAI_PEJABAT_PENILAI_NAMA');
+        $penilaiNipNrp= $set->getField('PEGAWAI_PEJABAT_PENILAI_NIP');
+        $kuadranKinerjaNilai= 1;
+        $statusPenilai= $set->getField('PEGAWAI_PEJABAT_PENILAI_ID');
+        $statusPenilai= $statusPenilai?'ASN':'NON ASN';
+        $perilakuKerjaNilai= $set->getField('NILAI_HASIL_PERILAKU');
+        $penilaiUnorNama= $set->getField('PEGAWAI_PEJABAT_PENILAI_UNOR_NAMA');
+        $penilaiJabatan= $set->getField('PEGAWAI_PEJABAT_PENILAI_JABATAN_NAMA');
+        $penilaiGolongan= $set->getField('PEGAWAI_PEJABAT_PENILAI_PANGKAT_ID');
+        $hasilKinerjaNilai= $set->getField('NILAI_HASIL_KERJA');
         // $hasilKinerjaNilai=3;
         // $perilakuKerjaNilai=3;
         // $hasilKinerjaNilai=$hasilKinerjaNilai?$hasilKinerjaNilai:0;
 
-        $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
+        // update ke efile
+        $idPegawai = $set->getField('PEGAWAI_ID');
+        $this->load->library('globalfilesycnbkn');
+        $vsycn= new globalfilesycnbkn();
+        $arrparam= array("pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"4");
+        $ambilfiledata= $vsycn->uptofile($arrparam);
+        // print_r($ambilfiledata);exit;
+
+        // $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
+        $path= [];
+        foreach ($ambilfiledata as $kd => $vd) 
+        {
+            $vdocid= $vd->dok_id;
+            $vdocument= $vd->dok_nama;
+            $vbknlink= $vd->dok_uri;
+
+            $arrdata= [];
+            $arrdata["dok_id"]= $vdocid;
+            $arrdata["dok_nama"]= $vdocument;
+            $arrdata["dok_uri"]= $vbknlink;
+            $arrdata["object"]= $vbknlink;
+            $arrdata["slug"]= $vdocid;
+            array_push($path, $arrdata);
+        }
+        // print_r($path);exit;
 
         $arrData = array(
             "id"=>$reqBknId
             , "hasilKinerjaNilai"=>$hasilKinerjaNilai
             , "kuadranKinerjaNilai"=>$kuadranKinerjaNilai
-            , "path"=>$path
+            , "path"=> json_encode($path)
             , "penilaiGolongan"=>$penilaiGolongan
             , "penilaiJabatan"=>$penilaiJabatan
             , "penilaiNama"=>$penilaiNama
@@ -76,7 +100,7 @@ class skp22_json extends CI_Controller {
 
         $set= new CurlData();
         $response= $set->curlpost($vurl,$arrData);
-          // print_r($response);exit();
+        // print_r($response);exit();
         $returnStatus= $response->result->success;
         $returnId= $response->result->mapData;
         $pesan = $response->result->message;
@@ -98,6 +122,14 @@ class skp22_json extends CI_Controller {
         {
             $arrDataStatus =array("PESAN"=>$pesan,"code"=>400);
         }
+
+        // update sesuai table
+        $set= new PenilaianSkp();
+        $set->setField("SYNC_ID", $this->USER_LOGIN_ID);
+        $set->setField("SYNC_NAMA", $this->LOGIN_USER);
+        $set->setField("SYNC_STATUS", $statusKirim);
+        $set->setField("PENILAIAN_SKP_ID", $reqRiwayatId);
+        $set->updateStatusSync();
 
         echo json_encode( $arrDataStatus,true);
     }
@@ -144,6 +176,7 @@ class skp22_json extends CI_Controller {
         $pnsDinilaiId= $arrResult['pnsDinilaiId'];
         $statusPenilai= $arrResult['statusPenilai'];
         $tahun= $arrResult['tahun'];
+        $path= $arrResult['path'];
 
         $pegawai = new Pegawai();
         $pegawai->selectByParams(array("A.PEGAWAI_ID_SAPK"=>$pnsDinilaiId));
@@ -177,6 +210,12 @@ class skp22_json extends CI_Controller {
            $set->updateBknData();
         }
         // echo $set->query;exit;
+
+        // update ke efile
+        $this->load->library('globalfilesycnbkn');
+        $vsycn= new globalfilesycnbkn();
+        $arrparam= array("vpath"=>$path, "pegawaiid"=>$idPegawai, "rowid"=>$reqRiwayatId, "refid"=>"4");
+        $vsycn->cptofile($arrparam);
 
         $arrparam= ["reqRiwayatId"=>$reqRiwayatId, "id"=>$id];
         $this->setidsapk($arrparam);
