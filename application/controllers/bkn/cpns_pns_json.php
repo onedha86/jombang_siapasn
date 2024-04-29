@@ -81,7 +81,7 @@ class cpns_pns_json extends CI_Controller {
         // print_r($path);exit;
 
         $arrData = array(
-            "id"=>$reqBknId
+            "id"=>""
             , "pns_orang_id" => $pns_orang_id
             , "nomor_sk_cpns" => $nomor_sk_cpns
             , "tgl_sk_cpns" => $tgl_sk_cpns
