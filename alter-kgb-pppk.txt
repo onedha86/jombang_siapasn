@@ -1,0 +1,140 @@
+--select * menu where menu_id = '010203' and menu_group_id = 1;
+delete from menu where menu_id = '010203' and menu_group_id = 1;
+insert into menu(menu_id, menu_parent_id, menu_group_id, nama, link_file, urut, status, icon, menu_icon_id)
+values('010203', '0102', 1, 'Gaji PPPK', 'pegawai_add_gaji_pppk_monitoring', 3, 1, '<i class="mdi-content-mail"></i>', 'fa fa-files-o');
+
+drop table if exists gaji_pppk_riwayat;
+create table gaji_pppk_riwayat
+(
+	gaji_pppk_riwayat_id numeric not null
+	, pegawai_id numeric
+	, pejabat_penetap_id numeric
+	, pejabat_penetap character varying
+	, pangkat_id numeric
+	, no_sk character varying(100)
+	, tanggal_sk date
+	, tmt_sk date not null
+	, masa_kerja_tahun numeric
+	, masa_kerja_bulan numeric
+	, gaji_pokok numeric
+	, jenis_kenaikan numeric
+	, status character varying(1)
+	, last_user character varying
+	, last_date timestamp without time zone
+	, last_level numeric
+	, user_login_id numeric
+	, user_login_pegawai_id numeric
+	, last_create_user character varying
+	, last_create_date timestamp without time zone
+	, constraint pk_gaji_pppk_riwayat primary key (gaji_pppk_riwayat_id)
+	, constraint fk_g_r_gaji_pppk_riway_pegawai foreign key (pegawai_id) references pegawai (pegawai_id) match simple on update restrict on delete restrict
+	, constraint fk_g_r_gaji_pppk_riway_pejabat_ foreign key (pejabat_penetap_id) references pejabat_penetap (pejabat_penetap_id) match simple on update restrict on delete restrict
+);
+
+--untuk ambil data pertama
+delete from gaji_pppk_riwayat;
+insert into gaji_pppk_riwayat
+(
+	gaji_pppk_riwayat_id
+	, pegawai_id, pejabat_penetap_id, pejabat_penetap, pangkat_id, no_sk, tanggal_sk, tmt_sk
+	, masa_kerja_tahun, masa_kerja_bulan, gaji_pokok, jenis_kenaikan
+	, last_user, last_date, last_level, user_login_id, user_login_pegawai_id, last_create_user, last_create_date
+)
+select
+row_number () over ( order by a.sk_pppk_id ) gaji_pppk_riwayat_id
+, a.pegawai_id, a.pejabat_penetap_id, a.pejabat_penetap, golongan_pppk_id pangkat_id, a.no_sk, a.tanggal_sk, a.tmt_pppk tmt_sk
+, a.masa_kerja_tahun, a.masa_kerja_bulan, a.gaji_pokok, 0 jenis_kenaikan
+, a.last_user, a.last_date, a.last_level, a.user_login_id, a.user_login_pegawai_id, a.last_create_user, a.last_create_date
+from
+sk_pppk a
+inner join
+(
+	select
+	a.sk_pppk_id, a.pegawai_id
+	from
+	(
+		select a.sk_pppk_id, a.pegawai_id
+		, row_number () over ( partition by a.pegawai_id order by a.tmt_pppk asc, a.tanggal_sk asc ) urut
+		from sk_pppk a
+	) a
+	where urut = 1
+	order by a.pegawai_id
+) b on a.sk_pppk_id = b.sk_pppk_id
+order by a.sk_pppk_id;
+
+--triger
+create or replace function gaji_pppk_riwayat_validasi_before()
+  returns trigger as
+$body$
+declare
+vrowid integer;
+begin
+	
+	if upper(tg_op) = upper('insert') then
+		if new.jenis_kenaikan = 0 then
+			select
+				case when count(1) > 0 then 1 else 0 end into vrowid
+			from gaji_pppk_riwayat a
+			where 1=1 and a.pegawai_id = new.pegawai_id
+			and a.jenis_kenaikan = new.jenis_kenaikan
+			and (coalesce(nullif(a.status, ''), null) is null or a.status = '2');
+		else
+			select
+				case when count(1) > 0 then 1 else 0 end into vrowid
+			from gaji_pppk_riwayat a
+			where 1=1 and a.pegawai_id = new.pegawai_id
+			and a.tanggal_sk = new.tanggal_sk and a.tmt_sk = new.tmt_sk
+			and a.jenis_kenaikan = new.jenis_kenaikan
+			and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+			;
+		end if;
+
+		if vrowid >= 1 and vrowid is not null then return false;
+		else return new;
+		end if;
+	elsif upper(tg_op) = upper('update') and new.status is null then
+		if new.jenis_kenaikan = 0 then
+			select
+				gaji_pppk_riwayat_id into vrowid
+			from gaji_pppk_riwayat a
+			where 1=1 and a.pegawai_id = new.pegawai_id
+			and a.jenis_kenaikan = new.jenis_kenaikan
+			and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+			;
+		else
+			select
+				gaji_pppk_riwayat_id into vrowid
+			from gaji_pppk_riwayat a
+			where 1=1 and a.pegawai_id = new.pegawai_id
+			and a.tanggal_sk = new.tanggal_sk
+			and a.tmt_sk = new.tmt_sk
+			and a.jenis_kenaikan = new.jenis_kenaikan
+			and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+			;
+		end if;
+
+		if new.gaji_pppk_riwayat_id = vrowid or vrowid is null then vrowid:= 0;
+		else vrowid:= 1;
+		end if;
+
+		raise notice 'sql %', ':' || vrowid;
+		
+		if vrowid >= 1 and vrowid is not null then return false;
+		else return new;
+		end if;
+
+	elsif upper(tg_op) = upper('update') and new.status is not null then
+		return new;
+	end if;
+	
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function gaji_pppk_riwayat_validasi_before() owner to postgres;
+
+drop trigger if exists gaji_pppk_riwayat_before on gaji_pppk_riwayat;
+create trigger gaji_pppk_riwayat_before
+before insert or update
+on gaji_pppk_riwayat
+for each row
+execute procedure gaji_pppk_riwayat_validasi_before();

@@ -33,6 +33,8 @@ $reqAksesAppSimpegId= $this->AKSES_APP_SIMPEG_ID;
 
 $arrexceptpp3= array("010201", "0103", "0104");
 
+$arrgajipp3= array("010203");
+
 $index_set=0;
 $arrMenu= array();
 $set= new Menu();
@@ -61,20 +63,17 @@ while($set->nextRow())
         continue;
     }
 
+    if(in_array($infomenuid, $arrgajipp3))
+    {
+        if($reqStatusPegawaiId == "6"){}
+        else
+        continue;
+    }
+
     $arrMenu[$index_set]["MENU_ID"]= $infomenuid;
     $arrMenu[$index_set]["MENU_PARENT_ID"]= $set->getField("MENU_PARENT_ID");
     $arrMenu[$index_set]["NAMA"]= $set->getField("NAMA");
-
-    
-
-    $infolinkfile= $set->getField("LINK_FILE");
-    /*$arrlihatjenisfile= array("pegawai_add_diklat_kursus_monitoring", "pegawai_add_diklat_kursus_monitoring");
-    if(in_array($infolinkfile, $arrlihatjenisfile))
-    {
-        $infolinkfile.= "_bkn";
-    }*/
-
-    $arrMenu[$index_set]["LINK_FILE"]= $infolinkfile;
+    $arrMenu[$index_set]["LINK_FILE"]= $set->getField("LINK_FILE");
     $arrMenu[$index_set]["LINK_DETIL_FILE"]= $set->getField("LINK_DETIL_FILE");
     $arrMenu[$index_set]["AKSES"]= $set->getField("AKSES");
     $arrMenu[$index_set]["JUMLAH_MENU"]= $set->getField("JUMLAH_MENU");
@@ -87,7 +86,7 @@ while($set->nextRow())
 }
 $jumlah_menu= $index_set;
 unset($set);
-// print_r($arrMenu);exit;
+//print_r($arrMenu);exit;
 ?>
 <!DOCTYPE html>
 <html>

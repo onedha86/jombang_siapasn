@@ -633,7 +633,7 @@ function calltreeid(id, nama)
                        </select> 
                        <select id='reqTahun'>
                             <?
-                                for($i=date("Y")-5; $i<=date("Y")+2; $i++)
+                                for($i=date("Y")-8; $i<=date("Y")+2; $i++)
                                 {
                             ?>
                                 <option value="<?=$i?>" <? if($reqTahun == $i) echo 'selected';?>><?=$i?></option>
