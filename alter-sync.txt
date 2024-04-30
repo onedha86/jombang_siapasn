@@ -15,8 +15,13 @@ alter table sk_pns add column id_sapk character varying, add column sync_id inte
 
 alter table penilaian_skp drop column if exists id_sapk; alter table penilaian_skp drop column if exists sync_id; alter table penilaian_skp drop column if exists sync_nama; alter table penilaian_skp drop column if exists sync_waktu; alter table penilaian_skp drop column if exists sync_status;
 alter table penilaian_skp add column id_sapk character varying, add column sync_id integer, add column sync_nama character varying, add column sync_waktu timestamp without time zone, add column sync_status character varying;
---========================================================================
 
+alter table pak drop column if exists sync_id; alter table pak drop column if exists sync_nama; alter table pak drop column if exists sync_waktu; alter table pak drop column if exists sync_status;
+alter table pak add column sync_id integer, add column sync_nama character varying, add column sync_waktu timestamp without time zone, add column sync_status character varying;
+
+--select sync_id from pak
+--========================================================================
+--select * from ref_bkn_file;
 drop view if exists ref_bkn_file;
 create or replace view ref_bkn_file as
 select
@@ -34,6 +39,18 @@ union all
 select
 4 idcari, 891 id, 'Riwayat SKP'::text detail_layanan_nama, 'Dok Realisasi SKP'::text vdocument
 , 'PENILAIAN_SKP' riwayat_table, ''::text riwayat_field, 7 kategori_file_id
+union all
+select
+5 idcari, 880 id, 'Riwayat Angka Kredit'::text detail_layanan_nama, 'Dok SK PAK'::text vdocument
+, 'PAK' riwayat_table, ''::text riwayat_field, 10 kategori_file_id
+union all
+select
+6 idcari, 879 id, 'Riwayat Angka Kredit'::text detail_layanan_nama, 'Dok PAK'::text vdocument
+, 'PAK' riwayat_table, ''::text riwayat_field, 10 kategori_file_id
+union all
+select
+7 idcari, 879 id, 'Riwayat Angka Kredit'::text detail_layanan_nama, 'Dok PAK'::text vdocument
+, 'PAK' riwayat_table, ''::text riwayat_field, 10 kategori_file_id
 union all
 select null idcari, null id, 'Tambah sesuai kebutuahn'::text detail_layanan_nama, ''::text vdocument
 , '' riwayat_table, ''::text riwayat_field, null kategori_file_id

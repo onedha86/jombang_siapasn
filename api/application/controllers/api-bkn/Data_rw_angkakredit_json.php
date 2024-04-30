@@ -49,7 +49,19 @@ class Data_rw_angkakredit_json extends REST_Controller {
         $tahunSelesaiPenailan = $this->input->post('tahunSelesaiPenailan');
         $tanggalSk = $this->input->post('tanggalSk');
 
-        $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);       
+        $vpath= json_decode($this->input->post('path'));
+        $vd= $vpath[0];
+        $vdocid= (string)$vd->dok_id;
+        $vdocument= $vd->dok_nama;
+        $vbknlink= $vd->dok_uri;
+
+        $dok_id= $vdocid;
+        $dok_nama= $vdocument;
+        $dok_uri= $vbknlink;
+        $object= $vbknlink;
+        $slug= $vdocid;
+
+        $path[]= array("dok_id"=>$dok_id,"dok_nama"=>$dok_nama,"dok_uri"=>$dok_uri,"object"=>$object,"slug"=>$slug);
         
         $id= $id?$id:null;
         $isAngkaKreditPertama=$isAngkaKreditPertama?$isAngkaKreditPertama:null;
@@ -57,23 +69,22 @@ class Data_rw_angkakredit_json extends REST_Controller {
         $isKonversi=$isKonversi?$isKonversi:null;
          
          $arrData = array(
-                "bulanMulaiPenailan"=>$bulanMulaiPenailan,
-                "bulanSelesaiPenailan"=>$bulanSelesaiPenailan,
-                "id"=>$reqBknId,
-                "isAngkaKreditPertama"=>$isAngkaKreditPertama,
-                "isIntegrasi"=>$isIntegrasi,
-                "isKonversi"=>$isKonversi,
-                "kreditBaruTotal"=>$kreditBaruTotal,
-                "kreditPenunjangBaru"=>$kreditPenunjangBaru,
-                "kreditUtamaBaru"=>$kreditUtamaBaru,
-                "nomorSk"=>$nomorSk,
-                // "path"=>$path,
-                "pnsId"=>$pnsId,
-                "rwJabatanId"=>$rwJabatanId,
-                "tahunMulaiPenailan"=>$tahunMulaiPenailan,
-                "tahunSelesaiPenailan"=>$tahunSelesaiPenailan,
-                 "tanggalSk"=>$tanggalSk,
-
+            "bulanMulaiPenailan"=>$bulanMulaiPenailan
+            , "bulanSelesaiPenailan"=>$bulanSelesaiPenailan
+            , "id"=>$reqBknId
+            , "isAngkaKreditPertama"=>$isAngkaKreditPertama
+            , "isIntegrasi"=>$isIntegrasi
+            , "isKonversi"=>$isKonversi
+            , "kreditBaruTotal"=>$kreditBaruTotal
+            , "kreditPenunjangBaru"=>$kreditPenunjangBaru
+            , "kreditUtamaBaru"=>$kreditUtamaBaru
+            , "nomorSk"=>$nomorSk
+            , "path"=>$path
+            , "pnsId"=>$pnsId
+            , "rwJabatanId"=>$rwJabatanId
+            , "tahunMulaiPenailan"=>$tahunMulaiPenailan
+            , "tahunSelesaiPenailan"=>$tahunSelesaiPenailan
+            , "tanggalSk"=>$tanggalSk
           );
 
         $jsonData  = json_encode($arrData);

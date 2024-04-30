@@ -54,8 +54,6 @@ else
   $reqTglSelesaiTahun= $set->getField('TAHUN_SELESAI');
 }
 
-
-// echo  $reqTglSelesaiTahun;
 // untuk kondisi file
 $vfpeg= new globalfilepegawai();
 $arrpilihfiledokumen= $vfpeg->pilihfiledokumen();
@@ -114,8 +112,6 @@ while($set->nextRow())
   array_push($arrkualitasfile, $arrdata);
 }
 
-
-
 // kondisi untuk menu
 $this->load->library('globalmenusapk');
 $vmenusapk= new globalmenusapk();
@@ -124,7 +120,6 @@ $arrmenusapk= $vmenusapk->setmenusapk($tempMenuId);
 $lihatsapk= $arrmenusapk["lihat"];
 $kirimsapk= $arrmenusapk["kirim"];
 $tariksapk= $arrmenusapk["tarik"];
-
 
 $queryJabatan = 'Select * from jabatan_riwayat where jabatan_ft_id is not null and  id_sapk is not null and status is null and pegawai_id='.ValToNullDB($reqId);
 $arrDataJabatanFt = $this->db->query($queryJabatan)->result_array();
@@ -221,7 +216,7 @@ $(function(){
     source:function(request, response){
       var id= this.element.attr('id');
       var replaceAnakId= replaceAnak= urlAjax= "";
-	
+  
       if (id.indexOf('reqJabatanFt') !== -1)
       {
         var element= id.split('reqJabatanFt');
@@ -242,7 +237,7 @@ $(function(){
           else
           {
             var array = responseData.map(function(element) {
-			return {desc: element['desc'], id: element['id'], label: element['label'], satuan_kerja: element['satuan_kerja']};
+              return {desc: element['desc'], id: element['id'], label: element['label'], satuan_kerja: element['satuan_kerja']};
             });
             response(array);
           }
@@ -271,27 +266,26 @@ $(function(){
       .appendTo( ul );
   };
 
-   $('#reqTglMulai').keyup(function() {
-     vtanggalakhir= $('#reqTglMulai').val();
-     vtahun= vtanggalakhir.substring(6,10);
-      vBulan= vtanggalakhir.substring(3,5);
-      $("#reqTglMulaiBulan").focus();
-      $("#reqTglMulaiBulan").val(vBulan);
-      $("#reqTglMulaiTahun").focus();
-      $("#reqTglMulaiTahun").val(vtahun);
+  $('#reqTglMulai').keyup(function() {
+    vtanggalakhir= $('#reqTglMulai').val();
+    vtahun= vtanggalakhir.substring(6,10);
+    vBulan= vtanggalakhir.substring(3,5);
+    $("#reqTglMulaiBulan").focus();
+    $("#reqTglMulaiBulan").val(vBulan);
+    $("#reqTglMulaiTahun").focus();
+    $("#reqTglMulaiTahun").val(vtahun);
 
-   });
-     $('#reqTglSelesai').keyup(function() {
-     vtanggalakhir= $('#reqTglSelesai').val();
-     vtahun= vtanggalakhir.substring(6,10);
-      vBulan= vtanggalakhir.substring(3,5);
-      $("#reqTglSelesaiBulan").focus();
-      $("#reqTglSelesaiBulan").val(vBulan);
-      $("#reqTglSelesaiTahun").focus();
-      $("#reqTglSelesaiTahun").val(vtahun);
+  });
 
-   });
-
+  $('#reqTglSelesai').keyup(function() {
+    vtanggalakhir= $('#reqTglSelesai').val();
+    vtahun= vtanggalakhir.substring(6,10);
+    vBulan= vtanggalakhir.substring(3,5);
+    $("#reqTglSelesaiBulan").focus();
+    $("#reqTglSelesaiBulan").val(vBulan);
+    $("#reqTglSelesaiTahun").focus();
+    $("#reqTglSelesaiTahun").val(vtahun);
+  });
 
 });
 
@@ -415,7 +409,7 @@ $(function(){
                       }
                       ?>
                     </select>
-                     <label for="reqJabatanFt">Nama Jabatan Fungsional Yang Diusulkan</label>
+                     <label for="reqJabatanFt">Jabatan Fungsional Ketika Mendapatkan Angka Kredit</label>
                 </div>
               </div>
 

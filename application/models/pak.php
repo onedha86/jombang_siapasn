@@ -33,36 +33,39 @@ DESCRIPTION			:
 		$this->setField("PAK_ID", $this->getNextId("PAK_ID","PAK")); 
 
 		$str = "
-			INSERT INTO PAK (
-				PAK_ID, PEGAWAI_ID, NO_SK, TANGGAL_SK, TANGGAL_MULAI, TANGGAL_SELESAI, 
-			    PERIODE_AWAL, PERIODE_AKHIR,BULAN_MULAI,TAHUN_MULAI,BULAN_SELESAI, TAHUN_SELESAI,PAK_AWAL,PAK_INTERGRASI,PAK_KONVERSI, JABATAN_FT_ID, KREDIT_UTAMA, 
-			    KREDIT_PENUNJANG, TOTAL_KREDIT, LAST_USER, LAST_DATE, LAST_LEVEL, USER_LOGIN_ID, USER_LOGIN_PEGAWAI_ID
+			INSERT INTO PAK 
+			(
+				PAK_ID, PEGAWAI_ID, NO_SK, TANGGAL_SK, TANGGAL_MULAI, TANGGAL_SELESAI
+				, PERIODE_AWAL, PERIODE_AKHIR,BULAN_MULAI,TAHUN_MULAI,BULAN_SELESAI, TAHUN_SELESAI, PAK_AWAL
+				, PAK_INTERGRASI,PAK_KONVERSI, JABATAN_FT_ID, KREDIT_UTAMA, KREDIT_PENUNJANG, TOTAL_KREDIT
+				, LAST_USER, LAST_DATE, LAST_LEVEL, USER_LOGIN_ID, USER_LOGIN_PEGAWAI_ID
 			) 
-			VALUES (
-				 ".$this->getField("PAK_ID").",
-				 ".$this->getField("PEGAWAI_ID").",
-				 '".$this->getField("NO_SK")."',
-				 ".$this->getField("TANGGAL_SK").",
-				 ".$this->getField("TANGGAL_MULAI").",
-				 ".$this->getField("TANGGAL_SELESAI").",
-				 ".$this->getField("PERIODE_AWAL").",
-				 ".$this->getField("PERIODE_AKHIR").",
-				 ".$this->getField("BULAN_MULAI").",
-				 ".$this->getField("TAHUN_MULAI").",
-				 ".$this->getField("BULAN_SELESAI").",
-				 ".$this->getField("TAHUN_SELESAI").",
-				 '".$this->getField("PAK_AWAL")."',
-				 '".$this->getField("PAK_INTERGRASI")."',
-				 '".$this->getField("PAK_KONVERSI")."',
-				 ".$this->getField("JABATAN_FT_ID").",
-				 ".$this->getField("KREDIT_UTAMA").",
-				 ".$this->getField("KREDIT_PENUNJANG").",
-				 ".$this->getField("TOTAL_KREDIT").",
-				 '".$this->getField("LAST_USER")."',
-				 ".$this->getField("LAST_DATE").",
-				 ".$this->getField("LAST_LEVEL").",
-				 ".$this->getField("USER_LOGIN_ID").",
-				 ".$this->getField("USER_LOGIN_PEGAWAI_ID")."
+			VALUES 
+			(
+				".$this->getField("PAK_ID")."
+				, ".$this->getField("PEGAWAI_ID")."
+				, '".$this->getField("NO_SK")."'
+				, ".$this->getField("TANGGAL_SK")."
+				, ".$this->getField("TANGGAL_MULAI")."
+				, ".$this->getField("TANGGAL_SELESAI")."
+				, ".$this->getField("PERIODE_AWAL")."
+				, ".$this->getField("PERIODE_AKHIR")."
+				, ".$this->getField("BULAN_MULAI")."
+				, ".$this->getField("TAHUN_MULAI")."
+				, ".$this->getField("BULAN_SELESAI")."
+				, ".$this->getField("TAHUN_SELESAI")."
+				, '".$this->getField("PAK_AWAL")."'
+				, '".$this->getField("PAK_INTERGRASI")."'
+				, '".$this->getField("PAK_KONVERSI")."'
+				, ".$this->getField("JABATAN_FT_ID")."
+				, ".$this->getField("KREDIT_UTAMA")."
+				, ".$this->getField("KREDIT_PENUNJANG")."
+				, ".$this->getField("TOTAL_KREDIT")."
+				, '".$this->getField("LAST_USER")."'
+				, ".$this->getField("LAST_DATE")."
+				, ".$this->getField("LAST_LEVEL")."
+				, ".$this->getField("USER_LOGIN_ID")."
+				, ".$this->getField("USER_LOGIN_PEGAWAI_ID")."
 			)
 		"; 	
 		$this->id = $this->getField("PAK_ID");
@@ -74,35 +77,34 @@ DESCRIPTION			:
 
     function update()
 	{
-		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE PAK
-				SET    
-				 	PEGAWAI_ID			= ".$this->getField("PEGAWAI_ID").",
-				 	NO_SK				= '".$this->getField("NO_SK")."',
-				 	TANGGAL_SK			= ".$this->getField("TANGGAL_SK").",
-				 	TANGGAL_MULAI		= ".$this->getField("TANGGAL_MULAI").",
-				 	TANGGAL_SELESAI		= ".$this->getField("TANGGAL_SELESAI").",
-				 	PERIODE_AWAL		= ".$this->getField("PERIODE_AWAL").",
-				 	PERIODE_AKHIR		= ".$this->getField("PERIODE_AKHIR").",
-				 	PAK_AWAL			= '".$this->getField("PAK_AWAL")."',
-				 	PAK_INTERGRASI			= '".$this->getField("PAK_INTERGRASI")."',
-				 	PAK_KONVERSI			= '".$this->getField("PAK_KONVERSI")."',
-				 	BULAN_MULAI			= ".$this->getField("BULAN_MULAI").",
-				 	TAHUN_MULAI			= ".$this->getField("TAHUN_MULAI").",
-				 	BULAN_SELESAI			= ".$this->getField("BULAN_SELESAI").",
-				 	TAHUN_SELESAI			= ".$this->getField("TAHUN_SELESAI").",
-				 	JABATAN_FT_ID		= ".$this->getField("JABATAN_FT_ID").",
-				 	KREDIT_UTAMA		= ".$this->getField("KREDIT_UTAMA").",
-				 	KREDIT_PENUNJANG	= ".$this->getField("KREDIT_PENUNJANG").",
-				 	TOTAL_KREDIT		= ".$this->getField("TOTAL_KREDIT").",
-				 	LAST_USER			= '".$this->getField("LAST_USER")."',
-				 	LAST_DATE			= ".$this->getField("LAST_DATE").",
-				 	USER_LOGIN_PEGAWAI_ID			= ".$this->getField("USER_LOGIN_PEGAWAI_ID").",
-				 	USER_LOGIN_ID			= ".$this->getField("USER_LOGIN_ID").",
-				 	LAST_LEVEL			= ".$this->getField("LAST_LEVEL")."
-				WHERE  PAK_ID = ".$this->getField("PAK_ID")."
-				"; 
+		UPDATE PAK
+		SET    
+		PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
+		, NO_SK= '".$this->getField("NO_SK")."'
+		, TANGGAL_SK= ".$this->getField("TANGGAL_SK")."
+		, TANGGAL_MULAI= ".$this->getField("TANGGAL_MULAI")."
+		, TANGGAL_SELESAI= ".$this->getField("TANGGAL_SELESAI")."
+		, PERIODE_AWAL= ".$this->getField("PERIODE_AWAL")."
+		, PERIODE_AKHIR= ".$this->getField("PERIODE_AKHIR")."
+		, PAK_AWAL= '".$this->getField("PAK_AWAL")."'
+		, PAK_INTERGRASI= '".$this->getField("PAK_INTERGRASI")."'
+		, PAK_KONVERSI= '".$this->getField("PAK_KONVERSI")."'
+		, BULAN_MULAI= ".$this->getField("BULAN_MULAI")."
+		, TAHUN_MULAI= ".$this->getField("TAHUN_MULAI")."
+		, BULAN_SELESAI= ".$this->getField("BULAN_SELESAI")."
+		, TAHUN_SELESAI= ".$this->getField("TAHUN_SELESAI")."
+		, JABATAN_FT_ID= ".$this->getField("JABATAN_FT_ID")."
+		, KREDIT_UTAMA= ".$this->getField("KREDIT_UTAMA")."
+		, KREDIT_PENUNJANG= ".$this->getField("KREDIT_PENUNJANG")."
+		, TOTAL_KREDIT= ".$this->getField("TOTAL_KREDIT")."
+		, LAST_USER= '".$this->getField("LAST_USER")."'
+		, LAST_DATE= ".$this->getField("LAST_DATE")."
+		, USER_LOGIN_PEGAWAI_ID= ".$this->getField("USER_LOGIN_PEGAWAI_ID")."
+		, USER_LOGIN_ID= ".$this->getField("USER_LOGIN_ID")."
+		, LAST_LEVEL= ".$this->getField("LAST_LEVEL")."
+		WHERE PAK_ID= ".$this->getField("PAK_ID")."
+		"; 
 		$this->query = $str;
 		// echo $str;exit;
 		return $this->execQuery($str);
@@ -114,28 +116,31 @@ DESCRIPTION			:
 		$this->setField("PAK_ID", $this->getNextId("PAK_ID","PAK")); 
 
 		$str = "
-			INSERT INTO PAK (
-				PAK_ID, PEGAWAI_ID, NO_SK, TANGGAL_SK,TANGGAL_MULAI,TANGGAL_SELESAI,KREDIT_UTAMA,KREDIT_PENUNJANG,TOTAL_KREDIT,PAK_AWAL,JABATAN_FT_ID,PAK_INTERGRASI,PAK_KONVERSI,BULAN_MULAI,TAHUN_MULAI,BULAN_SELESAI,TAHUN_SELESAI
+			INSERT INTO PAK 
+			(
+				PAK_ID, PEGAWAI_ID, NO_SK, TANGGAL_SK, TANGGAL_MULAI, TANGGAL_SELESAI, KREDIT_UTAMA, KREDIT_PENUNJANG
+				, TOTAL_KREDIT, PAK_AWAL, JABATAN_FT_ID, PAK_INTERGRASI, PAK_KONVERSI, BULAN_MULAI, TAHUN_MULAI 
+				, BULAN_SELESAI, TAHUN_SELESAI
 			) 
-			VALUES (
-			".$this->getField("PAK_ID").",
-			".$this->getField("PEGAWAI_ID").",
-			'".$this->getField("NO_SK")."',
-			".$this->getField("TANGGAL_SK").",
-			".$this->getField("TANGGAL_MULAI").",
-			".$this->getField("TANGGAL_SELESAI").",
-			".$this->getField("KREDIT_UTAMA").",
-			".$this->getField("KREDIT_PENUNJANG").",
-			".$this->getField("TOTAL_KREDIT").",
-			".$this->getField("PAK_AWAL").",
-			".$this->getField("JABATAN_FT_ID")."
-			".$this->getField("PAK_INTERGRASI").",
-			".$this->getField("PAK_KONVERSI").",
-			".$this->getField("BULAN_MULAI").",
-			".$this->getField("TAHUN_MULAI").",
-			".$this->getField("BULAN_SELESAI").",
-			".$this->getField("TAHUN_SELESAI")."
-			
+			VALUES 
+			(
+				".$this->getField("PAK_ID")."
+				, ".$this->getField("PEGAWAI_ID")."
+				, '".$this->getField("NO_SK")."'
+				, ".$this->getField("TANGGAL_SK")."
+				, ".$this->getField("TANGGAL_MULAI")."
+				, ".$this->getField("TANGGAL_SELESAI")."
+				, ".$this->getField("KREDIT_UTAMA")."
+				, ".$this->getField("KREDIT_PENUNJANG")."
+				, ".$this->getField("TOTAL_KREDIT")."
+				, ".$this->getField("PAK_AWAL")."
+				, ".$this->getField("JABATAN_FT_ID")."
+				, ".$this->getField("PAK_INTERGRASI")."
+				, ".$this->getField("PAK_KONVERSI")."
+				, ".$this->getField("BULAN_MULAI")."
+				, ".$this->getField("TAHUN_MULAI")."
+				, ".$this->getField("BULAN_SELESAI")."
+				, ".$this->getField("TAHUN_SELESAI")."
 			)
 		"; 	
 		$this->id = $this->getField("PAK_ID");
@@ -145,49 +150,57 @@ DESCRIPTION			:
 		return $this->execQuery($str);
     }
 
-
-
     function updateBknData()
     {
 		$str = "		
 		UPDATE PAK
-		SET    
-		
-		 	 PEGAWAI_ID= ".$this->getField("PEGAWAI_ID").",
-		 	 NO_SK= '".$this->getField("NO_SK")."',
-		 	 TANGGAL_SK= ".$this->getField("TANGGAL_SK").",
-		 	 KREDIT_UTAMA= ".$this->getField("KREDIT_UTAMA").",
-		 	 KREDIT_PENUNJANG= ".$this->getField("KREDIT_PENUNJANG").",
-		 	 TOTAL_KREDIT= ".$this->getField("TOTAL_KREDIT").",
-		 	 JABATAN_FT_ID= ".$this->getField("JABATAN_FT_ID").",
-		 	 PAK_AWAL= ".$this->getField("PAK_AWAL").",
-		 	  	TANGGAL_MULAI		= ".$this->getField("TANGGAL_MULAI").",
-				 	TANGGAL_SELESAI		= ".$this->getField("TANGGAL_SELESAI").",		 	 
-		 	 PAK_INTERGRASI			= ".$this->getField("PAK_INTERGRASI").",
-		 	 PAK_KONVERSI			= ".$this->getField("PAK_KONVERSI").",
-		 	 BULAN_MULAI			= ".$this->getField("BULAN_MULAI").",
-		 	 TAHUN_MULAI			= ".$this->getField("TAHUN_MULAI").",
-		 	 BULAN_SELESAI			= ".$this->getField("BULAN_SELESAI").",
-		 	 TAHUN_SELESAI			= ".$this->getField("TAHUN_SELESAI")."
-	
-		WHERE  PAK_ID = ".$this->getField("PAK_ID")."
+		SET
+			PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
+			, NO_SK= '".$this->getField("NO_SK")."'
+			, TANGGAL_SK= ".$this->getField("TANGGAL_SK")."
+			, KREDIT_UTAMA= ".$this->getField("KREDIT_UTAMA")."
+			, KREDIT_PENUNJANG= ".$this->getField("KREDIT_PENUNJANG")."
+			, TOTAL_KREDIT= ".$this->getField("TOTAL_KREDIT")."
+			, JABATAN_FT_ID= ".$this->getField("JABATAN_FT_ID")."
+			, PAK_AWAL= ".$this->getField("PAK_AWAL")."
+			, TANGGAL_MULAI= ".$this->getField("TANGGAL_MULAI")."
+			, TANGGAL_SELESAI= ".$this->getField("TANGGAL_SELESAI")."
+			, PAK_INTERGRASI= ".$this->getField("PAK_INTERGRASI")."
+			, PAK_KONVERSI= ".$this->getField("PAK_KONVERSI")."
+			, BULAN_MULAI= ".$this->getField("BULAN_MULAI")."
+			, TAHUN_MULAI= ".$this->getField("TAHUN_MULAI")."
+			, BULAN_SELESAI= ".$this->getField("BULAN_SELESAI")."
+			, TAHUN_SELESAI= ".$this->getField("TAHUN_SELESAI")."
+		WHERE PAK_ID = ".$this->getField("PAK_ID")."
+		";
+		$this->query = $str;
+	 	// echo "xxx-".$str;exit;
+		return $this->execQuery($str);
+    }
+
+    function updateIdSapk()
+    {
+		$str = "		
+		UPDATE PAK
+		SET
+			ID_SAPK= '".$this->getField("ID_SAPK")."'
+		WHERE PAK_ID = ".$this->getField("PAK_ID")."
 		"; 
 		$this->query = $str;
 	 	// echo "xxx-".$str;exit;
 		return $this->execQuery($str);
     }
 
-
-
-      function updateIdSapk()
-    {
+    function updateStatusSync()
+	{
 		$str = "		
-		UPDATE PAK
-		SET    
-		
-		 	 ID_SAPK= '".$this->getField("ID_SAPK")."'
-	
-		WHERE  PAK_ID = ".$this->getField("PAK_ID")."
+		UPDATE PENILAIAN_SKP
+		SET
+			SYNC_ID= '".$this->getField("SYNC_ID")."'
+			, SYNC_NAMA= '".$this->getField("SYNC_NAMA")."'
+			, SYNC_WAKTU= NOW()
+			, SYNC_STATUS= '".$this->getField("SYNC_STATUS")."'
+		WHERE PENILAIAN_SKP_ID = ".$this->getField("PENILAIAN_SKP_ID")."
 		"; 
 		$this->query = $str;
 	 	// echo "xxx-".$str;exit;
@@ -196,18 +209,17 @@ DESCRIPTION			:
 
     function updateStatus()
 	{
-		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE PAK
-				SET    
-					   STATUS   	= ".$this->getField("STATUS").",
-					   LAST_USER	= '".$this->getField("LAST_USER")."',
-					   LAST_LEVEL	= ".$this->getField("LAST_LEVEL").",
-					   USER_LOGIN_ID	= ".$this->getField("USER_LOGIN_ID").",
-					   USER_LOGIN_PEGAWAI_ID	= ".$this->getField("USER_LOGIN_PEGAWAI_ID").",
-					   LAST_DATE	= ".$this->getField("LAST_DATE")."
-				WHERE  PAK_ID    	= ".$this->getField("PAK_ID")."
-				"; 
+		UPDATE PAK
+		SET    
+		STATUS= ".$this->getField("STATUS")."
+		, LAST_USER= '".$this->getField("LAST_USER")."'
+		, LAST_LEVEL= ".$this->getField("LAST_LEVEL")."
+		, USER_LOGIN_ID= ".$this->getField("USER_LOGIN_ID")."
+		, USER_LOGIN_PEGAWAI_ID= ".$this->getField("USER_LOGIN_PEGAWAI_ID")."
+		, LAST_DATE= ".$this->getField("LAST_DATE")."
+		WHERE PAK_ID= ".$this->getField("PAK_ID")."
+		"; 
 		$this->query = $str;
 		// echo $str;exit;
 		return $this->execQuery($str);

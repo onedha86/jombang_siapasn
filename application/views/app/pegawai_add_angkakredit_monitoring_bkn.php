@@ -63,7 +63,6 @@ while($set->nextRow())
   $arrdata["JABATAN"]= $set->getField("JABATAN");
   $arrdata["STATUS"]= $set->getField("STATUS"); 
   $arrdata["ID_SAPK"]= $set->getField("ID_SAPK");
-
   
   array_push($arrdatariwayat, $arrdata);
 
@@ -79,40 +78,34 @@ $arrdatabkn= [];
 $arrparam= ["nip"=>$infonipbaru, "vurl"=>"Data_rw_angkakredit_json"];
 $set= new DataCombo();
 $set->selectdata($arrparam, "");
-
 while($set->nextRow())
- 
 {
 
-  $date      = new DateTime($set->getField("tanggalSk"));
-  $tmtFormat = $date->format('d-m-Y');
+  $date= new DateTime($set->getField("tanggalSk"));
+  $tmtFormat= $date->format('d-m-Y');
 
-
-  $infokunci= $tmtFormat ;
+  $infokunci= $tmtFormat;
   $arrdata= [];
   // kunci untuk kondisi
   $arrdata["key"]= $infokunci;
 
   // data sesuai api bkn
- $arrdata["id"]= $set->getField("id");
- $arrdata["pns"]= $set->getField("pns");
- $arrdata["nomorSk"]= $set->getField("nomorSk");
- $arrdata["tanggalSk"]=$infokunci;
- $arrdata["bulanMulaiPenailan"]= $set->getField("bulanMulaiPenailan");
- $arrdata["tahunMulaiPenailan"]= $set->getField("tahunMulaiPenailan");
- $arrdata["bulanSelesaiPenailan"]= $set->getField("bulanSelesaiPenailan");
- $arrdata["tahunSelesaiPenailan"]= $set->getField("tahunSelesaiPenailan");
- $arrdata["kreditUtamaBaru"]= $set->getField("kreditUtamaBaru");
- $arrdata["kreditPenunjangBaru"]= $set->getField("kreditPenunjangBaru");
- $arrdata["kreditBaruTotal"]= $set->getField("kreditBaruTotal");
- $arrdata["rwJabatan"]= $set->getField("rwJabatan");
- $arrdata["namaJabatan"]= $set->getField("namaJabatan");
- $arrdata["isAngkaKreditPertama"]= $set->getField("isAngkaKreditPertama");
- $arrdata["path"]= $set->getField("path");
+  $arrdata["id"]= $set->getField("id");
+  $arrdata["pns"]= $set->getField("pns");
+  $arrdata["nomorSk"]= $set->getField("nomorSk");
+  $arrdata["tanggalSk"]=$infokunci;
+  $arrdata["bulanMulaiPenailan"]= $set->getField("bulanMulaiPenailan");
+  $arrdata["tahunMulaiPenailan"]= $set->getField("tahunMulaiPenailan");
+  $arrdata["bulanSelesaiPenailan"]= $set->getField("bulanSelesaiPenailan");
+  $arrdata["tahunSelesaiPenailan"]= $set->getField("tahunSelesaiPenailan");
+  $arrdata["kreditUtamaBaru"]= $set->getField("kreditUtamaBaru");
+  $arrdata["kreditPenunjangBaru"]= $set->getField("kreditPenunjangBaru");
+  $arrdata["kreditBaruTotal"]= $set->getField("kreditBaruTotal");
+  $arrdata["rwJabatan"]= $set->getField("rwJabatan");
+  $arrdata["namaJabatan"]= $set->getField("namaJabatan");
+  $arrdata["isAngkaKreditPertama"]= $set->getField("isAngkaKreditPertama");
+  $arrdata["path"]= $set->getField("path");
 
-
-  
-  
   array_push($arrdatabkn, $arrdata);
 
   // kalau tidak ada maka masukkan
@@ -192,9 +185,8 @@ usort($arrkunci, "sortdatefunctiondesc");
           $infotanggalskriwayat= $arrdatariwayat[$indexdata]["TANGGAL_SK"];
           $infokreditutamariwayat= $arrdatariwayat[$indexdata]["KREDIT_UTAMA"];
           $infokreditpenunjangriwayat= $arrdatariwayat[$indexdata]["KREDIT_PENUNJANG"];
-           $infototalkreditriwayat= $arrdatariwayat[$indexdata]["TOTAL_KREDIT"];
+          $infototalkreditriwayat= $arrdatariwayat[$indexdata]["TOTAL_KREDIT"];
           $infojabatanriwayat= $arrdatariwayat[$indexdata]["JABATAN"];
-        
 
           $vurldetil= "pegawai_add_pak_data";
         }
@@ -202,8 +194,7 @@ usort($arrkunci, "sortdatefunctiondesc");
         // untuk ambil data bkn
         $infoidbkn= "";
         $vdatabkn= in_array_column($infocarikey, "key", $arrdatabkn);
-        $infonamabkn= $infokreditpenunjangbkn= $infototalkreditbkn= $infotanggalskbkn=$infokreditutamabkn= $infojumlahjambkn= $infonilaihasilkerjabkn= $infojabatanbkn="";
-
+        $infonamabkn= $infokreditpenunjangbkn= $infototalkreditbkn= $infokreditutamabkn= $infojumlahjambkn= $infonilaihasilkerjabkn= $infojabatanbkn="";
         if(!empty($vdatabkn))
         {
           $indexdata= $vdatabkn[0];
@@ -215,10 +206,7 @@ usort($arrkunci, "sortdatefunctiondesc");
           $infotanggalskbkn= $arrdatabkn[$indexdata]["tanggalSk"];
           $infokreditutamabkn= $arrdatabkn[$indexdata]["kreditUtamaBaru"];
           $infojabatanbkn= $arrdatabkn[$indexdata]["namaJabatan"];
-
-         
         }
-
       ?>
       <div class="item">
         <div class="tanggal"><span><img src="images/icon-tanggal.png"></span> <?=getFormattedDate(dateToPageCheck($value))?></div>
@@ -333,8 +321,8 @@ usort($arrkunci, "sortdatefunctiondesc");
               $infoidsinkronsiapasnbkndisabled= "disabled";
             }
             ?>
-<a class="<?=$infoidsinkronsiapasnbkndisabled?>" id="<?=$infoidsinkronsiapasnbkn.$infoidriwayat?>" href="javascript:void(0)" title="update data SIAPASN ke BKN"><img src="images/icon-right.png"></a>
-            <input type="hidden" id="<?=$infoidriwayat?>" value="<?=$infoidbkn?>"> 
+            <a class="<?=$infoidsinkronsiapasnbkndisabled?>" id="<?=$infoidsinkronsiapasnbkn.$infoidriwayat?>" href="javascript:void(0)" title="update data SIAPASN ke BKN"><img src="images/icon-right.png"></a>
+            <input type="hidden" id="<?=$infoidriwayat?>" value="<?=$infoidbkn?>">
 
             <?
             $infoidsinkronbknsiapasndisabled= $infoidsinkronbknsiapasn= "";
@@ -345,13 +333,10 @@ usort($arrkunci, "sortdatefunctiondesc");
             else
             {
               $infoidsinkronbknsiapasn= "infoidsinkronbknsiapasn";
-              $infoidhapusbkn= "infoidhapusbkn";
             }
             ?>
-            <a class="<?=$infoidsinkronbknsiapasndisabled?>" href="javascript:void(0)" id="<?=$infoidsinkronbknsiapasn.$infoidbkn?>" title="update data BKN ke SIAPASN"><img src="images/icon-left.png"></a>
+            <a class="<?=$infoidsinkronbknsiapasndisabled?>" href="javascript:void(0)" id="<?=$infoidsinkronbknsiapasn.$infoidbkn?>" title="update data BKN ke SIAPASN<?=$infoidbkn?>"><img src="images/icon-left.png"></a>
             <input type="hidden" id="<?=$infoidbkn?>" value="<?=$infoidriwayat?>">
-
-              <a href="javascript:void(0)" id="<?=$infoidhapusbkn.$infoidriwayat?>" class="<?=$infoidsinkronbknsiapasndisabled?>" title="hapus data bkn " ><img src="images/icon-seru.png"></a>
 
             <?
             $inforesetidsapk= "";
@@ -372,8 +357,7 @@ usort($arrkunci, "sortdatefunctiondesc");
             }
             ?>
             <a class="<?=$infolinkdisabled?>" href="app/loadUrl/app/<?=$vurldetil?>?reqId=<?=$reqId?>&reqRowId=<?=$infoidriwayat?>" title="ubah data"><img src="images/icon-pen.png"></a>
-           
-       
+            <!--   <a href="javascript:void(0)" id="<?=$inforesetidsapk.$infoidriwayat?>" class="<?=$inforesetidsapkdisabled?>" title="hapus data bkn " ><img src="images/button_cancel.png"></a> -->
           </div>
         </div>
 
@@ -396,46 +380,6 @@ usort($arrkunci, "sortdatefunctiondesc");
   <link href="lib/mbox/mbox-modif.css" rel="stylesheet">
 
   <script type="text/javascript">
-    $('[id^="infoidhapusbkn"]').click(function() {
-      vinfoid= $(this).attr('id');
-      vinfoid= vinfoid.replace("infoidhapusbkn", "");
-       var vinfoidbkn= $("#"+vinfoid).val();
-      info= "Apakah Anda Yakin, menghapus data bkn ?";
-      mbox.custom({
-          message: info,
-          options: {close_speed: 100},
-          buttons: [
-          {
-            label: 'Ya',
-            color: 'green darken-2',
-            callback: function() {
-
-              var s_url='bkn/angkakredit_json/delete_bkn?reqRiwayatId='+vinfoid+"&reqBknId="+vinfoidbkn;
-              $.ajax({'url': s_url, type: "get",'success': function(data){
-                // console.log(data);return false;
-                mbox.alert('Proses Data', {open_speed: 500}, interval = window.setInterval(function() 
-                {
-                  clearInterval(interval);
-                 document.location.href= "app/loadUrl/app/pegawai_add_angkakredit_monitoring_bkn/?reqId=<?=$reqId?>";
-                }, 1000));
-                $(".mbox > .right-align").css({"display": "none"});
-                
-              }});
-              mbox.close();
-          }
-          },
-          {
-            label: 'Tidak',
-            color: 'grey darken-2',
-            callback: function() {
-              mbox.close();
-            }
-          }
-          ]
-        });
-
-    });
-
     $('[id^="resetsinkron"]').click(function() {
       vinfoid= $(this).attr('id');
       vinfoid= vinfoid.replace("resetsinkron", "");
@@ -473,10 +417,7 @@ usort($arrkunci, "sortdatefunctiondesc");
           }
           ]
         });
-
     });
-
-   
 
     $('[id^="infoidsinkronbknsiapasn"]').click(function() {
       vinfoid= $(this).attr('id');
