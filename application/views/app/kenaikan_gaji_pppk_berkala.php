@@ -177,7 +177,7 @@ $reqSatuanKerjaNama= "Semua Satuan Kerja"
 			reqBulan= $("#reqBulan").val();
 			reqTahun= $("#reqTahun").val();
 			
-			newWindow = window.open("app/loadUrl/persuratan/surat_keluar_teknis_add?reqTipe=1&reqJenis=5&reqBulan="+reqBulan+"&reqTahun="+reqTahun, 'Cetak'+Math.floor(Math.random()*999999));
+			newWindow = window.open("app/loadUrl/persuratan/surat_keluar_teknis_add?reqTipe=1&reqJenis=14&reqBulan="+reqBulan+"&reqTahun="+reqTahun, 'Cetak'+Math.floor(Math.random()*999999));
 			newWindow.focus();
 			tempindextab= parseInt(tempindextab) + 1;
 			//window.parent.createWindowMaxFull("app/loadUrl/app/pegawai_add");

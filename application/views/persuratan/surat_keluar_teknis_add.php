@@ -21,7 +21,9 @@ $tempStatusKelompokPegawaiUsul= $this->STATUS_KELOMPOK_PEGAWAI_USUL;
 //echo $tempLoginLevel;exit;
 //setting d user $tempStatusKelompokPegawaiUsul
 if($reqJenis == "5")
-$mode= "surat_keluar_kgb";
+    $mode= "surat_keluar_kgb";
+else if($reqJenis == "14")
+    $mode= "surat_keluar_pppk_kgb";
 else
 {
 	if($tempStatusKelompokPegawaiUsul == "1" || $tempLoginLevel == 99 || $tempLoginLevel == "")
@@ -33,7 +35,7 @@ else
 }
 
 $index_set=0;
-$arrMenu=setmenusuratbkpp($reqJenis, $mode);
+$arrMenu= setmenusuratbkpp($reqJenis, $mode);
 $jumlah_menu= count($arrMenu);
 //echo $jumlah_menu;exit;
 //print_r($arrMenu);exit;

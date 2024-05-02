@@ -1,3 +1,5 @@
+insert into persuratan.jenis_pelayanan(jenis_pelayanan_id, nama) values(14, 'Surat Kenaikan Gaji Berkala PPPK')
+
 --select * menu where menu_id = '010203' and menu_group_id = 1;
 delete from menu where menu_id = '010203' and menu_group_id = 1;
 insert into menu(menu_id, menu_parent_id, menu_group_id, nama, link_file, urut, status, icon, menu_icon_id)

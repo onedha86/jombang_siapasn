@@ -1732,6 +1732,12 @@ function setmenusuratbkpp($reqId="", $mode="")
 			$arrNama= array("Atur Nomor dan Tanggal KGB");
 			$arrFile= array("surat_keluar_teknis_add_kgb_data");
 		}
+		elseif($mode == "surat_keluar_pppk_kgb")
+		{
+			$arrNama= $arrFile= [];
+			$arrNama= array("Atur Nomor dan Tanggal KGB");
+			$arrFile= array("surat_keluar_teknis_add_kgb_pppk_data");
+		}
 		elseif($mode == "surat_keluar_lihat")
 		{
 			$arrNama= $arrFile= [];
