@@ -198,7 +198,7 @@ DESCRIPTION			:
 				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 				   GAJI_RIWAYAT_LAMA_ID= ".$this->getField("GAJI_RIWAYAT_LAMA_ID").",
-				   GAJI_RIWAYAT_BARU_ID= (SELECT MAX(COALESCE(GAJI_RIWAYAT_ID,0)) + 1 FROM gaji_pppk_riwayat A WHERE 1=1),
+				   GAJI_RIWAYAT_BARU_ID= (SELECT MAX(COALESCE(GAJI_PPPK_RIWAYAT_ID,0)) + 1 FROM gaji_pppk_riwayat A WHERE 1=1),
 				   SURAT_KELUAR_BKD_ID= ".$this->getField("SURAT_KELUAR_BKD_ID").",
 				   NOMOR_URUT= ".$this->getField("NOMOR_URUT").",
 				   KETERANGAN_TEKNIS= '".$this->getField("KETERANGAN_TEKNIS")."',
@@ -286,7 +286,7 @@ DESCRIPTION			:
 					   LAST_DATE	= ".$this->getField("LAST_DATE").",
 					   USER_LOGIN_ID	= ".$this->getField("USER_LOGIN_ID").",
 					   USER_LOGIN_PEGAWAI_ID	= ".$this->getField("USER_LOGIN_PEGAWAI_ID")."
-				WHERE  GAJI_RIWAYAT_ID= (SELECT GAJI_RIWAYAT_BARU_ID FROM kenaikan_gaji_pppk_berkala WHERE PERIODE= '".$this->getField("PERIODE")."' AND PEGAWAI_ID= ".$this->getField("PEGAWAI_ID").")
+				WHERE  GAJI_PPPK_RIWAYAT_ID= (SELECT GAJI_RIWAYAT_BARU_ID FROM kenaikan_gaji_pppk_berkala WHERE PERIODE= '".$this->getField("PERIODE")."' AND PEGAWAI_ID= ".$this->getField("PEGAWAI_ID").")
 				"; 
 		$this->query = $str2;
 		// echo $str2;exit;
@@ -306,7 +306,7 @@ DESCRIPTION			:
 		/*Auto-generate primary key(s) by next max value (integer) */
      	$str = "
 			INSERT INTO gaji_pppk_riwayat (
-				GAJI_RIWAYAT_ID, PEGAWAI_ID, PEJABAT_PENETAP_ID, PEJABAT_PENETAP, PANGKAT_ID, NO_SK,
+				GAJI_PPPK_RIWAYAT_ID, PEGAWAI_ID, PEJABAT_PENETAP_ID, PEJABAT_PENETAP, PANGKAT_ID, NO_SK,
 				TANGGAL_SK, TMT_SK, MASA_KERJA_TAHUN, MASA_KERJA_BULAN, GAJI_POKOK, JENIS_KENAIKAN, LAST_USER
 				, LAST_DATE, LAST_LEVEL, USER_LOGIN_ID, USER_LOGIN_PEGAWAI_ID
 			) 
@@ -342,7 +342,7 @@ DESCRIPTION			:
 			)
 		";
 		
-		$this->id = $this->getField("GAJI_RIWAYAT_ID");
+		$this->id = $this->getField("GAJI_PPPK_RIWAYAT_ID");
 		$this->query = $str;
 		//echo $str;exit;
 		return $this->execQuery($str);
@@ -376,7 +376,7 @@ DESCRIPTION			:
 				  LAST_LEVEL= ".$this->getField("LAST_LEVEL").",
 				  USER_LOGIN_ID= ".$this->getField("USER_LOGIN_ID").",
 				  USER_LOGIN_PEGAWAI_ID= ".$this->getField("USER_LOGIN_PEGAWAI_ID")."
-				WHERE  GAJI_RIWAYAT_ID = ".$this->getField("GAJI_RIWAYAT_ID")."
+				WHERE  GAJI_PPPK_RIWAYAT_ID = ".$this->getField("GAJI_PPPK_RIWAYAT_ID")."
 				"; 
 		$this->query = $str;
 		//echo $str;exit;
@@ -395,7 +395,7 @@ DESCRIPTION			:
 					   LAST_DATE	= ".$this->getField("LAST_DATE").",
 					   USER_LOGIN_ID	= ".$this->getField("USER_LOGIN_ID").",
 					   USER_LOGIN_PEGAWAI_ID	= ".$this->getField("USER_LOGIN_PEGAWAI_ID")."
-				WHERE  GAJI_RIWAYAT_ID    	= ".$this->getField("GAJI_RIWAYAT_ID")."
+				WHERE  GAJI_PPPK_RIWAYAT_ID    	= ".$this->getField("GAJI_PPPK_RIWAYAT_ID")."
 				"; 
 		$this->query = $str;
 		return $this->execQuery($str);

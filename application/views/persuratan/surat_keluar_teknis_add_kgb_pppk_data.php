@@ -331,8 +331,8 @@ $jumlah_histori= $index_data;*/
 						clearInterval(interval);
 						mbox.close();
 						//parent.reloadparenttab();
-						//document.location.href= "app/loadUrl/persuratan/surat_keluar_teknis_add_kgb_data/?reqId="+rowid+"&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
-						document.location.href= "app/loadUrl/persuratan/surat_keluar_teknis_add_kgb_data/?reqId=<?=$reqId?>&reqTipe=<?=$reqTipe?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
+						//document.location.href= "app/loadUrl/persuratan/surat_keluar_teknis_add_kgb_pppk_data/?reqId="+rowid+"&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
+						document.location.href= "app/loadUrl/persuratan/surat_keluar_teknis_add_kgb_pppk_data/?reqId=<?=$reqId?>&reqTipe=<?=$reqTipe?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
 					}, 1000));
 					$(".mbox > .right-align").css({"display": "none"});
 				}
@@ -600,7 +600,7 @@ function setNomorSurat()
 										if($reqTipe == "1")
 										{
 								?>
-                                	<button class="btn blue waves-effect waves-light" style="font-size:9pt" type="button" onClick="document.location.href= 'app/loadUrl/persuratan/surat_keluar_teknis_add_kgb_data/?reqMode=insert&reqId=&reqTipe=<?=$reqTipe?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>';">
+                                	<button class="btn blue waves-effect waves-light" style="font-size:9pt" type="button" onClick="document.location.href= 'app/loadUrl/persuratan/surat_keluar_teknis_add_kgb_pppk_data/?reqMode=insert&reqId=&reqTipe=<?=$reqTipe?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>';">
                                         Usul Nomor Lainnya
                                         <i class="mdi-content-save left hide-on-small-only"></i>
                                     </button>
@@ -665,7 +665,7 @@ function setNomorSurat()
 					   $.getJSON("surat/surat_keluar_bkd_json/delete/?reqId=<?=$reqId?>",
 					   function(data){
 						   mbox.alert(data.PESAN, {open_speed: 0});
-						   document.location.href= "app/loadUrl/persuratan/surat_keluar_teknis_add_kgb_data/?reqMode=&reqId=&reqTipe=<?=$reqTipe?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
+						   document.location.href= "app/loadUrl/persuratan/surat_keluar_teknis_add_kgb_pppk_data/?reqMode=&reqId=&reqTipe=<?=$reqTipe?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
 						   mbox.close();
 					   });
 				   }

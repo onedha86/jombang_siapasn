@@ -93,11 +93,11 @@ if($reqStatusHitungUlang == "1")
 if($reqSuratKeluarBkdId == "")
 {
 	$sOrder= "ORDER BY COALESCE(A.NOMOR_AWAL,-1) ASC";
-	$statement= " AND A.STATUS_TERIMA = '1' AND A.JENIS_ID = 5 AND A.NOMOR_AWAL IS NOT NULL AND A.PERIODE = '".$reqPeriodeLama."'";
+	$statement= " AND A.STATUS_TERIMA = '1' AND A.JENIS_ID = 14 AND A.NOMOR_AWAL IS NOT NULL AND A.PERIODE = '".$reqPeriodeLama."'";
 	$set= new KenaikanGajiPppkBerkala();
 	$set->selectByParamsSuratKeluarData(array(), -1, -1, $statement, $sOrder);
 	$set->firstRow();
-	//echo $set->query;exit;
+	// echo $set->query;exit;
 	$reqSuratKeluarBkdId= $set->getField("SURAT_KELUAR_BKD_ID");
 	$reqRiwayatGajiBaruTanggalBaru= dateToPageCheck($set->getField('TANGGAL'));
 	$reqNomorAwal= $set->getField('NOMOR_AWAL');
@@ -236,7 +236,7 @@ $jumlah_gaji_riwayat= $index_data;
     	?>
     	
 		$('#ff').form({
-            url:'gaji_pppk_riwayat_json/add',
+            url:'kenaikan_gaji_pppk_berkala_json/add',
             onSubmit:function(){
                 if($(this).form('validate')){}
                     else
@@ -246,7 +246,7 @@ $jumlah_gaji_riwayat= $index_data;
                     }
                 },
                 success:function(data){
-                // alert(data);return false;
+                // console.log(data);return false;
                 data = data.split("-");
                 rowid= data[0];
                 infodata= data[1];
@@ -272,11 +272,11 @@ $jumlah_gaji_riwayat= $index_data;
 						
 						//if(reqPeriodeLama == reqPeriode)
 						//{
-							//document.location.href= "app/loadUrl/app/kenaikan_gaji_berkala_add_data?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
+							//document.location.href= "app/loadUrl/app/kenaikan_gaji_pppk_berkala_add_data?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
 						//}
 						//else
 						//{
-							top.location.href= "app/loadUrl/app/kenaikan_gaji_berkala_add?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan="+reqBulan+"&reqTahun="+reqTahun;
+							top.location.href= "app/loadUrl/app/kenaikan_gaji_pppk_berkala_add?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan="+reqBulan+"&reqTahun="+reqTahun;
 						//}
 					}, 1000));
 					$(".mbox > .right-align").css({"display": "none"});
@@ -1003,7 +1003,7 @@ $(document).ready( function () {
 					reqBulan= "<?=$reqBulan?>";
 					reqTahun= "<?=$reqTahun?>";
 					
-					$.ajax({'url': "gaji_pppk_riwayat_json/batal/?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan="+reqBulan+"&reqTahun="+reqTahun,'success': function(datahtml) {
+					$.ajax({'url': "kenaikan_gaji_pppk_berkala_json/batal/?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan="+reqBulan+"&reqTahun="+reqTahun,'success': function(datahtml) {
 						mbox.close();
 					    top.closeparenttab();
 					}});
@@ -1026,9 +1026,9 @@ $(document).ready( function () {
 	$("#reqrevisi,#reqrevisibatal").click(function() {
 		var id= $(this).attr('id');
 		if(id == "reqrevisi")
-		document.location.href= "app/loadUrl/app/kenaikan_gaji_berkala_add_data?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>&reqRevisi=1";
+		document.location.href= "app/loadUrl/app/kenaikan_gaji_pppk_berkala_add_data?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>&reqRevisi=1";
 		else
-		document.location.href= "app/loadUrl/app/kenaikan_gaji_berkala_add_data?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
+		document.location.href= "app/loadUrl/app/kenaikan_gaji_pppk_berkala_add_data?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan=<?=$reqBulan?>&reqTahun=<?=$reqTahun?>";
 	});
 	
 	$("#reqproses,#reqselesai").click(function() {
@@ -1101,7 +1101,7 @@ $(document).ready( function () {
 								reqBulan= "<?=$reqBulan?>";
 								reqTahun= "<?=$reqTahun?>";
 								
-								$.ajax({'url': "gaji_pppk_riwayat_json/batal/?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan="+reqBulan+"&reqTahun="+reqTahun,'success': function(datahtml) {
+								$.ajax({'url': "kenaikan_gaji_pppk_berkala_json/batal/?reqPegawaiId=<?=$reqPegawaiId?>&reqBulan="+reqBulan+"&reqTahun="+reqTahun,'success': function(datahtml) {
 									mbox.close();
 									top.closeparenttab();
 								}});

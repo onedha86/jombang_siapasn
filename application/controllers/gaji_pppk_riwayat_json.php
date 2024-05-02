@@ -127,7 +127,7 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 			//  dan tgl dasar < tgl data baru 
 			//  dan tgl data baru <= tgl kgb baru
 			
-			/*$statement= " AND A.PEGAWAI_ID = ".$reqId." AND A.STATUS_KGB IN ('2','3') AND A.PERIODE = '".$reqPeriode."'";
+			$statement= " AND A.PEGAWAI_ID = ".$reqId." AND A.STATUS_KGB IN ('2','3') AND A.PERIODE = '".$reqPeriode."'";
 			$set_kgb= new KenaikanGajiPppkBerkala();
 			$set_kgb->selectByParamsData(array(), -1,-1, $statement);
 			$set_kgb->firstRow();
@@ -141,7 +141,7 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 			$tempKgbTanggal= strtotime($tempKgbTanggal);
 			$tempKgbTmt= strtotime($tempKgbTmt);
 			$tempDataBaruTanggal= strtotime($reqTanggalSk);
-			$tempDataBaruTmt= strtotime($reqTmtSk);*/
+			$tempDataBaruTmt= strtotime($reqTmtSk);
 			
 			//if($tempDasarTmt < $tempDataBaruTmt && $tempDataBaruTmt <= $tempKgbTmt && $tempDasarTanggal < $tempDataBaruTanggal && $tempDataBaruTanggal <= $tempKgbTanggal)
 			//if($tempDasarTmt < $tempDataBaruTmt && $tempDataBaruTmt < $tempKgbTmt && $tempDasarTanggal < $tempDataBaruTanggal && $tempDataBaruTanggal <= $tempKgbTanggal)
@@ -172,14 +172,14 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 			{
 				$set = new KenaikanGajiPppkBerkala();
 				
-				/*$set->setField('PERIODE', $reqPeriode);
+				$set->setField('PERIODE', $reqPeriode);
 				$set->setField('PEGAWAI_ID', $reqId);
 				$set->setField("LAST_LEVEL", $this->LOGIN_LEVEL);
 				$set->setField("LAST_USER", $this->LOGIN_USER);
 				$set->setField("USER_LOGIN_ID", $this->LOGIN_ID);
 				$set->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($this->LOGIN_PEGAWAI_ID));
 				$set->setField("LAST_DATE", "NOW()");
-				$set->updateStatusHitung();*/
+				$set->updateStatusHitung();
 			}
 
 			// khusus 

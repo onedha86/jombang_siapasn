@@ -147,7 +147,7 @@ class kenaikan_gaji_pppk_berkala_json extends CI_Controller {
 			{
 				$set_detil= new KenaikanGajiPppkBerkala();
 				$set_detil->setField("PERIODE", $reqPeriode);
-				$set_detil->setField('JENIS_KENAIKAN', 3);
+				$set_detil->setField('JENIS_KENAIKAN', 1);
 				$set_detil->setField('NO_SK', $reqNoSk);
 				$set_detil->setField('PANGKAT_ID', $reqRiwayatGajiLamaGolId);
 				$set_detil->setField('TANGGAL_SK', dateToDBCheck($reqRiwayatGajiBaruTanggalBaru));
@@ -345,7 +345,7 @@ class kenaikan_gaji_pppk_berkala_json extends CI_Controller {
 			{
 				$set_detil= new KenaikanGajiPppkBerkala();
 				$set_detil->setField("PERIODE", $reqPeriode);
-				$set_detil->setField('JENIS_KENAIKAN', 3);
+				$set_detil->setField('JENIS_KENAIKAN', 1);
 				$set_detil->setField('NO_SK', $reqNoSk);
 				$set_detil->setField('PANGKAT_ID', $reqRiwayatGajiLamaGolId);
 				$set_detil->setField('TANGGAL_SK', dateToDBCheck($reqRiwayatGajiBaruTanggalBaru));
