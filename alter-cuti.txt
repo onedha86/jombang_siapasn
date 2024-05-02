@@ -1,3 +1,5 @@
+--insert into kategori_file (kategori_file_id, nama, urut) values(31, 'KGB PPPK', 6);
+
 --drop view if exists riwayat_file;
 CREATE OR REPLACE VIEW riwayat_file AS 
 SELECT 
@@ -1014,6 +1016,43 @@ FROM
   WHERE 1 = 1
 ) a
 UNION ALL
+SELECT
+  31 AS no_urut
+  , a.pegawai_id
+  , 'GAJI_PPPK_RIWAYAT'::text AS riwayat_table
+  , NULL::text AS riwayat_field
+  , a.gaji_pppk_riwayat_id::text AS riwayat_id
+  , concat(a.pangkat_kode, ' TMT ', a.tmt_sk) AS info_data
+  , 2 AS tipe_file
+  , concat('KGB_PPPK_', a.nip_baru) AS format_bkn
+FROM
+(
+  SELECT
+    a_1.gaji_pppk_riwayat_id
+    , a_1.pegawai_id
+    , a_1.pangkat_id
+    , a_1.no_sk
+    , datetopagecheck(a_1.tanggal_sk::text::character varying) AS tanggal_sk
+    , getformatteddate(a_1.tmt_sk::text::character varying) AS tmt_sk
+    , a_1.masa_kerja_tahun
+    , a_1.masa_kerja_bulan
+    , b.kode AS pangkat_kode
+    , b.nama AS pangkat_nama
+    , p.nip_baru
+  FROM gaji_pppk_riwayat a_1
+  JOIN
+  (
+    SELECT
+      a.nip_baru
+      , a.pegawai_id
+    FROM pegawai a
+  ) p ON a_1.pegawai_id = p.pegawai_id
+  LEFT JOIN golongan_pppk b ON a_1.pangkat_id = b.golongan_pppk_id
+  WHERE 1 = 1
+  AND (COALESCE(NULLIF(a_1.status::text, ''::text), NULL::text) IS NULL OR a_1.status::text = '2'::text)
+  ORDER BY a_1.tmt_sk DESC
+) a
+UNION ALL
 SELECT 
   66 AS no_urut
   , a.pegawai_id
@@ -1047,6 +1086,86 @@ FROM
 WHERE 1 = 1
 ;
 ALTER TABLE riwayat_file OWNER TO postgres;
+
+create or replace function p_jenisfiledata_pegawai()
+  returns setof p_jenisfiledata_type as
+$body$
+declare
+  cur refcursor;
+  query text;
+  rec p_jenisfiledata_type%rowtype;
+begin
+  query := '
+  select
+  concat(cast(a.kategori_file_id as text),''-'',cast(a.riwayat_table as text),''-'',cast(a.riwayat_field as text),''-'',cast(a.riwayat_id as text)) id_row
+  , kategori_file_id, riwayat_table, riwayat_id, riwayat_field, info_data, nama, urut
+  from
+  (
+    select 1::numeric kategori_file_id, ''PANGKAT_RIWAYAT'' riwayat_table, null::text riwayat_id, riwayat_field, info_data, info_data nama, 1 urut
+    from riwayat_pegawai_cpns_file a
+    where 1 = 1
+    union all
+    select 2::numeric kategori_file_id, ''PANGKAT_RIWAYAT'' riwayat_table, null::text riwayat_id, riwayat_field, info_data, info_data nama, 2 urut
+    from riwayat_pegawai_pns_file a
+    where 1 = 1
+    union all
+    select 3::numeric kategori_file_id, ''JABATAN_RIWAYAT'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Jabatan Riwayat''::text info_data, ''Jabatan Riwayat''::text nama, 3 urut
+    union all
+    select 5::numeric kategori_file_id, ''GAJI_RIWAYAT'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Kenaikan Gaji Berkala''::text info_data, ''Kenaikan Gaji Berkala''::text nama, 3 urut
+    union all
+    select 31::numeric kategori_file_id, ''GAJI_PPPK_RIWAYAT'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Kenaikan Gaji Berkala PPPK''::text info_data, ''Kenaikan Gaji Berkala PPPK''::text nama, 3 urut
+    union all
+    select 4::numeric kategori_file_id, ''PANGKAT_RIWAYAT'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Kenaikan Pangkat / KP''::text info_data, ''Kenaikan Pangkat / KP''::text nama, 4 urut
+    union all
+    select 20::numeric kategori_file_id, ''JABATAN_TAMBAHAN'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''SK Tugas''::text info_data, ''SK Tugas''::text nama, 5 urut
+    union all
+    select 6::numeric kategori_file_id, ''PENDIDIKAN_RIWAYAT'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Pendidikan''::text info_data, ''Pendidikan''::text nama, 6 urut
+    union all
+    select 14::numeric kategori_file_id, ''PENDIDIKAN_RIWAYAT'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Tubel/Ibel''::text info_data, ''Tubel/Ibel''::text nama, 6 urut
+    union all
+    select 11::numeric kategori_file_id, ''DIKLAT_STRUKTURAL'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Diklatpim''::text info_data, ''Sertifikat Diklatpim''::text nama, 7 urut
+    union all
+    select 25::numeric kategori_file_id, ''DIKLAT_KURSUS'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Diklat/Kursus''::text info_data, ''Sertifikat Diklat/kursus''::text nama, 8 urut
+    union all
+    select 7::numeric kategori_file_id, ''PENILAIAN_SKP'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''SKP/PPK''::text info_data, ''SKP/PPK''::text nama, 9 urut
+    union all
+    select 10::numeric kategori_file_id, ''PAK'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''PAK''::text info_data, ''PAK''::text nama, 10 urut
+    union all
+    select 26::numeric kategori_file_id, ''PENILAIAN_KOMPETENSI'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Assessment''::text info_data, ''Hasil Kompetensi''::text nama, 11 urut
+    union all
+    select 27::numeric kategori_file_id, ''CUTI'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Cuti''::text info_data, ''Surat Cuti''::text nama, 12 urut
+    union all
+    select 22::numeric kategori_file_id, ''PENGHARGAAN'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Penghargaan''::text info_data, ''Sertifikat Penghargaan''::text nama, 13 urut
+    union all
+    select 15::numeric kategori_file_id, ''SUAMI_ISTRI'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Suami/Istri''::text info_data, ''Suami/Istri''::text nama, 14 urut
+    union all
+    select 16::numeric kategori_file_id, ''ANAK'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Anak''::text info_data, ''Anak''::text nama, 15 urut
+    union all
+    select 13::numeric kategori_file_id, ''TAMBAHAN_MASA_KERJA'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''P. Masa Kerja''::text info_data, ''P. Masa Kerja''::text nama, 17 urut
+    union all
+    select 28::numeric kategori_file_id, ''HUKUMAN'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''Hukuman''::text info_data, ''Hukuman''::text nama, 18 urut
+    union all
+    select 9::numeric kategori_file_id, ''SURAT_TANDA_LULUS'' riwayat_table, null::text riwayat_id, null::text riwayat_field, ''STLUD/PI''::text info_data, ''STLUD/PI''::text nama, 19 urut
+  ) a
+  where 1=1
+  order by urut
+  ';
+
+  --raise notice 'sql %', query;
+  --select * from p_jenisfiledata_pegawai();
+  
+  open cur for execute query;
+  
+  fetch cur into rec;
+  while found loop
+    return next rec;
+    fetch cur into rec;
+  end loop;
+  close cur;
+end;
+$body$
+language plpgsql volatile strict cost 100 rows 1000;
+alter function p_jenisfiledata_pegawai() owner to postgres;
 
 alter table pegawai_file add column vqr character varying;
 alter table pegawai_file add column v_bkn_link character varying;

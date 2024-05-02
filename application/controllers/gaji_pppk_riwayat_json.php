@@ -40,11 +40,11 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 			exit;
 		}
 
-		$this->load->model('GajiRiwayat');
-		$this->load->model('KenaikanGajiBerkala');
+		$this->load->model('GajiPppkRiwayat');
+		$this->load->model('KenaikanGajiPppkBerkala');
 		$this->load->model('PejabatPenetap');
 		
-		$set = new GajiRiwayat();
+		$set = new GajiPppkRiwayat();
 		
 		$reqId = $this->input->post("reqId");
 		$reqRowId= $this->input->post("reqRowId");
@@ -111,7 +111,7 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 		}
 		else
 		{
-			$set->setField('GAJI_RIWAYAT_ID', $reqRowId);
+			$set->setField('GAJI_PPPK_RIWAYAT_ID', $reqRowId);
 			if($set->update())
 			{
 				$reqsimpan= "1";
@@ -121,70 +121,65 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 		if($reqPeriode == ""){}
 		else
 		{
-			if($reqJenis == 8 || $reqJenis == 9){}
+			//apbila ada data baru,
+			//- apabila tmt dasar < tmt data baru 
+			//  dan tmt data baru <= tmt kgb baru
+			//  dan tgl dasar < tgl data baru 
+			//  dan tgl data baru <= tgl kgb baru
+			
+			/*$statement= " AND A.PEGAWAI_ID = ".$reqId." AND A.STATUS_KGB IN ('2','3') AND A.PERIODE = '".$reqPeriode."'";
+			$set_kgb= new KenaikanGajiPppkBerkala();
+			$set_kgb->selectByParamsData(array(), -1,-1, $statement);
+			$set_kgb->firstRow();
+			$tempDasarTanggalVal= $tempDasarTanggal= dateToPageCheck($set_kgb->getField("TANGGAL_SK"));
+			$tempDasarTmtVal= $tempDasarTmt= dateToPageCheck($set_kgb->getField("TMT_LAMA"));
+			$tempKgbTanggal= dateToPageCheck($set_kgb->getField("TANGGAL_BARU"));
+			$tempKgbTmt= dateToPageCheck($set_kgb->getField("TMT_BARU"));
+			
+			$tempDasarTanggal= strtotime($tempDasarTanggal);
+			$tempDasarTmt= strtotime($tempDasarTmt);
+			$tempKgbTanggal= strtotime($tempKgbTanggal);
+			$tempKgbTmt= strtotime($tempKgbTmt);
+			$tempDataBaruTanggal= strtotime($reqTanggalSk);
+			$tempDataBaruTmt= strtotime($reqTmtSk);*/
+			
+			//if($tempDasarTmt < $tempDataBaruTmt && $tempDataBaruTmt <= $tempKgbTmt && $tempDasarTanggal < $tempDataBaruTanggal && $tempDataBaruTanggal <= $tempKgbTanggal)
+			//if($tempDasarTmt < $tempDataBaruTmt && $tempDataBaruTmt < $tempKgbTmt && $tempDasarTanggal < $tempDataBaruTanggal && $tempDataBaruTanggal <= $tempKgbTanggal)
+			if($tempDasarTmt < $tempDataBaruTmt && $tempDataBaruTmt < $tempKgbTmt && $tempDasarTanggal < $tempDataBaruTanggal)
+			$reqstatushitung= "1";
+			
+			if($reqTh == $reqTempTh){}
 			else
-			{
-				//apbila ada data baru,
-				//- apabila tmt dasar < tmt data baru 
-				//  dan tmt data baru <= tmt kgb baru
-				//  dan tgl dasar < tgl data baru 
-				//  dan tgl data baru <= tgl kgb baru
-				
-				$statement= " AND A.PEGAWAI_ID = ".$reqId." AND A.STATUS_KGB IN ('2','3') AND A.PERIODE = '".$reqPeriode."'";
-				$set_kgb= new KenaikanGajiBerkala();
-				$set_kgb->selectByParamsData(array(), -1,-1, $statement);
-				$set_kgb->firstRow();
-				$tempDasarTanggalVal= $tempDasarTanggal= dateToPageCheck($set_kgb->getField("TANGGAL_SK"));
-				$tempDasarTmtVal= $tempDasarTmt= dateToPageCheck($set_kgb->getField("TMT_LAMA"));
-				$tempKgbTanggal= dateToPageCheck($set_kgb->getField("TANGGAL_BARU"));
-				$tempKgbTmt= dateToPageCheck($set_kgb->getField("TMT_BARU"));
-				
-				$tempDasarTanggal= strtotime($tempDasarTanggal);
-				$tempDasarTmt= strtotime($tempDasarTmt);
-				$tempKgbTanggal= strtotime($tempKgbTanggal);
-				$tempKgbTmt= strtotime($tempKgbTmt);
-				$tempDataBaruTanggal= strtotime($reqTanggalSk);
-				$tempDataBaruTmt= strtotime($reqTmtSk);
-				
-				//if($tempDasarTmt < $tempDataBaruTmt && $tempDataBaruTmt <= $tempKgbTmt && $tempDasarTanggal < $tempDataBaruTanggal && $tempDataBaruTanggal <= $tempKgbTanggal)
-				//if($tempDasarTmt < $tempDataBaruTmt && $tempDataBaruTmt < $tempKgbTmt && $tempDasarTanggal < $tempDataBaruTanggal && $tempDataBaruTanggal <= $tempKgbTanggal)
-				if($tempDasarTmt < $tempDataBaruTmt && $tempDataBaruTmt < $tempKgbTmt && $tempDasarTanggal < $tempDataBaruTanggal)
-				$reqstatushitung= "1";
-				
-				if($reqTh == $reqTempTh){}
-				else
-				$reqstatushitung= "1";
-				
-				if($reqBl == $reqTempBl){}
-				else
-				$reqstatushitung= "1";
+			$reqstatushitung= "1";
+			
+			if($reqBl == $reqTempBl){}
+			else
+			$reqstatushitung= "1";
 
-				//echo $tempDasarTanggalVal." == ".$reqTanggalSk." && ".$tempDasarTmtVal." == ".$reqTmtSk;
-				//exit;
-				
-				if($tempDasarTanggalVal == $reqTanggalSk && $tempDasarTmtVal == $reqTmtSk)
-					$reqstatushitung= "1";
-				
-				//echo $tempDasarTanggalVal." == ".$reqTanggalSk." && ".$tempDasarTmtVal." == ".$reqTmtSk.";;".$reqstatushitung;
-				//exit;
-				
-			}
+			//echo $tempDasarTanggalVal." == ".$reqTanggalSk." && ".$tempDasarTmtVal." == ".$reqTmtSk;
+			//exit;
+			
+			if($tempDasarTanggalVal == $reqTanggalSk && $tempDasarTmtVal == $reqTmtSk)
+				$reqstatushitung= "1";
+			
+			//echo $tempDasarTanggalVal." == ".$reqTanggalSk." && ".$tempDasarTmtVal." == ".$reqTmtSk.";;".$reqstatushitung;
+			//exit;
 		}
 				
 		if($reqsimpan == "1")
 		{
 			if($reqstatushitung == "1")
 			{
-				$set = new KenaikanGajiBerkala();
+				$set = new KenaikanGajiPppkBerkala();
 				
-				$set->setField('PERIODE', $reqPeriode);
+				/*$set->setField('PERIODE', $reqPeriode);
 				$set->setField('PEGAWAI_ID', $reqId);
 				$set->setField("LAST_LEVEL", $this->LOGIN_LEVEL);
 				$set->setField("LAST_USER", $this->LOGIN_USER);
 				$set->setField("USER_LOGIN_ID", $this->LOGIN_ID);
 				$set->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($this->LOGIN_PEGAWAI_ID));
 				$set->setField("LAST_DATE", "NOW()");
-				$set->updateStatusHitung();
+				$set->updateStatusHitung();*/
 			}
 
 			// khusus 
@@ -204,10 +199,10 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 	
 	function delete()
 	{
-		$this->load->model('GajiRiwayat');
-		$this->load->model('KenaikanGajiBerkala');
+		$this->load->model('GajiPppkRiwayat');
+		$this->load->model('KenaikanGajiPppkBerkala');
 		
-		$set = new GajiRiwayat();
+		$set = new GajiPppkRiwayat();
 		
 		$reqId =  $this->input->get('reqId');
 		$reqMode =  $this->input->get('reqMode');
@@ -219,7 +214,7 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 		$set->setField("USER_LOGIN_ID", $this->LOGIN_ID);
 		$set->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($this->LOGIN_PEGAWAI_ID));
 		$set->setField("LAST_DATE", "NOW()");
-		$set->setField("GAJI_RIWAYAT_ID", $reqId);
+		$set->setField("GAJI_PPPK_RIWAYAT_ID", $reqId);
 		
 		$reqsimpan= "";
 		if($reqMode == "gaji_riwayat_0")
@@ -253,7 +248,7 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 		{
 			if($reqstatushitung == "1")
 			{
-				$set = new KenaikanGajiBerkala();
+				$set = new KenaikanGajiPppkBerkala();
 				
 				$set->setField('PERIODE', $reqPeriode);
 				$set->setField('PEGAWAI_ID', $reqPegawaiId);
@@ -273,16 +268,16 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 
 	function log($riwayatId) 
 	{	
-		$this->load->model('GajiRiwayatLog');
+		$this->load->model('GajiPppkRiwayatLog');
 
-		$set = new GajiRiwayatLog();
+		$set = new GajiPppkRiwayatLog();
 		
 		ini_set("memory_limit","500M");
 		ini_set('max_execution_time', 520);
 		
 		
-		$aColumns = array("INFO_LOG", "LAST_USER", "LAST_DATE", "STATUS_NAMA", "GAJI_RIWAYAT_ID");
-		$aColumnsAlias = array("INFO_LOG", "LAST_USER", "LAST_DATE", "STATUS_NAMA", "GAJI_RIWAYAT_ID");
+		$aColumns = array("INFO_LOG", "LAST_USER", "LAST_DATE", "STATUS_NAMA", "GAJI_PPPK_RIWAYAT_ID");
+		$aColumnsAlias = array("INFO_LOG", "LAST_USER", "LAST_DATE", "STATUS_NAMA", "GAJI_PPPK_RIWAYAT_ID");
 		
 
 		/*
@@ -437,7 +432,7 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 		else	
 			$allRecordFilter = $set->getCountByParams(array(), $searchJson);
 		
-		$arrayWhere = array("GAJI_RIWAYAT_ID" => $riwayatId);
+		$arrayWhere = array("GAJI_PPPK_RIWAYAT_ID" => $riwayatId);
 		$set->selectByParams($arrayWhere, $dsplyRange, $dsplyStart, $searchJson, $sOrder);     		
 		
 		/* Output */
@@ -469,11 +464,11 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 	
 	function getinfo()
 	{
-		$this->load->model('GajiRiwayat');
-		$set = new GajiRiwayat();
+		$this->load->model('GajiPppkRiwayat');
+		$set = new GajiPppkRiwayat();
 		$reqId= $this->input->get('reqId');
 		
-		$statement= " AND A.GAJI_RIWAYAT_ID = ".$reqId;
+		$statement= " AND A.GAJI_PPPK_RIWAYAT_ID = ".$reqId;
 		$set->selectByParams(array(), -1,-1, $statement);
 		$set->firstRow();
 		//echo $set->query;exit;
@@ -497,13 +492,13 @@ class gaji_pppk_riwayat_json extends CI_Controller {
 	
 	function getinfohitungulang()
 	{
-		$this->load->model('KenaikanGajiBerkala');
-		$set = new KenaikanGajiBerkala();
+		$this->load->model('KenaikanGajiPppkBerkala');
+		$set = new KenaikanGajiPppkBerkala();
 		$reqId= $this->input->get('reqId');
 		
 		// http://localhost/simpeg/jombang-allnew/gaji_pppk_riwayat_json/getinfohitungulang/?reqId=123298
-		$statement= " AND A.GAJI_RIWAYAT_ID = ".$reqId;
-		$set= new KenaikanGajiBerkala();
+		$statement= " AND A.GAJI_PPPK_RIWAYAT_ID = ".$reqId;
+		$set= new KenaikanGajiPppkBerkala();
 		$set->selectByParamsHitungGajiRiwayat($statement);
 		$set->firstRow();
 		// echo $set->query;exit;

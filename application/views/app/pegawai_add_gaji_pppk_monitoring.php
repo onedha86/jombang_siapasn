@@ -122,7 +122,7 @@ $set->selectByParams(array(), -1, -1, $statementLevel." AND A.PEGAWAI_ID = ".$re
   <div class="row">
     <div class="col s12 m10 offset-m1 ">
       <ul class="collection card">
-        <li class="collection-item ubah-color-warna">RIWAYAT GAJI</li>
+        <li class="collection-item ubah-color-warna">RIWAYAT GAJI PPPK</li>
         <li class="collection-item">
           <div class="row">
             <?
@@ -151,13 +151,16 @@ $set->selectByParams(array(), -1, -1, $statementLevel." AND A.PEGAWAI_ID = ".$re
             <? 
             while($set->nextRow())
             {
-        $LastLevel= $set->getField('LAST_LEVEL');
+              $reqRowId = $set->getField('GAJI_PPPK_RIWAYAT_ID');
+              $reqId = $set->getField('PEGAWAI_ID');
+
+              $LastLevel= $set->getField('LAST_LEVEL');
+              
+              $tempAksiProses= "";
+              if($sessionLoginLevel < $LastLevel)
+              $tempAksiProses= "1";
         
-        $tempAksiProses= "";
-        if($sessionLoginLevel < $LastLevel)
-        $tempAksiProses= "1";
-        
-              ?>
+            ?>
               <tr>
                 <td><?=$set->getField('JENIS_KENAIKAN_NAMA')?></td>
                 <td><?=$set->getField('NO_SK')?></td>
@@ -168,105 +171,66 @@ $set->selectByParams(array(), -1, -1, $statementLevel." AND A.PEGAWAI_ID = ".$re
                 <td>
                   <?
                   if($set->getField('STATUS') == 1) 
-          {
+                  {
                     echo '<i class="mdi-av-not-interested red-text"></i>';
                   }
-          else if($set->getField('LAST_LEVEL') == 99)
-          {
+                  else if($set->getField('LAST_LEVEL') == 99)
+                  {
                     echo '<i class="mdi-action-done green-text"></i>';
                   }
-          else
-          {
+                  else
+                  {
                     echo '<i class="mdi-alert-warning orange-text"></i>';
                   }
                   ?>
                 </td>
                 <td width="90px">
-                  <?
-                  $reqRowId = $set->getField('GAJI_RIWAYAT_ID');
-                  $reqId = $set->getField('PEGAWAI_ID');
-                  ?>
-                  <span>
+                    <span>
                     <?
-          if($tempAksiProses == "1"){}
-            else
-            {
-                    if($set->getField('STATUS')==1 && $set->getField('JENIS_KENAIKAN') == 3)
-          {
-            if($set->getField('DATA_HUKUMAN') == 0)
-            {
-          ?>
-                    
-                    <?
-                    // A;R;D
                     if($tempAksesMenu == "A")
                     {
                     ?>
+                    <?if($set->getField('STATUS')==1):?>
                     <a href="javascript:void(0)" class="round waves-effect waves-light green white-text" title="Aktifkan" onClick="hapusdata('<?=$reqRowId?>','1','<?=$reqId?>')">
                       <i class="mdi-action-autorenew"></i>
                     </a>
-                    <?
-                    }
-                    ?>
-
-                    <?
-            }
-          }
-                    else
-          {
-            //if($set->getField('JENIS_KENAIKAN') == 1 || $set->getField('JENIS_KENAIKAN') == 2){}
-            //else
-            if($set->getField('JENIS_KENAIKAN') == 3)
-            {
-              if($set->getField('DATA_HUKUMAN') == 0)
-                {
-          ?>
-                    
-                    <?
-                    // A;R;D
-                    if($tempAksesMenu == "A")
-                    {
-                    ?>
+                    <?else:?>
                     <a href="javascript:void(0)" class="round waves-effect waves-light red white-text" title="Hapus" onClick="hapusdata('<?=$reqRowId?>','','<?=$reqId?>')">
                       <i class="mdi-action-delete"></i>
                     </a>
+                    <?endif?>
                     <?
                     }
                     ?>
-
-                    <?
-              }
-            }
-          }
-            }
-                    ?>
                   </span>
                   <span>
-                  <a href="javascript:void(0)" class="round waves-effect waves-light purple white-text" title="Log"  onclick="parent.openModal('app/loadUrl/app/informasi_data_log?reqjson=gaji_riwayat_json/log/<?=$reqRowId?>&reqjudul=Data Gaji Riwayat Log')">
+                      <a href="javascript:void(0)" class="round waves-effect waves-light purple white-text" title="Log"  onclick="parent.openModal('app/loadUrl/app/informasi_data_log?reqjson=pak_json/log/<?=$reqRowId?>&reqjudul=Data Diklat Struktural Log')">
                       <i class="mdi-action-query-builder"></i>
                     </a>
                   </span>
                   <span>
                     <?if($set->getField('STATUS')!=1):?>
-                    <a href="javascript:void(0)" class="round waves-effect waves-light blue white-text" title="Ubah" onClick="parent.setload('pegawai_add_gaji_pppk_data?reqId=<?=$reqId?>&reqRowId=<?=$reqRowId?>&reqPeriode=<?=$reqPeriode?>')">
-                      <i class="mdi-editor-mode-edit"></i>
-                    </a>
-                    <!-- <a href="javascript:void(0)" class="rounded material-bold blue white-text" onClick="parent.setload('pegawai_add_pangkat_data?reqId=<?=$reqId?>&reqRowId=<?=$reqRowId?>')">UBAH</a> -->
+                      <a href="javascript:void(0)" class="round waves-effect waves-light blue white-text" title="Ubah"
+                      <?
+                      if(!empty($pelayananid))
+                      {
+                      ?>
+                      onClick="parent.setappload('pegawai_add_gaji_pppk_data?reqId=<?=$reqId?>&reqRowId=<?=$reqRowId?>&pelayananid=<?=$pelayananid?>&pelayananjenis=<?=$pelayananjenis?>&pelayananrowid=<?=$pelayananrowid?>&pelayanankembali=<?=$pelayanankembali?>')"
+                      <?
+                      }
+                      else
+                      {
+                      ?>
+                      onClick="parent.setload('pegawai_add_gaji_pppk_data?reqId=<?=$reqId?>&reqRowId=<?=$reqRowId?>')"
+                      <?
+                      }
+                      ?>
+                      >
+                        <i class="mdi-editor-mode-edit"></i>
+                      </a>
                     <?endif?>
                   </span>
-                  <span>
-
-                   <!-- <span>
-                    <a href="javascript:void(0)" class="rounded material-bold blue white-text" onClick="parent.setload('pegawai_add_gaji_pppk_data?reqId=<?=$reqId?>&reqRowId=<?=$reqRowId?>')">UBAH</a>
-                  </span>
-                  <span>
-                   <?if($set->getField('STATUS')==1):?>
-                   <a href="javascript:void(0)" class="rounded material-bold green white-text" onClick="hapusdata('<?=$reqRowId?>','1','<?=$reqId?>')">AKTIFKAN</a>
-                   <?else:?>
-                   <a href="javascript:void(0)" class="rounded material-bold red white-text" onClick="hapusdata('<?=$reqRowId?>','','<?=$reqId?>')">HAPUS</a>
-                   <?endif?>-->
-                 </span> 
-               </td>
+                </td>
              </tr>
              <? 
            }

@@ -5,7 +5,6 @@ include_once("functions/date.func.php");
 $CI =& get_instance();
 $CI->checkUserLogin();
 
-$this->load->model('PangkatRiwayat');
 $this->load->model('GajiPppkRiwayat');
 $this->load->model('GolonganPppk');
 $this->load->model('KualitasFile');
@@ -24,20 +23,30 @@ $tempUserLoginId= $this->USER_LOGIN_ID;
 $tempMenuId= "010203";
 $tempAksesMenu= $CI->checkmenupegawai($tempUserLoginId, $tempMenuId);
 
-if($reqRowId=="")
+if(empty($reqRowId))
 {
-  $reqMode = 'insert';
+  $reqMode= 'insert';
+  $statementdetil= " AND A.JENIS_KENAIKAN = 0 AND A.PEGAWAI_ID = ".$reqId;
+  $setdetil= new GajiPppkRiwayat();
+  $jumlahjenis= $setdetil->getCountByParams(array(), $statementdetil);
+
   $reqJenis= "1";
+  $reqJenisNama= "SK PPPK";
+  if($jumlahjenis > 0)
+  {
+    $reqJenis= "2";
+    $reqJenisNama= "Gaji Berkala";
+  }
 }
 else
 {
   $reqMode = 'update';
-  $statement= " AND A.GAJI_RIWAYAT_ID = ".$reqRowId." AND A.PEGAWAI_ID = ".$reqId;
+  $statement= " AND A.GAJI_PPPK_RIWAYAT_ID = ".$reqRowId." AND A.PEGAWAI_ID = ".$reqId;
   $set= new GajiPppkRiwayat();
   $set->selectByParams(array(), -1, -1, $statement);
   // echo $set->query;exit;
   $set->firstRow();
-  $reqRowId = $set->getField('GAJI_RIWAYAT_ID');
+  $reqRowId = $set->getField('GAJI_PPPK_RIWAYAT_ID');
 
   $reqPejabatPenetapId= $set->getField('PEJABAT_PENETAP_ID');
   $reqPejabatPenetap= $set->getField('PEJABAT_PENETAP_NAMA');
@@ -56,21 +65,20 @@ else
   $LastLevel= $set->getField('LAST_LEVEL');
 }
 
-$tempAksiProses= "";
-if($sessionLoginLevel < $LastLevel)
-$tempAksiProses= "1";
-
 // untuk kondisi file
 $vfpeg= new globalfilepegawai();
 $arrpilihfiledokumen= $vfpeg->pilihfiledokumen();
 // print_r($arrpilihfiledokumen);exit;
 
+$riwayattable= "GAJI_PPPK_RIWAYAT";
+$reqDokumenKategoriFileId= "31"; // ambil dari table KATEGORI_FILE, cek sesuai mode
+$arrsetriwayatfield= $vfpeg->setriwayatfield($riwayattable);
+// print_r($arrsetriwayatfield);exit;
+
 if(empty($reqRowId))
   $arrlistriwayatfilepegawai= $vfpeg->listpilihfilepegawai($reqId, $riwayattable, "baru");
 else
   $arrlistriwayatfilepegawai= $vfpeg->listpilihfilepegawai($reqId, $riwayattable, $reqRowId);
-
-$vRowId= $reqRowId;
 
 $arrlistpilihfile= $arrlistriwayatfilepegawai["pilihfile"];
 // print_r($arrlistpilihfile);exit;
@@ -180,7 +188,8 @@ if(!empty($hanyalihatfile))
         return false;
       }
 
-      var reqTanggal= "";
+      $("#reqSubmit").click();
+      /*var reqTanggal= "";
       reqTanggal= $("#reqTmtSk").val();
       var s_url= "hari_libur_json/hakentrigaji?reqMode=gaji&reqTanggal="+reqTanggal;
       $.ajax({'url': s_url,'success': function(dataajax){
@@ -195,7 +204,7 @@ if(!empty($hanyalihatfile))
         }
         else
           $("#reqSubmit").click();
-      }});
+      }});*/
 
     });
     
@@ -341,7 +350,7 @@ if(!empty($hanyalihatfile))
                       while($pangkat->nextRow())
                       {
                       ?>
-                        <option value="<?=$pangkat->getField('PANGKAT_ID')?>" <? if($reqGolRuang == $pangkat->getField('PANGKAT_ID')) echo 'selected';?>><?=$pangkat->getField('KODE')?></option>
+                        <option value="<?=$pangkat->getField('GOLONGAN_PPPK_ID')?>" <? if($reqGolRuang == $pangkat->getField('GOLONGAN_PPPK_ID')) echo 'selected';?>><?=$pangkat->getField('KODE')?></option>
                       <? 
                       }
                       ?>
@@ -383,24 +392,9 @@ if(!empty($hanyalihatfile))
 
                 <div class="row">
                   <div class="input-field col s12 m6">
-                    <?
-                    if($reqJenis == "3")
-                    {
-                      ?>
-                      <label for="reqJenisNama">Jenis</label>
-                      <input type="hidden" id="reqJenis" name="reqJenis" value="3" />
-                      <input type="text" id="reqJenisNama" value="Gaji Berkala" disabled />
-                    <?
-                    }
-                    else
-                    {
-                    ?>
-                      <label for="reqJenisNama">Jenis</label>
-                      <input type="hidden" id="reqJenis" name="reqJenis" value="<?=$reqJenis?>" />
-                      <input type="text" id="reqJenisNama" value="<?=$reqJenisNama?>" disabled />
-                      <?
-                    }
-                    ?>
+                    <label for="reqJenisNama">Jenis</label>
+                    <input type="hidden" id="reqJenis" name="reqJenis" value="<?=$reqJenis?>" />
+                    <input type="text" id="reqJenisNama" value="<?=$reqJenisNama?>" disabled />
                   </div>
                 </div>
 
@@ -416,31 +410,23 @@ if(!empty($hanyalihatfile))
                       });
                     </script>
 
+                    <input type="hidden" name="reqPeriode" value="<?=$reqPeriode?>" />
+                    <input type="hidden" name="reqRowId" value="<?=$reqRowId?>" />
+                    <input type="hidden" name="vRowId" value="<?=$vRowId?>" />
+                    <input type="hidden" name="reqId" value="<?=$reqId?>" />
+                    <input type="hidden" name="reqMode" value="<?=$reqMode?>" />
                     <?
-                    if($reqJenis == "3")
+                    if($tempAksesMenu == "A")
                     {
-                      if($tempAksiProses == "1"){}
-                      else
-                      {
                     ?>
-                      <input type="hidden" name="reqPeriode" value="<?=$reqPeriode?>" />
-                      <input type="hidden" name="reqRowId" value="<?=$reqRowId?>" />
-                      <input type="hidden" name="vRowId" value="<?=$vRowId?>" />
-                      <input type="hidden" name="reqId" value="<?=$reqId?>" />
-                      <input type="hidden" name="reqMode" value="<?=$reqMode?>" />
+                      <button type="submit" style="display:none" id="reqSubmit"></button>
+                      <button class="btn waves-effect waves-light green" style="font-size:9pt" type="button" id="reqsimpan">Simpan
+                        <i class="mdi-content-save left hide-on-small-only"></i>
+                      </button>
                     <?
-                        if($tempAksesMenu == "A")
-                        {
-                    ?>
-                        <button type="submit" style="display:none" id="reqSubmit"></button>
-                        <button class="btn waves-effect waves-light green" style="font-size:9pt" type="button" id="reqsimpan">Simpan
-                          <i class="mdi-content-save left hide-on-small-only"></i>
-                        </button>
-                    <?
-                        }
-                      }
                     }
                     ?>
+
                   </div>
                 </div>
 

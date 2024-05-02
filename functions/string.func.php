@@ -1664,6 +1664,25 @@ function setmenukgb()
 	return $arrMenu;
 }
 
+function setmenuppkkgb()
+{
+	$arrId= $arrParentId= $arrNama= $arrFile= "";
+	$arrId= array("01", "02");
+	$arrParentId= array("0", "0");
+	$arrNama= array("KGB", "Riwayat Gaji");
+	$arrFile= array("kenaikan_gaji_pppk_berkala_add_data", "pegawai_add_gaji_pppk_monitoring");
+	
+	for($index_set=0; $index_set < count($arrId); $index_set++ )
+	{
+		$arrMenu[$index_set]["MENU_ID"]= $arrId[$index_set];
+		$arrMenu[$index_set]["MENU_PARENT_ID"]= $arrParentId[$index_set];
+		$arrMenu[$index_set]["NAMA"]= $arrNama[$index_set];
+		$arrMenu[$index_set]["LINK_FILE"]= $arrFile[$index_set];
+		$arrMenu[$index_set]["ICON"]= '<i class="mdi-action-dashboard"></i>';
+	}
+	return $arrMenu;
+}
+
 function setmenusuratbkpp($reqId="", $mode="")
 {
 	$arrId= $arrParentId= $arrNama= $arrFile= "";
@@ -2061,15 +2080,14 @@ function toAlpha($data){
 
 }
 
-// function new_array_multisort(&$a, array $column_names) {
-//     usort($a, function($a, $b) use($column_names) {
-//         foreach ($column_names as $column_name => $order) {
-//             $result = ($a[$column_name] <=> $b[$column_name]) * ($order === SORT_DESC ? -1 : 1);
-//             if ($result) return $result;
-//         }
-//         return 0;
-//     });
-// }
+function new_array_multisort(&$a, array $column_names) {
+    /*usort($a, function($a, $b) use($column_names) {
+        foreach ($column_names as $column_name => $order) {
+            $result = ($a[$column_name] <=> $b[$column_name]) * ($order === SORT_DESC ? -1 : 1);
+            if ($result) return $result;
+        }
+        return 0;
+    });*/
 
     /*
     // contoh data
@@ -2085,5 +2103,5 @@ function toAlpha($data){
 	new_array_multisort($data, ['volume' => SORT_ASC]);
 	new_array_multisort($data, ['volume' => SORT_ASC, 'edition' => SORT_DESC]);
 	print_r($data);exit;*/
-
+}
 ?>

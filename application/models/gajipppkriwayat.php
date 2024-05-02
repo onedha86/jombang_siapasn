@@ -65,7 +65,6 @@ DESCRIPTION			:
 		return $this->execQuery($str);
     }
 
-
     function update()
 	{
 		$str = "		
@@ -91,7 +90,7 @@ DESCRIPTION			:
 		WHERE GAJI_PPPK_RIWAYAT_ID = ".$this->getField("GAJI_PPPK_RIWAYAT_ID")."
 		"; 
 		$this->query = $str;
-		//echo $str;exit;
+		// echo $str;exit;
 		return $this->execQuery($str);
     }
 
@@ -189,7 +188,7 @@ DESCRIPTION			:
 			, PP.NAMA PEJABAT_PENETAP_NAMA
 		FROM gaji_pppk_riwayat A
 		LEFT JOIN golongan_pppk B ON A.PANGKAT_ID = B.GOLONGAN_PPPK_ID
-		LEFT JOIN PEJABAT_PENETAP PP ON A.PEJABAT_PENETAP_ID = PP.PEJABAT_PENETAP_ID
+		LEFT JOIN pejabat_penetap PP ON A.PEJABAT_PENETAP_ID = PP.PEJABAT_PENETAP_ID
 		WHERE 1 = 1
 		"; 
 		

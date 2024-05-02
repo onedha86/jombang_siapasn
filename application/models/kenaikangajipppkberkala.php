@@ -31,7 +31,7 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "
-			INSERT INTO KENAIKAN_GAJI_BERKALA
+			INSERT INTO kenaikan_gaji_pppk_berkala
 			(
 				PERIODE, PEGAWAI_ID, PEGAWAI_STATUS_ID, JABATAN_RIWAYAT_ID, PANGKAT_RIWAYAT_LAMA_ID, STATUS_HITUNG_ULANG,
 				GAJI_RIWAYAT_LAMA_ID, PANGKAT_RIWAYAT_BARU_ID, HUKUMAN_RIWAYAT_ID, SURAT_KELUAR_BKD_ID, NOMOR_URUT, KETERANGAN_TEKNIS, TANGGAL_BARU, TMT_BARU, MASA_KERJA_TAHUN_BARU, MASA_KERJA_BULAN_BARU, GAJI_POKOK_DETIL_ID, GAJI_BARU, SATUAN_KERJA_ID, STATUS_KGB, STATUS, LAST_USER, LAST_DATE, LAST_LEVEL, USER_LOGIN_ID, USER_LOGIN_PEGAWAI_ID
@@ -83,7 +83,7 @@ DESCRIPTION			:
 	function prosesKgb()
 	{
         $str = "
-		SELECT PROSESKENAIKANBERKALA('".$this->getField("PERIODE")."', ".$this->getField("SATKERID").", '".$this->getField("LAST_USER")."', ".$this->getField("LAST_LEVEL").")
+		SELECT proseskenaikanpppkberkala('".$this->getField("PERIODE")."', ".$this->getField("SATKERID").", '".$this->getField("LAST_USER")."', ".$this->getField("LAST_LEVEL").")
 		"; 
 		$this->query = $str;
 		// echo $str;exit();
@@ -93,7 +93,7 @@ DESCRIPTION			:
 	function prosesPersonalKgb()
 	{
         $str = "
-		SELECT PROSESKENAIKANBERKALAPEGAWAI('".$this->getField("PERIODE")."', ".$this->getField("PEGAWAI_ID").", '".$this->getField("LAST_USER")."', ".$this->getField("LAST_LEVEL").")
+		SELECT proseskenaikanpppkberkalapegawai('".$this->getField("PERIODE")."', ".$this->getField("PEGAWAI_ID").", '".$this->getField("LAST_USER")."', ".$this->getField("LAST_LEVEL").")
 		"; 
 		$this->query = $str;
 		//echo $str;
@@ -104,7 +104,7 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 				   STATUS_HITUNG_ULANG= 1,
 			       LAST_USER= '".$this->getField("LAST_USER")."',
@@ -122,7 +122,7 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 				   STATUS_HITUNG_ULANG= NULL,
 			       LAST_USER= '".$this->getField("LAST_USER")."',
@@ -139,7 +139,7 @@ DESCRIPTION			:
 	function update()
 	{
 		$str = "		
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 				   GAJI_RIWAYAT_LAMA_ID= ".$this->getField("GAJI_RIWAYAT_LAMA_ID").",
 				   SURAT_KELUAR_BKD_ID= ".$this->getField("SURAT_KELUAR_BKD_ID").",
@@ -167,7 +167,7 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 				   GAJI_RIWAYAT_LAMA_ID= ".$this->getField("GAJI_RIWAYAT_LAMA_ID").",
 				   SURAT_KELUAR_BKD_ID= ".$this->getField("SURAT_KELUAR_BKD_ID").",
@@ -195,10 +195,10 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 				   GAJI_RIWAYAT_LAMA_ID= ".$this->getField("GAJI_RIWAYAT_LAMA_ID").",
-				   GAJI_RIWAYAT_BARU_ID= (SELECT MAX(COALESCE(GAJI_RIWAYAT_ID,0)) + 1 FROM GAJI_RIWAYAT A WHERE 1=1),
+				   GAJI_RIWAYAT_BARU_ID= (SELECT MAX(COALESCE(GAJI_RIWAYAT_ID,0)) + 1 FROM gaji_pppk_riwayat A WHERE 1=1),
 				   SURAT_KELUAR_BKD_ID= ".$this->getField("SURAT_KELUAR_BKD_ID").",
 				   NOMOR_URUT= ".$this->getField("NOMOR_URUT").",
 				   KETERANGAN_TEKNIS= '".$this->getField("KETERANGAN_TEKNIS")."',
@@ -224,7 +224,7 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 				   STATUS		= ".$this->getField("STATUS").",
 			       STATUS_KGB	= ".$this->getField("STATUS_KGB").",
@@ -243,7 +243,7 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 			       QR_CODE	= '".$this->getField("QR_CODE")."'
 				WHERE PERIODE	= '".$this->getField("PERIODE")."' AND PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
@@ -258,7 +258,7 @@ DESCRIPTION			:
 		// echo "--";exit();
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str1= "
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET 	
 				   STATUS_KGB= NULL
 				WHERE PERIODE= '".$this->getField("PERIODE")."' AND PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
@@ -268,17 +268,17 @@ DESCRIPTION			:
 		$this->execQuery($str1);
 
 		$str11= "
-				UPDATE KENAIKAN_GAJI_BERKALA
+				UPDATE kenaikan_gaji_pppk_berkala
 				SET
 				   STATUS_KGB= NULL
-				WHERE GAJI_RIWAYAT_BARU_ID = (SELECT GAJI_RIWAYAT_BARU_ID FROM KENAIKAN_GAJI_BERKALA WHERE PERIODE= '".$this->getField("PERIODE")."' AND PEGAWAI_ID= ".$this->getField("PEGAWAI_ID").")
+				WHERE GAJI_RIWAYAT_BARU_ID = (SELECT GAJI_RIWAYAT_BARU_ID FROM kenaikan_gaji_pppk_berkala WHERE PERIODE= '".$this->getField("PERIODE")."' AND PEGAWAI_ID= ".$this->getField("PEGAWAI_ID").")
 				";
 		$this->query = $str11;
 		//echo $str1;exit;
 		$this->execQuery($str11);
 		
 		$str2= "		
-				UPDATE GAJI_RIWAYAT
+				UPDATE gaji_pppk_riwayat
 				SET    
 					   STATUS   	= ".$this->getField("STATUS").",
 					   LAST_USER	= '".$this->getField("LAST_USER")."',
@@ -286,14 +286,14 @@ DESCRIPTION			:
 					   LAST_DATE	= ".$this->getField("LAST_DATE").",
 					   USER_LOGIN_ID	= ".$this->getField("USER_LOGIN_ID").",
 					   USER_LOGIN_PEGAWAI_ID	= ".$this->getField("USER_LOGIN_PEGAWAI_ID")."
-				WHERE  GAJI_RIWAYAT_ID= (SELECT GAJI_RIWAYAT_BARU_ID FROM KENAIKAN_GAJI_BERKALA WHERE PERIODE= '".$this->getField("PERIODE")."' AND PEGAWAI_ID= ".$this->getField("PEGAWAI_ID").")
+				WHERE  GAJI_RIWAYAT_ID= (SELECT GAJI_RIWAYAT_BARU_ID FROM kenaikan_gaji_pppk_berkala WHERE PERIODE= '".$this->getField("PERIODE")."' AND PEGAWAI_ID= ".$this->getField("PEGAWAI_ID").")
 				"; 
 		$this->query = $str2;
 		// echo $str2;exit;
 		$this->execQuery($str2);
 		
 		$str3= "
-		SELECT PROSESKENAIKANBERKALAPEGAWAI('".$this->getField("PERIODE")."', ".$this->getField("PEGAWAI_ID").", '".$this->getField("LAST_USER")."', ".$this->getField("LAST_LEVEL").")
+		SELECT proseskenaikanpppkberkalapegawai('".$this->getField("PERIODE")."', ".$this->getField("PEGAWAI_ID").", '".$this->getField("LAST_USER")."', ".$this->getField("LAST_LEVEL").")
 		"; 
 		$this->query = $str3;
 		//echo $str3;exit;
@@ -304,9 +304,8 @@ DESCRIPTION			:
 	function insertGajiRiwayat()
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
-		//$this->setField("GAJI_RIWAYAT_ID", $this->getNextId("GAJI_RIWAYAT_ID","GAJI_RIWAYAT"));
      	$str = "
-			INSERT INTO GAJI_RIWAYAT (
+			INSERT INTO gaji_pppk_riwayat (
 				GAJI_RIWAYAT_ID, PEGAWAI_ID, PEJABAT_PENETAP_ID, PEJABAT_PENETAP, PANGKAT_ID, NO_SK,
 				TANGGAL_SK, TMT_SK, MASA_KERJA_TAHUN, MASA_KERJA_BULAN, GAJI_POKOK, JENIS_KENAIKAN, LAST_USER
 				, LAST_DATE, LAST_LEVEL, USER_LOGIN_ID, USER_LOGIN_PEGAWAI_ID
@@ -315,7 +314,7 @@ DESCRIPTION			:
 				  (
 				  SELECT 
 				  A.GAJI_RIWAYAT_BARU_ID
-				  FROM KENAIKAN_GAJI_BERKALA A
+				  FROM kenaikan_gaji_pppk_berkala A
 				  WHERE A.STATUS_KGB = '3' AND A.PERIODE= '".$this->getField("PERIODE")."' AND A.PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
 				  ),
 				  ".$this->getField("PEGAWAI_ID").",
@@ -325,7 +324,7 @@ DESCRIPTION			:
 				  (
 				  SELECT 
 				  CONCAT(SPLIT_PART(B.NOMOR, '/', 1), '/', SPLIT_PART(B.NOMOR, '/', 2), '.', CAST(A.NOMOR_URUT AS TEXT), '/', SPLIT_PART(B.NOMOR, '/', 3), '/', SPLIT_PART(B.NOMOR, '/', 4))
-				  FROM KENAIKAN_GAJI_BERKALA A
+				  FROM kenaikan_gaji_pppk_berkala A
 				  INNER JOIN PERSURATAN.SURAT_KELUAR_BKD B ON A.SURAT_KELUAR_BKD_ID = B.SURAT_KELUAR_BKD_ID
 				  WHERE A.STATUS_KGB = '3' AND A.PERIODE= '".$this->getField("PERIODE")."' AND A.PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
 				  ),
@@ -353,7 +352,7 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE GAJI_RIWAYAT
+				UPDATE gaji_pppk_riwayat
 				SET    
 				  PEGAWAI_ID= ".$this->getField("PEGAWAI_ID").",
 				  PEJABAT_PENETAP_ID= ".$this->getField("PEJABAT_PENETAP_ID").",
@@ -362,7 +361,7 @@ DESCRIPTION			:
 				  NO_SK= (
 				  SELECT 
 				  CONCAT(SPLIT_PART(B.NOMOR, '/', 1), '/', SPLIT_PART(B.NOMOR, '/', 2), '.', CAST(A.NOMOR_URUT AS TEXT), '/', SPLIT_PART(B.NOMOR, '/', 3), '/', SPLIT_PART(B.NOMOR, '/', 4))
-				  FROM KENAIKAN_GAJI_BERKALA A
+				  FROM kenaikan_gaji_pppk_berkala A
 				  INNER JOIN PERSURATAN.SURAT_KELUAR_BKD B ON A.SURAT_KELUAR_BKD_ID = B.SURAT_KELUAR_BKD_ID
 				  WHERE A.STATUS_KGB = '3' AND A.PERIODE= '".$this->getField("PERIODE")."' AND A.PEGAWAI_ID= ".$this->getField("PEGAWAI_ID")."
 				  ),
@@ -388,7 +387,7 @@ DESCRIPTION			:
 	{
 		/*Auto-generate primary key(s) by next max value (integer) */
 		$str = "		
-				UPDATE GAJI_RIWAYAT
+				UPDATE gaji_pppk_riwayat
 				SET    
 					   STATUS   	= ".$this->getField("STATUS").",
 					   LAST_USER	= '".$this->getField("LAST_USER")."',
@@ -411,7 +410,7 @@ DESCRIPTION			:
 			A.HUKUMAN_RIWAYAT_ID, A.SURAT_KELUAR_BKD_ID, A.NOMOR_URUT, A.KETERANGAN_TEKNIS, A.TANGGAL_BARU, A.TMT_BARU, A.MASA_KERJA_TAHUN_BARU, 
 			A.MASA_KERJA_BULAN_BARU, A.GAJI_BARU, A.SATUAN_KERJA_ID, A.STATUS_KGB, 
 			A.STATUS, A.LAST_USER, A.LAST_DATE, A.LAST_LEVEL
-		FROM KENAIKAN_GAJI_BERKALA A
+		FROM kenaikan_gaji_pppk_berkala A
 		WHERE 1 = 1
 		"; 
 		
@@ -429,10 +428,10 @@ DESCRIPTION			:
 	{
 		$str = "
 		SELECT
-		(SELECT COUNT(1) FROM KENAIKAN_GAJI_BERKALA A WHERE 1=1 AND A.PERIODE = '".$periode."' ".$statement." ) JUMLAH_DATA_KGB
-		, (SELECT COUNT(1) FROM KENAIKAN_GAJI_BERKALA A WHERE 1=1 AND A.STATUS_KGB = '2' AND A.PERIODE = '".$periode."' ".$statement." ) JUMLAH_DATA_KGB_PROSES
-		, (SELECT COUNT(1) FROM KENAIKAN_GAJI_BERKALA A WHERE 1=1 AND A.STATUS_KGB = '3' AND A.PERIODE = '".$periode."' ".$statement." ) JUMLAH_DATA_KGB_SELESAI
-		, (SELECT COUNT(1) FROM KENAIKAN_GAJI_BERKALA A WHERE 1=1 AND A.HUKUMAN_RIWAYAT_ID IS NOT NULL AND A.PERIODE = '".$periode."' ".$statement." ) JUMLAH_DATA_KGB_HUKUMAN
+		(SELECT COUNT(1) FROM kenaikan_gaji_pppk_berkala A WHERE 1=1 AND A.PERIODE = '".$periode."' ".$statement." ) JUMLAH_DATA_KGB
+		, (SELECT COUNT(1) FROM kenaikan_gaji_pppk_berkala A WHERE 1=1 AND A.STATUS_KGB = '2' AND A.PERIODE = '".$periode."' ".$statement." ) JUMLAH_DATA_KGB_PROSES
+		, (SELECT COUNT(1) FROM kenaikan_gaji_pppk_berkala A WHERE 1=1 AND A.STATUS_KGB = '3' AND A.PERIODE = '".$periode."' ".$statement." ) JUMLAH_DATA_KGB_SELESAI
+		, (SELECT COUNT(1) FROM kenaikan_gaji_pppk_berkala A WHERE 1=1 AND A.HUKUMAN_RIWAYAT_ID IS NOT NULL AND A.PERIODE = '".$periode."' ".$statement." ) JUMLAH_DATA_KGB_HUKUMAN
 		"; 
 		
 		// $str .= $statement." ".$order;
@@ -503,9 +502,9 @@ DESCRIPTION			:
 			, HK.KETERANGAN_HUKUMAN_INFO, HK.TMT_BERIKUT_GAJI, HK.TANGGAL_SK HUKUMAN_TANGGAL_SK, HK.NO_SK HUKUMAN_NO_SK
 			, '' JENIS_KGB, A.STATUS_KGB, CASE A.STATUS_KGB WHEN '2' THEN 'Dalam Proses' WHEN '3' THEN 'Selesai' WHEN '4' THEN 'Batal' ELSE '' END STATUS_KGB_NAMA
 			, A.STATUS_HITUNG_ULANG
-		FROM KENAIKAN_GAJI_BERKALA A
-		INNER JOIN PEGAWAI P ON A.PEGAWAI_ID = P.PEGAWAI_ID
-		INNER JOIN GAJI_RIWAYAT_DATA PR1 ON A.GAJI_RIWAYAT_LAMA_ID = PR1.GAJI_RIWAYAT_ID
+		FROM kenaikan_gaji_pppk_berkala A
+		INNER JOIN pegawai P ON A.PEGAWAI_ID = P.PEGAWAI_ID
+		INNER JOIN gaji_pppk_riwayat_data PR1 ON A.GAJI_RIWAYAT_LAMA_ID = PR1.GAJI_RIWAYAT_ID
 		LEFT JOIN 
 		(
 			SELECT A.PEGAWAI_STATUS_ID, A.PEGAWAI_ID, A.STATUS_PEGAWAI_ID, B.NAMA PEGAWAI_STATUS_NAMA
@@ -550,9 +549,9 @@ DESCRIPTION			:
 			, A.TMT_BARU, A.MASA_KERJA_TAHUN_BARU, A.MASA_KERJA_BULAN_BARU, A.GAJI_BARU
 			, CASE WHEN PR1.JENIS_KENAIKAN = 1 AND A.HUKUMAN_RIWAYAT_ID IS NULL THEN 'CPNS' WHEN HK.JENIS_HUKUMAN_ID = 4 THEN 'Penundaan' WHEN A.HUKUMAN_RIWAYAT_ID IS NOT NULL THEN 'Mundur' ELSE 'Normal' END
 			JENIS_KGB, A.STATUS_KGB, CASE A.STATUS_KGB WHEN '2' THEN 'Dalam Proses' WHEN '3' THEN 'Selesai' WHEN '4' THEN 'Batal' ELSE '' END STATUS_KGB_NAMA
-		FROM KENAIKAN_GAJI_BERKALA A
-		INNER JOIN PEGAWAI P ON A.PEGAWAI_ID = P.PEGAWAI_ID
-		INNER JOIN GAJI_RIWAYAT_DATA PR1 ON A.GAJI_RIWAYAT_LAMA_ID = PR1.GAJI_RIWAYAT_ID
+		FROM kenaikan_gaji_pppk_berkala A
+		INNER JOIN pegawai P ON A.PEGAWAI_ID = P.PEGAWAI_ID
+		INNER JOIN gaji_pppk_riwayat_data PR1 ON A.GAJI_RIWAYAT_LAMA_ID = PR1.GAJI_RIWAYAT_ID
 		LEFT JOIN
 		(
 			SELECT A.PEGAWAI_ID, A.HUKUMAN_ID, A.JENIS_HUKUMAN_ID FROM HUKUMAN A
@@ -593,9 +592,9 @@ DESCRIPTION			:
 	{
 		$str = "
 				SELECT COUNT(1) AS ROWCOUNT 
-				FROM KENAIKAN_GAJI_BERKALA A
+				FROM kenaikan_gaji_pppk_berkala A
 				INNER JOIN PEGAWAI P ON A.PEGAWAI_ID = P.PEGAWAI_ID
-				INNER JOIN GAJI_RIWAYAT_DATA PR1 ON A.GAJI_RIWAYAT_LAMA_ID = PR1.GAJI_RIWAYAT_ID
+				INNER JOIN gaji_pppk_riwayat_data PR1 ON A.GAJI_RIWAYAT_LAMA_ID = PR1.GAJI_RIWAYAT_ID
 				WHERE 1 = 1 ".$statement; 
 		foreach ($paramsArray as $key => $val)
 		{

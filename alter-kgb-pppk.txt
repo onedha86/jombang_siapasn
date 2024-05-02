@@ -3,6 +3,10 @@ delete from menu where menu_id = '010203' and menu_group_id = 1;
 insert into menu(menu_id, menu_parent_id, menu_group_id, nama, link_file, urut, status, icon, menu_icon_id)
 values('010203', '0102', 1, 'Gaji PPPK', 'pegawai_add_gaji_pppk_monitoring', 3, 1, '<i class="mdi-content-mail"></i>', 'fa fa-files-o');
 
+delete from menu where menu_id = '1503' and menu_group_id = 1;
+insert into menu(menu_id, menu_parent_id, menu_group_id, nama, link_file, menu_icon_id)
+values('1503', '15', 1, 'KGB PPPK', 'kenaikan_gaji_pppk_berkala', 'fa fa-files-o');
+
 drop table if exists gaji_pppk_riwayat;
 create table gaji_pppk_riwayat
 (
@@ -138,3 +142,450 @@ before insert or update
 on gaji_pppk_riwayat
 for each row
 execute procedure gaji_pppk_riwayat_validasi_before();
+
+drop table if exists kenaikan_gaji_pppk_berkala;
+create table kenaikan_gaji_pppk_berkala
+(
+	periode character varying(6) not null,
+	pegawai_id numeric not null,
+	pegawai_status_id numeric,
+	jabatan_riwayat_id numeric,
+	pangkat_riwayat_lama_id numeric,
+	status_hitung_ulang numeric,
+	gaji_riwayat_lama_id numeric,
+	pangkat_riwayat_baru_id numeric,
+	gaji_riwayat_baru_id numeric,
+	hukuman_riwayat_id numeric,
+	surat_keluar_bkd_id numeric,
+	nomor_urut numeric,
+	keterangan_teknis text,
+	tanggal_baru date,
+	tmt_baru date,
+	masa_kerja_tahun_baru numeric,
+	masa_kerja_bulan_baru numeric,
+	gaji_pokok_detil_id numeric,
+	gaji_baru numeric,
+	satuan_kerja_id numeric,
+	status_kgb character varying(1),
+	status character varying(1),
+	last_user character varying,
+	last_date timestamp without time zone,
+	last_level numeric,
+	user_login_id numeric,
+	user_login_pegawai_id numeric,
+	qr_code text,
+	constraint ak_u1_kenaikan_gaji_pppk_berkala unique (pegawai_id, periode)
+);
+
+create or replace function unique_kenaikan_gaji_pppk_berkala()
+  returns trigger as
+$body$
+declare
+vrowid integer;
+begin
+	
+	if upper(tg_op) = upper('insert') or (upper(tg_op) = upper('update') and (coalesce(nullif(new.status, ''), null) is null or new.status = '2')) then
+		if upper(tg_op) = upper('insert') then
+			if new.nomor_urut is null then
+				vrowid:= null;
+			else
+				select
+				case when count(1) > 0 then 1 else 0 end into vrowid
+				from kenaikan_gaji_pppk_berkala a
+				where 1=1
+				and a.surat_keluar_bkd_id is not null
+				and a.surat_keluar_bkd_id = new.surat_keluar_bkd_id
+				and a.periode = new.periode --and a.pegawai_id = new.pegawai_id
+				and a.nomor_urut = new.nomor_urut
+				and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+				;
+			end if;
+		else
+			if new.nomor_urut is null then
+				vrowid:= null;
+			else
+				select
+				pegawai_id into vrowid
+				from kenaikan_gaji_pppk_berkala a
+				where 1=1
+				and a.surat_keluar_bkd_id is not null
+				and a.surat_keluar_bkd_id = new.surat_keluar_bkd_id
+				and a.periode = new.periode --and a.pegawai_id = new.pegawai_id
+				and a.nomor_urut = new.nomor_urut
+				and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+				;
+			end if;
+			--raise notice 'sql %',vrowid;
+
+			if new.pegawai_id = vrowid or vrowid is null then
+			vrowid:= 0;
+			else
+			vrowid:= 1;
+			end if;
+			raise notice 'sql %',vrowid;
+		end if;
+		
+		if vrowid >= 1 and vrowid is not null then
+			return false; 
+		else
+			return new;
+		end if;
+	else
+	return new;
+	end if;
+	
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function unique_kenaikan_gaji_pppk_berkala() owner to postgres;
+
+drop trigger if exists uniquec_kenaikan_gaji_pppk_berkala on kenaikan_gaji_pppk_berkala;
+create trigger uniquec_kenaikan_gaji_pppk_berkala
+before insert or update
+on kenaikan_gaji_pppk_berkala
+for each row
+execute procedure unique_kenaikan_gaji_pppk_berkala();
+
+create or replace view gaji_pppk_terakhir_periode as 
+ select a.gaji_pppk_riwayat_id gaji_riwayat_id,
+    a.pegawai_id,
+    a.tmt_sk +
+        case
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric then 24::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) then 24::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric - a.masa_kerja_bulan
+            when substr(a.pangkat_id::text, 1, 1)::integer = any (array[1, 3, 4]) then 24::numeric - a.masa_kerja_bulan
+            else 12::numeric - a.masa_kerja_bulan
+        end::double precision * '1 mon'::interval as tmt_periode_kgb,
+    c.nama as pejabat_penetap,
+    d.kode as gol_ruang,
+    a.no_sk,
+    a.tanggal_sk,
+    a.tmt_sk,
+    a.masa_kerja_tahun,
+    a.masa_kerja_bulan,
+    a.gaji_pokok,
+    a.jenis_kenaikan,
+    a.pangkat_id,
+        case
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 1
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric then 2
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 3
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 4
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 5
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 6
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 7
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 8
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) then 9
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 10
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 11
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 13
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 14
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) then 15
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 16
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 17
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 18
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 19
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 20
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 then 21
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 22
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 23
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 25
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 26
+            when substr(a.pangkat_id::text, 1, 1)::integer = any (array[1, 3, 4]) then 27
+            else 28
+        end as kondisi_tmt,
+        case
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 21::numeric then 1
+            else 2
+        end as tambah_tahun,
+        case
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric then 24::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and a.pangkat_id = 11::numeric and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (a.pangkat_id = any (array[12::numeric, 13::numeric, 14::numeric])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) then 24::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and (substr(a.pangkat_id::text, 1, 1)::integer = any (array[3, 4])) and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 then 12::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) = 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 1::numeric then 24::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) > 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric - a.masa_kerja_bulan
+            when coalesce(a.masa_kerja_bulan, 0::numeric) > 0::numeric and coalesce(a.masa_kerja_tahun, 0::numeric) = 0::numeric and substr(a.pangkat_id::text, 1, 1)::integer = 2 and (coalesce(a.masa_kerja_tahun, 0::numeric) % 2::numeric) = 0::numeric then 12::numeric - a.masa_kerja_bulan
+            when substr(a.pangkat_id::text, 1, 1)::integer = any (array[1, 3, 4]) then 24::numeric - a.masa_kerja_bulan
+            else 12::numeric - a.masa_kerja_bulan
+        end as tambah_bulan
+   from gaji_pppk_riwayat a
+     join ( select y.gaji_pppk_riwayat_id,
+            y.pegawai_id,
+            y.tmt_sk,
+            y.tanggal_sk
+           from gaji_pppk_riwayat y
+             join ( select max(a_1.gaji_pppk_riwayat_id) as gaji_pppk_riwayat_id,
+                    a_1.pegawai_id,
+                    a_1.tmt_sk,
+                    max(a_1.tanggal_sk) as tanggal_sk
+                   from gaji_pppk_riwayat a_1
+                     join ( select a_2.pegawai_id,
+                            max(a_2.tmt_sk) as tmt_sk
+                           from gaji_pppk_riwayat a_2
+                          where (coalesce(nullif(a_2.status::text, ''::text), null::text) is null or a_2.status::text = '2'::text) 
+                          group by a_2.pegawai_id) b_1 on a_1.pegawai_id = b_1.pegawai_id and a_1.tmt_sk = b_1.tmt_sk
+                  where (coalesce(nullif(a_1.status::text, ''::text), null::text) is null or a_1.status::text = '2'::text)
+                  group by a_1.pegawai_id, a_1.tmt_sk) x on x.gaji_pppk_riwayat_id = y.gaji_pppk_riwayat_id) b on a.gaji_pppk_riwayat_id = b.gaji_pppk_riwayat_id
+     left join pejabat_penetap c on a.pejabat_penetap_id = c.pejabat_penetap_id
+     left join golongan_pppk d on a.pangkat_id = d.golongan_pppk_id
+  where 1 = 1 and a.masa_kerja_bulan <= 12::numeric and (coalesce(nullif(a.status::text, ''::text), null::text) is null or a.status::text = '2'::text);
+
+alter table gaji_pppk_terakhir_periode owner to postgres;
+
+create or replace function proseskenaikanpppkberkala(pperiode character varying, psatker numeric, lastuser character varying, lastlevel numeric)
+  returns void as
+$body$
+declare
+    sqlquery   text;
+    
+begin
+
+	if psatker is null
+	then
+		sqlquery := 'delete from kenaikan_gaji_pppk_berkala where periode=''' || pperiode || ''' and status_kgb is null';
+		execute sqlquery;
+	else
+		sqlquery := 'delete from kenaikan_gaji_pppk_berkala where periode='''|| pperiode || ''' and pegawai_id in (select pegawai_id from pegawai where satuan_kerja_id = ' || psatker || '';
+		sqlquery := sqlquery || ') and status_kgb is null';
+		execute sqlquery;
+	end if;
+	raise notice 'sql %',sqlquery;
+	
+	sqlquery:= '
+	select
+	a.periode, a.pegawai_id, a.pegawai_status_id, a.jabatan_riwayat_id,
+	a.gaji_riwayat_lama_id, a.hukuman_riwayat_id, a.tanggal_baru, a.tmt_baru, a.masa_kerja_tahun_baru, 
+	a.masa_kerja_bulan_baru, cast(a.gaji_pokok_detil_id as numeric) gaji_pokok_detil_id, cast(a.gaji_baru as numeric) gaji_baru, a.satuan_kerja_id, null status_kgb, ''' || lastuser || ''' last_user, now() last_date, '|| lastlevel ||' last_level
+	from
+	(
+	select
+	case when kgb.pegawai_id is not null 
+	then
+	case when concat(to_char(gt.tmt_periode_kgb, ''mm'') || to_char(gt.tmt_periode_kgb, ''yyyy'')) = periode_kgb then 1 else 0 end
+	else 0 end check_data_kgb
+	, case when kgb.pegawai_id is not null then 1 else 0 end check_data_kgb1,
+	''' || pperiode || ''' periode, p.pegawai_id, p.pegawai_status_id, p.jabatan_riwayat_id, p.pangkat_riwayat_id pangkat_riwayat_lama_id
+	, gt.gaji_riwayat_id gaji_riwayat_lama_id
+	, h.hukuman_id hukuman_riwayat_id
+	, (select min(tanggal) from persuratan.surat_keluar_bkd where periode = ''' || pperiode || ''' and nomor_awal is not null) tanggal_baru
+	, set_hari_aktif(to_date(''01''|| ''' || pperiode || ''' , ''ddmmyyyy'')) tanggal_barubak
+	, to_date(''01''|| ''' || pperiode || ''' , ''ddmmyyyy'') tmt_baru
+	, coalesce(gt.masa_kerja_tahun,0) + round((coalesce(gt.masa_kerja_bulan,0) + coalesce(gt.tambah_bulan,0)) / 12) masa_kerja_tahun_baru, 0 masa_kerja_bulan_baru
+	, ambil_gaji_berlaku_tgl_id(substr(''' || pperiode || ''',3, 4) || ''-'' || substr(''' || pperiode || ''',1, 2) || ''-'' || ''01'', 
+	(coalesce(gt.masa_kerja_tahun,0) + round((coalesce(gt.masa_kerja_bulan,0) + coalesce(gt.tambah_bulan,0)) / 12))
+	, gt.pangkat_id) gaji_pokok_detil_id
+	, ambil_gaji_berlaku_tgl_cpns(substr(''' || pperiode || ''',3, 4) || ''-'' || substr(''' || pperiode || ''',1, 2) || ''-'' || ''01'', 
+	(coalesce(gt.masa_kerja_tahun,0) + round((coalesce(gt.masa_kerja_bulan,0) + coalesce(gt.tambah_bulan,0)) / 12))
+	, gt.pangkat_id, cast(coalesce(gt.jenis_kenaikan,0) as text)) gaji_baru
+	, p.satuan_kerja_id
+	, to_char(gt.tmt_periode_kgb, ''mm'') blacuan
+	, to_char(gt.tmt_periode_kgb, ''yyyy'') thacuan
+	, cast(coalesce(gt.jenis_kenaikan,0) as text) jenis_kenaikan
+	from pegawai p 
+	left join gaji_pppk_terakhir_periode gt on p.pegawai_id = gt.pegawai_id
+	left join
+	(
+		select pegawai_id, hukuman_id, tanggal_mulai, tanggal_akhir from hukuman where coalesce(nullif(status, ''''), null) is null or status = ''2''
+	) h on h.pegawai_id = p.pegawai_id and set_hari_aktif(to_date(''01''|| ''' || pperiode || ''' , ''ddmmyyyy'')) between h.tanggal_mulai and h.tanggal_akhir
+	left join 
+	(
+		select a.periode periode_kgb, a.pegawai_id, a.gaji_riwayat_lama_id from kenaikan_gaji_pppk_berkala a where 1=1
+		and (coalesce(nullif(a.status_kgb, ''''), null) is null or a.status_kgb is null)
+		and a.periode = ''' || pperiode || '''
+	) kgb on p.pegawai_id = kgb.pegawai_id
+	where 1 = 1 and p.status_pegawai_id in (6) ';
+	--substring(periode, 3,4) = substring(''' || pperiode || ''', 3,4) 
+
+	if psatker is not null
+	then
+	sqlquery := sqlquery || ' and ( p.satuan_kerja_id = any( ambil_id_satuan_kerja_tree_array('|| psatker ||') ) or p.satuan_kerja_id = '|| psatker ||' )';
+	end if;
+	--select proseskenaikanpppkberkala('102018', 231, 'admin', '99');
+	--select proseskenaikanpppkberkala('052024', null, 'admin', '99');
+
+	sqlquery := sqlquery || ' ) a
+	left join 
+	(
+		select a.pegawai_id, case when a.status_kgb = ''4'' then ''1'' when a.status_kgb is null then ''2'' else ''3'' end status_kgb_info 
+		from kenaikan_gaji_pppk_berkala a where a.periode = ''' || pperiode || '''
+	)
+	k on k.pegawai_id = a.pegawai_id
+	where
+	check_data_kgb = 0 and
+	cast(substr(''' || pperiode || ''',3, 4) as numeric) = cast(thacuan as numeric)
+	and cast(substr(''' || pperiode || ''',1, 2) as numeric) = cast(blacuan as numeric)
+	and k.status_kgb_info is null;
+	';
+	--raise notice 'sql %',sqlquery;
+
+	execute ' insert into kenaikan_gaji_pppk_berkala
+	(
+	periode, pegawai_id, pegawai_status_id, jabatan_riwayat_id,
+	gaji_riwayat_lama_id, hukuman_riwayat_id, tanggal_baru, tmt_baru, masa_kerja_tahun_baru, 
+	masa_kerja_bulan_baru, gaji_pokok_detil_id, gaji_baru, satuan_kerja_id, status_kgb, last_user, last_date, last_level
+	) ' || sqlquery || ';';
+     
+exception
+  when others
+  then raise exception 'an error was encountered - ';
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function proseskenaikanpppkberkala(character varying, numeric, character varying, numeric) owner to postgres;
+
+
+create or replace function proseskenaikanpppkberkalapegawai(pperiode character varying, pegawaiid numeric, lastuser character varying, lastlevel numeric)
+  returns void as
+$body$
+declare
+    sqlquery   text;
+    
+begin
+	--select proseskenaikanpppkberkala('102018', null, 'admin', '99');
+	sqlquery := 'delete from kenaikan_gaji_pppk_berkala where periode='''|| pperiode || ''' and pegawai_id = ' || pegawaiid || ' and status_kgb is null';
+	execute sqlquery;
+	--raise notice 'sql %',sqlquery;
+
+	sqlquery:= '
+	select
+	a.periode, a.pegawai_id, a.pegawai_status_id, a.jabatan_riwayat_id,
+	a.gaji_riwayat_lama_id, a.hukuman_riwayat_id, a.tanggal_baru, a.tmt_baru, a.masa_kerja_tahun_baru, 
+	a.masa_kerja_bulan_baru, cast(a.gaji_pokok_detil_id as numeric) gaji_pokok_detil_id, cast(a.gaji_baru as numeric) gaji_baru, a.satuan_kerja_id, null status_kgb, ''' || lastuser || ''' last_user, now() last_date, '|| lastlevel ||' last_level
+	from
+	(
+	select ''' || pperiode || ''' periode, p.pegawai_id, p.pegawai_status_id, p.jabatan_riwayat_id, p.pangkat_riwayat_id pangkat_riwayat_lama_id
+	, gt.gaji_riwayat_id gaji_riwayat_lama_id
+	, h.hukuman_id hukuman_riwayat_id
+	, (select min(tanggal) from persuratan.surat_keluar_bkd where periode = ''' || pperiode || ''' and nomor_awal is not null) tanggal_baru
+	, set_hari_aktif(to_date(''01''|| ''' || pperiode || ''' , ''ddmmyyyy'')) tanggal_barubak
+	, to_date(''01''|| ''' || pperiode || ''' , ''ddmmyyyy'') tmt_baru
+	, coalesce(gt.masa_kerja_tahun,0) + round((coalesce(gt.masa_kerja_bulan,0) + coalesce(gt.tambah_bulan,0)) / 12) masa_kerja_tahun_baru, 0 masa_kerja_bulan_baru
+	, ambil_gaji_berlaku_tgl_id(substr(''' || pperiode || ''',3, 4) || ''-'' || substr(''' || pperiode || ''',1, 2) || ''-'' || ''01'', 
+	(coalesce(gt.masa_kerja_tahun,0) + round((coalesce(gt.masa_kerja_bulan,0) + coalesce(gt.tambah_bulan,0)) / 12))
+	, gt.pangkat_id) gaji_pokok_detil_id
+	, ambil_gaji_berlaku_tgl_cpns(substr(''' || pperiode || ''',3, 4) || ''-'' || substr(''' || pperiode || ''',1, 2) || ''-'' || ''01'', 
+	(coalesce(gt.masa_kerja_tahun,0) + round((coalesce(gt.masa_kerja_bulan,0) + coalesce(gt.tambah_bulan,0)) / 12))
+	, gt.pangkat_id, cast(coalesce(gt.jenis_kenaikan,0) as text)) gaji_baru
+	, p.satuan_kerja_id
+	, to_char(gt.tmt_periode_kgb, ''mm'') blacuan
+	, to_char(gt.tmt_periode_kgb, ''yyyy'') thacuan
+	, cast(coalesce(gt.jenis_kenaikan,0) as text) jenis_kenaikan
+	from pegawai p 
+	left join gaji_pppk_terakhir_periode gt on p.pegawai_id = gt.pegawai_id
+	left join
+	(
+	select * from jabatan_terakhir where 1 = 1 and pegawai_id = '|| pegawaiid ||'
+	) jt on jt.jabatan_riwayat_id = p.jabatan_riwayat_id
+	left join
+	(
+		select pegawai_id, hukuman_id, tanggal_mulai, tanggal_akhir from hukuman where coalesce(nullif(status, ''''), null) is null or status = ''2''
+	) h on h.pegawai_id = p.pegawai_id and set_hari_aktif(to_date(''01''|| ''' || pperiode || ''' , ''ddmmyyyy'')) between h.tanggal_mulai and h.tanggal_akhir
+	where 1 = 1 and p.pegawai_id = '|| pegawaiid ||'';
+	--left join jabatan_terakhir jt on jt.jabatan_riwayat_id = p.jabatan_riwayat_id
+	--select proseskenaikanpppkberkala('102018', 231, 'admin', '99');
+	--select proseskenaikanpppkberkala('102018', null, 'admin', '99');
+
+	sqlquery := sqlquery || ' ) a
+	left join 
+	(
+		select a.pegawai_id, case when a.status_kgb = ''4'' then ''1'' when a.status_kgb is null then ''2'' else ''3'' end status_kgb_info 
+		from kenaikan_gaji_pppk_berkala a where a.periode = ''' || pperiode || '''
+	)
+	k on k.pegawai_id = a.pegawai_id
+	where
+	cast(substr(''' || pperiode || ''',3, 4) as numeric) = cast(thacuan as numeric)
+	and cast(substr(''' || pperiode || ''',1, 2) as numeric) = cast(blacuan as numeric)
+	and k.status_kgb_info is null;
+	';
+	raise notice 'sql %',sqlquery;
+
+	execute ' insert into kenaikan_gaji_pppk_berkala
+	(
+	periode, pegawai_id, pegawai_status_id, jabatan_riwayat_id,
+	gaji_riwayat_lama_id, hukuman_riwayat_id, tanggal_baru, tmt_baru, masa_kerja_tahun_baru, 
+	masa_kerja_bulan_baru, gaji_pokok_detil_id, gaji_baru, satuan_kerja_id, status_kgb, last_user, last_date, last_level
+	) ' || sqlquery || ';';
+     
+exception
+  when others
+  then raise exception 'an error was encountered - ';
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function proseskenaikanpppkberkalapegawai(character varying, numeric, character varying, numeric) owner to postgres;
+
+create or replace view gaji_pppk_riwayat_data as 
+ select
+    a.gaji_pppk_riwayat_id gaji_riwayat_id,
+    a.pegawai_id,
+    a.pejabat_penetap_id,
+    a.pejabat_penetap,
+    a.pangkat_id,
+    a.no_sk,
+    a.tanggal_sk,
+    a.tmt_sk,
+    a.masa_kerja_tahun,
+    a.masa_kerja_bulan,
+    a.gaji_pokok,
+    a.jenis_kenaikan,
+    a.status,
+    a.last_user,
+    a.last_date,
+    a.last_level,
+    b.kode as pangkat_kode,
+    b.nama as pangkat_nama,
+    case a.jenis_kenaikan when 0 then 'SK PPPK' when 1 then 'Gaji Berkala' else '-' end jenis_kenaikan_nama,
+    pp.nama as pejabat_penetap_nama,
+    0::numeric as data_hukuman
+   from gaji_pppk_riwayat a
+     left join golongan_pppk b on a.pangkat_id = b.golongan_pppk_id
+     left join pejabat_penetap pp on a.pejabat_penetap_id = pp.pejabat_penetap_id
+  where 1 = 1;
