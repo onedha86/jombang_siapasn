@@ -1,0 +1,127 @@
+drop table if exists rekap.statistik_diklat_kursus;
+create table rekap.statistik_diklat_kursus
+(
+	pegawai_id numeric not null
+	, pegawai_nama character varying
+	, satuan_kerja_id numeric not null
+	, tahun numeric not null
+	, keterangan_diklat_teknis character varying
+	, keterangan_diklat_fungsional character varying
+	, keterangan_seminar_dll character varying
+	, constraint pk_statistik_diklat_kursus primary key (pegawai_id)
+	, constraint u_statistik_diklat_kursus unique (pegawai_id)
+);
+
+create or replace function rekap.pstatistikdiklatkursus(vtahun numeric)
+  returns void as
+$body$
+declare
+    sqlquery text;
+    dtmenupenandatanganid character varying;
+    dtkode character varying;
+    dtnomenklatur character varying;
+    dtvalidtte numeric;
+    dtvalidnomor character varying;
+    dtperiode character varying;
+    dtbulan character varying;
+    dttahun character varying;
+    nextvalidsubnomor numeric;
+    nextvalidnomor character varying;
+begin
+	
+	insert into rekap.statistik_diklat_kursus
+	(
+		pegawai_id, pegawai_nama, satuan_kerja_id, tahun
+		, keterangan_diklat_teknis, keterangan_diklat_fungsional, keterangan_seminar_dll
+	)
+	select
+		a.pegawai_id
+		,
+		case
+		when coalesce(nullif(a.gelar_depan, ''), null) is null then ''
+		else replace(replace(a.gelar_depan, '.', ''), ' ', '') || '. '
+		end
+		||
+		a.nama
+		||
+		case
+		when coalesce(nullif(a.gelar_belakang, ''), null) is not null then
+		', ' || replace(replace(replace(a.gelar_belakang, ' , ', ''), ', ', ''), ' ,', '')
+		else ''
+		end pegawai_nama
+		, a.satuan_kerja_id, vtahun
+		,
+		case when jumlah_diklat_teknis > 0 then
+		jumlah_diklat_teknis || ' ( total ' || jp_diklat_teknis || ' jp)'
+		else '-' end keterangan_diklat_teknis
+		,
+		case when jumlah_diklat_fungsional > 0 then
+		jumlah_diklat_fungsional || ' ( total ' || jp_diklat_fungsional || ' jp)'
+		else '-' end keterangan_diklat_fungsional
+		,
+		case when jumlah_seminar_dll > 0 then
+		jumlah_seminar_dll || ' ( total ' || jp_seminar_dll || ' jp)'
+		else '-' end keterangan_seminar_dll
+	from pegawai a
+	inner join
+	(
+		select
+			a.pegawai_id
+			, sum(coalesce(jumlah_diklat_fungsional,0)) jumlah_diklat_fungsional
+			, sum(coalesce(jp_diklat_fungsional,0)) jp_diklat_fungsional
+			, sum(coalesce(jumlah_diklat_teknis,0)) jumlah_diklat_teknis
+			, sum(coalesce(jp_diklat_teknis,0)) jp_diklat_teknis
+			, sum(coalesce(jumlah_seminar_dll,0)) jumlah_seminar_dll
+			, sum(coalesce(jp_seminar_dll,0)) jp_seminar_dll
+		from
+		(
+			select
+				a.pegawai_id
+				, case when a.tipe_kursus_id = 2 then 1 else 0 end jumlah_diklat_fungsional
+				, case when a.tipe_kursus_id = 2 then a.jumlah_jam else 0 end jp_diklat_fungsional
+				, case when a.tipe_kursus_id = 3 then 1 else 0 end jumlah_diklat_teknis
+				, case when a.tipe_kursus_id = 3 then a.jumlah_jam else 0 end jp_diklat_teknis
+				, case when a.tipe_kursus_id not in (2,3) then 1 else 0 end jumlah_seminar_dll
+				, case when a.tipe_kursus_id not in (2,3) then a.jumlah_jam else 0 end jp_seminar_dll
+			from diklat_kursus a
+			where 1=1
+			and tahun = vtahun
+			and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+		) a
+		where 1=1
+		--and a.pegawai_id = 8300
+		group by a.pegawai_id
+	) a1 on a.pegawai_id = a1.pegawai_id
+	where 1=1;
+  	--select rekap.pstatistikdiklatkursus(2024);
+  
+exception
+when others
+then raise exception 'an error was encountered - ';
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function rekap.pstatistikdiklatkursus(numeric) owner to postgres;
+
+--==============================================================================================================
+select
+	a.pegawai_id
+	, a.tingkat_hukuman_nama, a.jenis_hukuman_nama
+	, a.tmt_sk, a.tanggal_akhir, a.status
+	, case a.status when 1 then 'Aktif' else 'Tidak Aktif' end status_nama
+from
+(
+	select
+		a.pegawai_id
+		, a1.nama tingkat_hukuman_nama, a2.nama jenis_hukuman_nama
+		, a.tmt_sk, a.tanggal_akhir
+		, case when current_date <= coalesce(a.tanggal_akhir, current_date) and current_date >= a.tanggal_mulai
+		then 1 else 2 end status
+	from hukuman a
+	left join tingkat_hukuman a1 on a1.tingkat_hukuman_id = a.tingkat_hukuman_id
+	left join jenis_hukuman a2 on a2.jenis_hukuman_id = a.jenis_hukuman_id
+	where 1=1
+	and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+) a
+where 1=1
