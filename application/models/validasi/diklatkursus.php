@@ -200,9 +200,20 @@ DESCRIPTION			:
         SET
         	RIWAYAT_ID= ".$this->getField("RIWAYAT_ID")."
         	, TEMP_VALIDASI_BELUM_ID= NULL
-        WHERE 
-        TEMP_VALIDASI_BELUM_ID= ".$this->getField("TEMP_VALIDASI_ID")."
-        AND RIWAYAT_TABLE= 'DIKLAT_KURSUS'
+        	, RIWAYAT_TABLE= 'DIKLAT_KURSUS'
+        	, TEMP_VALIDASI_ID= ".$this->getField("TEMP_VALIDASI_ID")."
+        WHERE
+        (
+			(
+				TEMP_VALIDASI_BELUM_ID= ".$this->getField("TEMP_VALIDASI_ID")." AND RIWAYAT_TABLE= 'DIKLAT_KURSUS'
+			)
+			OR
+			(
+				TEMP_VALIDASI_BELUM_ID= ".$this->getField("TEMP_VALIDASI_ID")."
+				AND PEGAWAI_ID = ".$this->getField("PEGAWAI_ID")."
+				AND COALESCE(NULLIF(RIWAYAT_TABLE, ''), NULL) IS NULL
+			)
+        )
         ";
 				  
 		$this->query = $str;

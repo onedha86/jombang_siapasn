@@ -89,6 +89,20 @@ class diklat_struktural_json extends CI_Controller {
 		}
 		else
 		{
+			// validasi untuk file
+			$this->load->library('globalvalidasifilepegawai');
+			$reqLinkFile= $_FILES['reqLinkFile'];
+			// print_r($reqLinkFile);exit;
+
+			// untuk validasi required file
+			$validasifilerequired= new globalvalidasifilepegawai();
+			$vpost= $this->input->post();
+			$vinforequired= $validasifilerequired->validasifilerequired($vpost, $reqLinkFile);
+			if(!empty($vinforequired))
+			{
+				echo "xxx-".$vinforequired;
+				exit;
+			}
 
 			$reqDiklat= $this->input->post('reqDiklat');
 			$reqTahun= $this->input->post('reqTahun');
@@ -158,6 +172,7 @@ class diklat_struktural_json extends CI_Controller {
 						$setfile= new DiklatStruktural();
 						$setfile->setField('RIWAYAT_ID', $reqValRowId);
 						$setfile->setField('TEMP_VALIDASI_ID', $reqTempValidasiId);
+						$setfile->setField('PEGAWAI_ID', $reqId);
 						$setfile->riwayatvalidasipegawaifile();
 
 					}

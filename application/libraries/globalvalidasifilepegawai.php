@@ -1008,7 +1008,11 @@ class globalvalidasifilepegawai
 		}
 		else
 		{
-			$statement= " AND A.RIWAYAT_TABLE = '".$riwayattable."'";
+			if($reqRowId == -1){}
+			else
+			{
+				$statement= " AND A.RIWAYAT_TABLE = '".$riwayattable."'";
+			}
 		}
 
 		if(!empty($reqRowId) && empty($paramriwayatfield))
@@ -1029,7 +1033,20 @@ class globalvalidasifilepegawai
 			else
 			{
 				if($reqRowId == -1)
-					$statement.= " AND A.TEMP_VALIDASI_BELUM_ID = ".$reqTempValidasiId;
+				{
+					$statement.= " 
+					AND 
+					(
+						(
+							A.RIWAYAT_TABLE = '".$riwayattable."' AND TEMP_VALIDASI_BELUM_ID = ".$reqTempValidasiId."
+						)
+						OR
+						(
+							TEMP_VALIDASI_BELUM_ID = ".$reqTempValidasiId."
+						)
+					)
+					";
+				}
 				else
 					$statement.= " AND A.RIWAYAT_ID = ".$reqRowId;
 			}
@@ -1085,7 +1102,11 @@ class globalvalidasifilepegawai
 					}
 					else
 					{
-						$statement.= " AND A.RIWAYAT_TABLE = '".$riwayattable."'";
+						if($reqRowId == -1){}
+						else
+						{
+							$statement.= " AND A.RIWAYAT_TABLE = '".$riwayattable."'";
+						}
 					}
 
 					if(!empty($reqRowId) && empty($paramriwayatfield))
@@ -1106,7 +1127,20 @@ class globalvalidasifilepegawai
 						else
 						{
 							if($reqRowId == -1)
-								$statement.= " AND TEMP_VALIDASI_BELUM_ID = ".$reqTempValidasiId;
+							{
+								$statement.= " 
+								AND 
+								(
+									(
+										A.RIWAYAT_TABLE = '".$riwayattable."' AND TEMP_VALIDASI_BELUM_ID = ".$reqTempValidasiId."
+									)
+									OR
+									(
+										TEMP_VALIDASI_BELUM_ID = ".$reqTempValidasiId."
+									)
+								)
+								";
+							}
 							else
 								$statement.= " AND RIWAYAT_ID = ".$reqRowId;
 						}

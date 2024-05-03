@@ -83,6 +83,7 @@ while($set_detil->nextRow())
 	$arrPegawaiDokumen[$index_data]["INFO_DATA"] = $set_detil->getField("INFO_DATA");
 	$arrPegawaiDokumen[$index_data]["KATEGORI_FILE_ID"] = $set_detil->getField("KATEGORI_FILE_ID");
 	$arrPegawaiDokumen[$index_data]["STATUS"] = $set_detil->getField("STATUS");
+	$arrPegawaiDokumen[$index_data]["TEMP_VALIDASI_BELUM_ID"] = $set_detil->getField("TEMP_VALIDASI_BELUM_ID");
 
 	$vinfogroupdata= "";
 	$vpidrow= $set_detil->getField("P_ID_ROW");
@@ -605,6 +606,13 @@ $kualitas->selectByParams(array());
 														$tempFileKualitasId= $arrPegawaiDokumen[$index_row]["FILE_KUALITAS_ID"];
 														$tempFileKualitasNama= $arrPegawaiDokumen[$index_row]["FILE_KUALITAS_NAMA"];
 														$infostatus= $arrPegawaiDokumen[$index_row]["STATUS"];
+
+														// kalau ada data maka lewati, karena belum valid
+														$dtempvalidasibelumid= $arrPegawaiDokumen[$index_row]["TEMP_VALIDASI_BELUM_ID"];
+														if(!empty($dtempvalidasibelumid))
+														{
+															continue;
+														}
 
 														$tempNamaUrlFileDB= $arrPegawaiDokumen[$index_row]["PATH_ASLI"];
 														$tempNamaUrlFileLama= $arrPegawaiDokumen[$index_row]["ROWID"];
