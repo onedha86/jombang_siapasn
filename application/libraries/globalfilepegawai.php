@@ -1956,7 +1956,7 @@ class globalfilepegawai
 					$arrdata["id"]= $reqDokumenFileId;
 					$arrdata["index"]= "v".count($arrpilihfile);
 					$arrdata["selected"]= "selected";
-					$arrdata["nama"]= $infonama;
+					$arrdata["nama"]= addslashes($infonama);
 					$arrdata["vurl"]= $reqDokumenFilePath;
 					$arrdata["ext"]= strtolower(end(explode(".", $reqDokumenFilePath)));
 					$arrdata["filekualitasid"]= $reqDokumenFileKualitasId;
@@ -2087,7 +2087,7 @@ class globalfilepegawai
 				$arrdata["id"]= $reqPegawaiFileId;
 				$arrdata["index"]= "v".count($arrpilihfile);
 				$arrdata["selected"]= "";
-				$arrdata["nama"]= $infonama;
+				$arrdata["nama"]= addslashes($infonama);
 				$arrdata["vurl"]= $tempUrlFile;
 				$arrdata["ext"]= strtolower($infoext);
 				$arrdata["filekualitasid"]= $infofilekualitasid;
@@ -2250,7 +2250,7 @@ class globalfilepegawai
 			$arrdata["id"]= $reqPegawaiFileId;
 			$arrdata["index"]= "v".count($arrpilihfile);
 			$arrdata["selected"]= "";
-			$arrdata["nama"]= $infonama;
+			$arrdata["nama"]= addslashes($infonama);
 			$arrdata["vurl"]= $tempUrlFile;
 			$arrdata["ext"]= strtolower($infoext);
 			$arrdata["filekualitasid"]= $infofilekualitasid;
