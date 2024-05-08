@@ -334,7 +334,7 @@ if(!empty($reqRowId) && $reqStatusBerkas > 1 && empty($m))
 }
 // exit;
 
-$arrLog= $arrTmsTolak= $arrTokenLog= [];
+$arrLog= $arrTmsTolak= $arrTurunStatus= $arrTokenLog= [];
 if(!empty($reqRowId))
 {
   $set= new CutiUsulanTmsTolak();
@@ -351,6 +351,20 @@ if(!empty($reqRowId))
     array_push($arrTmsTolak, $arrdata);
   }
   // print_r($arrTmsTolak);exit;
+
+  $set= new CutiUsulanTurunStatus();
+  $statement= " AND A.CUTI_USULAN_ID = ".$reqRowId;
+  $set->selectByParams(array(), -1, -1, $statement);
+  // echo $set->query;exit;
+  while($set->nextRow())
+  {
+    $arrdata= [];
+    $arrdata["KETERANGAN"]= $set->getField("KETERANGAN");
+    $arrdata["LAST_USER"]= $set->getField("LAST_USER");
+    $arrdata["LAST_DATE"]= $set->getField("LAST_DATE");
+    array_push($arrTurunStatus, $arrdata);
+  }
+  // print_r($arrTurunStatus);exit;
 
   $set= new TekenLog();
   $statement= " AND A.JENIS = 'cuti-".$reqRowId."'";
@@ -1077,6 +1091,32 @@ if(!empty($aksiteken))
                   ?>
 
                   <?
+                  if(!empty($arrTurunStatus))
+                  {
+                  ?>
+                  <table class="bordered striped md-text table_list tabel-responsif" style="margin-top:20px">
+                    <tr class="ubah-color-warna">
+                      <th colspan="2" class="white-text material-font">Log Keterangan Turun Status</th>
+                    </tr>
+                    <?
+                    foreach ($arrTurunStatus as $key => $value)
+                    {
+                      $infologketerangan= $value["KETERANGAN"];
+                      $infologtanggal= datetimeToPage($value["LAST_DATE"], "datetime");
+                    ?>
+                    <tr>
+                      <td class="material-font" style="width:20%"><?=$infologtanggal?></td>
+                      <td class="material-font"><?=$infologketerangan?></td>
+                    </tr>
+                    <?
+                    }
+                    ?>
+                  </table>
+                  <?
+                  }
+                  ?>
+
+                  <?
                   if(!empty($arrLog))
                   {
                   ?>
@@ -1166,7 +1206,7 @@ if(!empty($aksiteken))
 
 <style type="text/css">
 input.colorreadonly{
-  color: rgba(0, 0, 0, 0.26);
+  color: rgba(0, 0, 0, 0.65);
   border-bottom: 1px dotted rgba(0, 0, 0, 0.26);
 }
 </style>

@@ -63,7 +63,8 @@ class Info_presensi_json extends REST_Controller {
             // echo $statementsatuankerja;exit();
             
             $set = new Pegawai;
-            $aColumns = array("PEGAWAI_ID", "NIP_BARU", "NAMA_LENGKAP", "TANGGAL_INFO", "TIPE_ABSEN", "TIPE_ABSEN_INFO", "JAM_INFO");
+            $aColumns = array("PEGAWAI_ID", "NIP_BARU", "NAMA_LENGKAP", "TANGGAL_INFO", "TIPE_ABSEN", "TIPE_ABSEN_INFO", "JAM_INFO", "JADWAL_MASUK", "JADWAL_PULANG", "CEKLOG_MASUK", "CEKLOG_PULANG", "STATUS_MASUK", "STATUS_PULANG", "MT", "PC");
+
             $set->selectPresensi(array(), -1, -1, $statement, $statementdetil);
             // echo $set->query;exit();
 
