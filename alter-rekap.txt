@@ -17,18 +17,9 @@ create or replace function rekap.pstatistikdiklatkursus(vtahun numeric)
 $body$
 declare
     sqlquery text;
-    dtmenupenandatanganid character varying;
-    dtkode character varying;
-    dtnomenklatur character varying;
-    dtvalidtte numeric;
-    dtvalidnomor character varying;
-    dtperiode character varying;
-    dtbulan character varying;
-    dttahun character varying;
-    nextvalidsubnomor numeric;
-    nextvalidnomor character varying;
 begin
-	
+
+	delete from rekap.statistik_diklat_kursus where tahun = vtahun;
 	insert into rekap.statistik_diklat_kursus
 	(
 		pegawai_id, pegawai_nama, satuan_kerja_id, tahun
@@ -105,23 +96,298 @@ language plpgsql volatile cost 100;
 alter function rekap.pstatistikdiklatkursus(numeric) owner to postgres;
 
 --==============================================================================================================
-select
-	a.pegawai_id
-	, a.tingkat_hukuman_nama, a.jenis_hukuman_nama
-	, a.tmt_sk, a.tanggal_akhir, a.status
-	, case a.status when 1 then 'Aktif' else 'Tidak Aktif' end status_nama
-from
+
+drop table if exists rekap.statistik_hukuman;
+create table rekap.statistik_hukuman
 (
+	pegawai_id numeric not null
+	, pegawai_nama character varying
+	, satuan_kerja_id numeric not null
+	, tingkat_hukuman_id numeric
+	, jenis_hukuman_id numeric
+	, tingkat_hukuman_nama character varying
+	, jenis_hukuman_nama character varying
+	, tmt_sk date
+	, tanggal_akhir date
+	, status numeric
+	, status_nama character varying
+	, constraint pk_statistik_hukuman primary key (pegawai_id, tmt_sk)
+	, constraint u_statistik_hukuman unique (pegawai_id, tmt_sk)
+);
+
+create or replace function rekap.pstatistikhukuman()
+  returns void as
+$body$
+declare
+    sqlquery text;
+begin
+	
+	delete from rekap.statistik_hukuman;
+	insert into rekap.statistik_hukuman
+	(
+		pegawai_id, pegawai_nama, satuan_kerja_id, tingkat_hukuman_id, jenis_hukuman_id
+		, tingkat_hukuman_nama, jenis_hukuman_nama, tmt_sk, tanggal_akhir, status, status_nama
+	)
 	select
-		a.pegawai_id
-		, a1.nama tingkat_hukuman_nama, a2.nama jenis_hukuman_nama
-		, a.tmt_sk, a.tanggal_akhir
-		, case when current_date <= coalesce(a.tanggal_akhir, current_date) and current_date >= a.tanggal_mulai
-		then 1 else 2 end status
-	from hukuman a
-	left join tingkat_hukuman a1 on a1.tingkat_hukuman_id = a.tingkat_hukuman_id
-	left join jenis_hukuman a2 on a2.jenis_hukuman_id = a.jenis_hukuman_id
+	a.pegawai_id
+	,
+	case
+	when coalesce(nullif(a.gelar_depan, ''), null) is null then ''
+	else replace(replace(a.gelar_depan, '.', ''), ' ', '') || '. '
+	end
+	||
+	a.nama
+	||
+	case
+	when coalesce(nullif(a.gelar_belakang, ''), null) is not null then
+	', ' || replace(replace(replace(a.gelar_belakang, ' , ', ''), ', ', ''), ' ,', '')
+	else ''
+	end pegawai_nama
+	, a.satuan_kerja_id, a1.tingkat_hukuman_id, a1.jenis_hukuman_id, a1.tingkat_hukuman_nama, a1.jenis_hukuman_nama
+	, a1.tmt_sk, a1.tanggal_akhir, a1.status, a1.status_nama
+	from pegawai a
+	inner join
+	(
+		select
+			a.pegawai_id, a.tingkat_hukuman_id, a.jenis_hukuman_id
+			, a.tingkat_hukuman_nama, a.jenis_hukuman_nama
+			, a.tmt_sk, a.tanggal_akhir, a.status
+			, case a.status when 1 then 'Aktif' else 'Tidak Aktif' end status_nama
+		from
+		(
+			select
+				a.pegawai_id, a.tingkat_hukuman_id, a.jenis_hukuman_id
+				, a1.nama tingkat_hukuman_nama, a2.nama jenis_hukuman_nama
+				, a.tmt_sk, a.tanggal_akhir
+				, case when current_date <= coalesce(a.tanggal_akhir, current_date) and current_date >= a.tanggal_mulai
+				then 1 else 2 end status
+			from hukuman a
+			left join tingkat_hukuman a1 on a1.tingkat_hukuman_id = a.tingkat_hukuman_id
+			left join jenis_hukuman a2 on a2.jenis_hukuman_id = a.jenis_hukuman_id
+			where 1=1
+			and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+		) a
+		where 1=1
+	) a1 on a.pegawai_id = a1.pegawai_id
+	where 1=1;
+	--select rekap.pstatistikhukuman();
+  
+exception
+when others
+then raise exception 'an error was encountered - ';
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function rekap.pstatistikhukuman() owner to postgres;
+
+--==============================================================================================================
+
+DROP type if exists tree_satker_type;
+create type tree_satker_type as (satuan_kerja_id numeric, satuan_kerja_parent_id numeric, nama character varying, kode character varying, id numeric, idpath character varying, depth numeric);
+
+DROP FUNCTION if exists tree_satker_type();
+--select * from rekap.tree_satker() where idpath like '000000000005%';
+--select * from rekap.tree_satker() where satuan_kerja_parent_id = 0;
+CREATE or replace FUNCTION rekap.tree_satker() RETURNS SETOF tree_satker_type AS $$
+DECLARE
+  cur refcursor;
+  QUERY TEXT;
+  rec tree_satker_type%ROWTYPE;
+BEGIN
+	QUERY := '
+	with recursive cte as 
+	(
+		select
+		satuan_kerja_id, satuan_kerja_parent_id, nama, kode
+		, satuan_kerja_id id, lpad((satuan_kerja_id)::varchar(12),12,''0'')::varchar(144) as idpath, 1::int as depth
+		from
+		(
+			select
+			satuan_kerja_id, satuan_kerja_parent_id, nama, kode
+			from satuan_kerja a
+			where 1=1
+			and coalesce(a.masa_berlaku_awal, current_date::timestamp without time zone) <= current_date
+			and coalesce(a.masa_berlaku_akhir, current_date::timestamp without time zone) >= current_date
+			and a.satuan_kerja_parent_id = 0
+			and a.satuan_kerja_id > 0
+			order by a.kode
+		) a
+		union all
+		select
+		a.satuan_kerja_id, a.satuan_kerja_parent_id, a.nama, a.kode
+		, a.satuan_kerja_id id, concat(idpath, lpad(a.satuan_kerja_id::varchar(12),12,''0''))::varchar(144) idpath, depth + 1::int as depth
+		from cte r
+		join
+		(
+			select a.*
+			from
+			(
+				select
+				satuan_kerja_id, satuan_kerja_parent_id, nama, kode
+				from satuan_kerja a
+				where 1=1
+				and coalesce(a.masa_berlaku_awal, current_date::timestamp without time zone) <= current_date
+				and coalesce(a.masa_berlaku_akhir, current_date::timestamp without time zone) >= current_date
+				and a.satuan_kerja_parent_id != 0
+				order by a.kode
+			) a
+		)
+		a on a.satuan_kerja_parent_id = r.id
+	)
+	select
+	a.*
+	from cte a
 	where 1=1
-	and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
-) a
-where 1=1
+	order by idpath, depth
+	';
+  
+	OPEN cur FOR EXECUTE QUERY;
+		FETCH cur INTO rec;
+		WHILE FOUND LOOP
+			RETURN NEXT rec;
+			FETCH cur INTO rec;
+		END LOOP;
+  	CLOSE cur;
+END;
+$$ LANGUAGE plpgsql STRICT;
+
+drop table if exists rekap.statistik_jabatan_struktural;
+create table rekap.statistik_jabatan_struktural
+(
+	satuan_kerja_id numeric not null
+	, nama character varying
+	, satuan_kerja_new_id character varying
+	, pegawai_id numeric
+	, nip_baru character varying
+	, pegawai_nama character varying
+	, tmt timestamp without time zone
+	, status_jabatan character varying
+	, status_ada_pejabat character varying
+	, constraint pk_statistik_jabatan_struktural primary key (satuan_kerja_id)
+	, constraint u_statistik_jabatan_struktural unique (satuan_kerja_id)
+);
+
+create or replace function rekap.pstatistikjabatanstruktural()
+  returns void as
+$body$
+declare
+    sqlquery text;
+begin
+	
+	delete from rekap.statistik_jabatan_struktural;
+	insert into rekap.statistik_jabatan_struktural
+	(
+		SATUAN_KERJA_ID, NAMA, SATUAN_KERJA_NEW_ID
+		, PEGAWAI_ID, NIP_BARU, PEGAWAI_NAMA, TMT, STATUS_JABATAN, STATUS_ADA_PEJABAT
+	)
+	SELECT
+	A.SATUAN_KERJA_ID, A.NAMA, A.IDPATH SATUAN_KERJA_NEW_ID
+	, A.PEGAWAI_ID, A.NIP_BARU, A.PEGAWAI_NAMA, A.TMT, A.STATUS_JABATAN, A.STATUS_ADA_PEJABAT
+	FROM
+	(
+		SELECT
+		A.PEGAWAI_ID, A.NIP_BARU, A.PEGAWAI_NAMA, A.TMT, A.STATUS_JABATAN
+		, CASE WHEN A.PEGAWAI_ID IS NULL THEN 'Kosong' ELSE 'Ada' END STATUS_ADA_PEJABAT
+		, S.*
+		FROM rekap.tree_satker() S
+		LEFT JOIN
+		(
+			SELECT
+			A.PEGAWAI_ID, A.NIP_BARU, A.SATKER_ID, A.PEGAWAI_NAMA, A.TMT, A.STATUS_JABATAN
+			FROM
+			(
+				SELECT
+				A.PEGAWAI_ID, A.NIP_BARU, A.SATKER_ID, A.PEGAWAI_NAMA, A.TMT, A.STATUS_JABATAN
+				, ROW_NUMBER () OVER ( PARTITION BY A.SATKER_ID ORDER BY A.STATUS_PEGAWAI_ID) URUT
+				FROM
+				(
+					SELECT
+					A.PEGAWAI_ID, A.NIP_BARU, JAB_RIW.SATKER_ID
+					,
+					CASE
+					WHEN COALESCE(NULLIF(A.GELAR_DEPAN, ''), NULL) IS NULL THEN ''
+					ELSE REPLACE(REPLACE(A.GELAR_DEPAN, '.', ''), ' ', '') || '. '
+					END
+					||
+					A.NAMA
+					||
+					CASE
+					WHEN COALESCE(NULLIF(A.GELAR_BELAKANG, ''), NULL) IS NOT NULL THEN
+					', ' || REPLACE(REPLACE(REPLACE(A.GELAR_BELAKANG, ' , ', ''), ', ', ''), ' ,', '')
+					ELSE ''
+					END PEGAWAI_NAMA, JAB_RIW.TMT_JABATAN TMT, 'Aktif' STATUS_JABATAN, A.STATUS_PEGAWAI_ID
+					FROM pegawai A
+					LEFT JOIN
+					(
+						SELECT
+						A.JABATAN_RIWAYAT_ID, COALESCE(A.ESELON_ID,99) ESELON_ID, B.NAMA ESELON_NAMA, A.TMT_JABATAN
+						, A.NAMA JABATAN_NAMA, A.SATKER_ID, A.JENIS_JABATAN_ID
+						FROM jabatan_riwayat A
+						LEFT JOIN ESELON B ON A.ESELON_ID = B.ESELON_ID
+						WHERE (COALESCE(NULLIF(A.STATUS, ''), NULL) IS NULL OR A.STATUS = '2')
+					) JAB_RIW ON A.JABATAN_RIWAYAT_ID = JAB_RIW.JABATAN_RIWAYAT_ID
+					WHERE A.STATUS_PEGAWAI_ID IN (2) AND JAB_RIW.JENIS_JABATAN_ID = '1'
+					UNION ALL
+					SELECT
+					A.PEGAWAI_ID, A.NIP_BARU, A.SATKER_ID, A.PEGAWAI_NAMA, A1.TMT, 'Pensiun' STATUS_JABATAN, A.STATUS_PEGAWAI_ID
+					FROM
+					(
+						SELECT
+						A.PEGAWAI_ID, A.NIP_BARU, JAB_RIW.SATKER_ID
+						,
+						CASE
+						WHEN COALESCE(NULLIF(A.GELAR_DEPAN, ''), NULL) IS NULL THEN ''
+						ELSE REPLACE(REPLACE(A.GELAR_DEPAN, '.', ''), ' ', '') || '. '
+						END
+						||
+						A.NAMA
+						||
+						CASE
+						WHEN COALESCE(NULLIF(A.GELAR_BELAKANG, ''), NULL) IS NOT NULL THEN
+						', ' || REPLACE(REPLACE(REPLACE(A.GELAR_BELAKANG, ' , ', ''), ', ', ''), ' ,', '')
+						ELSE ''
+						END PEGAWAI_NAMA
+						, ROW_NUMBER () OVER ( PARTITION BY JAB_RIW.SATKER_ID ORDER BY JAB_RIW.TMT_JABATAN DESC ) URUT
+						, JAB_RIW.TMT_JABATAN, A.STATUS_PEGAWAI_ID
+						FROM pegawai A
+						LEFT JOIN
+						(
+							SELECT
+							A.JABATAN_RIWAYAT_ID, COALESCE(A.ESELON_ID,99) ESELON_ID, B.NAMA ESELON_NAMA, A.TMT_JABATAN
+							, A.NAMA JABATAN_NAMA, A.SATKER_ID
+							FROM jabatan_riwayat A
+							LEFT JOIN ESELON B ON A.ESELON_ID = B.ESELON_ID
+							WHERE (COALESCE(NULLIF(A.STATUS, ''), NULL) IS NULL OR A.STATUS = '2')
+						) JAB_RIW ON A.JABATAN_RIWAYAT_ID = JAB_RIW.JABATAN_RIWAYAT_ID
+						WHERE A.STATUS_PEGAWAI_ID IN (3) AND JAB_RIW.SATKER_ID > 0
+						ORDER BY JAB_RIW.SATKER_ID, JAB_RIW.TMT_JABATAN DESC
+					) A
+					LEFT JOIN
+					(
+						SELECT
+						PEGAWAI_ID, STATUS_PEGAWAI_ID, TMT
+						FROM pegawai_status
+					) A1 ON A.PEGAWAI_ID = A1.PEGAWAI_ID AND A.STATUS_PEGAWAI_ID = A1.STATUS_PEGAWAI_ID
+					WHERE URUT = 1
+				) A
+			) A
+			WHERE 1=1 AND URUT = 1
+		) A ON A.SATKER_ID = S.SATUAN_KERJA_ID
+	) A
+	WHERE 1=1
+	--AND A.IDPATH LIKE '000000000066%'
+	ORDER BY A.IDPATH
+	;
+	--select rekap.pstatistikjabatanstruktural();
+  
+exception
+when others
+then raise exception 'an error was encountered - ';
+   
+end;
+$body$
+language plpgsql volatile cost 100;
+alter function rekap.pstatistikjabatanstruktural() owner to postgres;
+
+--==============================================================================================================
