@@ -1,0 +1,268 @@
+CREATE OR REPLACE VIEW ref_pegawai AS 
+SELECT
+	a.pegawai_id id_pegawai, a.nip_baru nip
+	,
+	(
+	CASE
+	WHEN COALESCE(NULLIF(a.gelar_depan, ''), NULL) IS NULL THEN ''
+	ELSE a.gelar_depan || ' '
+	END || a.nama
+	)
+	||
+	CASE
+	WHEN COALESCE(NULLIF(a.gelar_belakang, ''), NULL) IS NULL THEN ''
+	ELSE '' || a.gelar_belakang
+	END nama_lengkap
+	, coalesce(jab_riw.id_jabatan, jab_riw1.id_jabatan) id_jabatan
+	, coalesce(jab_riw.jenis_jabatan, jab_riw1.jenis_jabatan) jenis_jabatan
+	, to_char(coalesce(jab_riw.tmt_jabatan, jab_riw1.tmt_pppk), 'dd/mm/yyyy') tmt_jabatan
+	, a.satuan_kerja_id id_satker, coalesce(pang_riw.pangkat_id, jab_riw1.golongan_pppk_id) id_gol
+	, to_char(coalesce(pang_riw.tmt_pangkat,jab_riw1.tmt_pppk)::timestamp with time zone, 'dd/mm/yyyy') tmt_pangkat
+	, ps.pegawai_status_nama status_pegawai
+	, to_char(cpns_riw.tmt_cpns::timestamp with time zone, 'dd/mm/yyyy') tmtcpns
+	, to_char(pns_riw.tmt_pns::timestamp with time zone, 'dd/mm/yyyy') tmtpns
+	, to_char(pppk_riw.tmt_pppk::timestamp with time zone, 'dd/mm/yyyy') tmtpppk
+	,
+	CASE
+	WHEN ps.status_pegawai_kedudukan_id = ANY (ARRAY[24::numeric, 25::numeric]) THEN to_char(ps.pegawai_kedudukan_tmt::timestamp with time zone, 'dd/mm/yyyy')
+	ELSE null
+	END tmtwafat
+	,
+	CASE
+	WHEN ps.status_pegawai_id = 4::numeric OR ps.status_pegawai_id = 3::numeric AND (ps.status_pegawai_kedudukan_id <> ALL (ARRAY[24::numeric, 25::numeric])) THEN to_char(ps.pegawai_kedudukan_tmt::timestamp with time zone, 'dd/mm/yyyy')
+	ELSE null
+	END tmtpensiun
+	,
+	CASE
+	WHEN ps.status_pegawai_id = 5::numeric THEN to_char(ps.pegawai_kedudukan_tmt::timestamp with time zone, 'dd/mm/yyyy')
+	ELSE null
+	END tmt_mutasikeluar
+FROM pegawai a
+LEFT JOIN
+(
+  SELECT
+  a_1.pangkat_riwayat_id, b.kode, a_1.tmt_pangkat, a_1.pangkat_id
+  FROM pangkat_riwayat a_1
+  LEFT JOIN pangkat b ON a_1.pangkat_id = b.pangkat_id
+) pang_riw ON a.pangkat_riwayat_id = pang_riw.pangkat_riwayat_id
+LEFT JOIN
+(
+	SELECT
+		a_1.jabatan_riwayat_id, COALESCE(a_1.eselon_id, 99::numeric) eselon_id, b.nama eselon_nama
+		, a_1.tmt_jabatan, a_1.nama jabatan_nama
+		,
+		CASE a_1.jenis_jabatan_id
+		WHEN '1' THEN a_1.satker_id
+		WHEN '2' THEN a_1.jabatan_fu_id
+		WHEN '3' THEN a_1.jabatan_ft_id
+		ELSE NULL::numeric
+		END id_jabatan
+		,
+		CASE a_1.jenis_jabatan_id
+		WHEN '1' THEN 'struktural'
+		WHEN '2' THEN 'jfu'
+		WHEN '3' THEN 'jft'
+		ELSE ''
+		END jenis_jabatan
+	FROM jabatan_riwayat a_1
+	LEFT JOIN eselon b ON a_1.eselon_id = b.eselon_id
+) jab_riw ON a.jabatan_riwayat_id = jab_riw.jabatan_riwayat_id
+LEFT JOIN
+(
+	select
+	    CASE a.jenis_formasi_tugas_id
+	    WHEN '2' THEN a.jabatan_ft_id
+	    ELSE NULL::numeric
+	    END id_jabatan
+	    ,
+	    CASE a.jenis_formasi_tugas_id
+	    WHEN '2' THEN 'jft_pppk'
+	    ELSE ''
+	    END jenis_jabatan, a.*
+	from sk_pppk a
+	inner join
+	(
+		select
+		a.sk_pppk_id, a.pegawai_id
+		from
+		(
+			select a.sk_pppk_id, a.pegawai_id
+			, row_number () over ( partition by a.pegawai_id order by a.tmt_pppk desc, a.tanggal_sk desc ) urut
+			from sk_pppk a
+		) a
+		where urut = 1
+		order by a.pegawai_id
+	) b on a.sk_pppk_id = b.sk_pppk_id
+) jab_riw1 ON a.pegawai_id = jab_riw1.pegawai_id
+LEFT JOIN
+(
+	SELECT
+		a_1.pegawai_status_id, a_1.pegawai_id, a_1.status_pegawai_id, b.nama pegawai_status_nama, a_1.tmt pegawai_kedudukan_tmt
+		, c.nama pegawai_kedudukan_nama, a_1.status_pegawai_kedudukan_id
+	FROM pegawai_status a_1
+	JOIN status_pegawai b ON a_1.status_pegawai_id = b.status_pegawai_id
+	JOIN status_pegawai_kedudukan c ON a_1.status_pegawai_kedudukan_id = c.status_pegawai_kedudukan_id
+) ps ON a.pegawai_status_id = ps.pegawai_status_id
+LEFT JOIN sk_cpns cpns_riw ON a.pegawai_id = cpns_riw.pegawai_id
+LEFT JOIN sk_pns pns_riw ON a.pegawai_id = pns_riw.pegawai_id
+LEFT JOIN sk_pppk pppk_riw ON a.sk_pppk_id = pppk_riw.sk_pppk_id
+WHERE 1 = 1
+ORDER BY jab_riw.eselon_id, pang_riw.pangkat_id DESC, pang_riw.tmt_pangkat;
+GRANT ALL ON TABLE ref_pegawai TO postgres;
+GRANT SELECT ON TABLE ref_pegawai TO kominfo_readonly;
+--================================================================================================================
+create or replace view ref_golongan as
+select pangkat_id id_golongan, 'cpns' jenis_golongan, nama from pangkat
+union all
+select golongan_pppk_id id_golongan, 'pppk' jenis_golongan, nama from golongan_pppk
+;
+GRANT ALL ON TABLE ref_golongan TO postgres;
+GRANT SELECT ON TABLE ref_golongan TO kominfo_readonly;
+--================================================================================================================
+CREATE OR REPLACE VIEW ref_jabatan AS 
+SELECT
+	a.id_jabatan, a.nama_jabatan, a.jenis_jabatan, a.id_satker
+FROM
+(
+	SELECT
+		jabatan_ft.jabatan_ft_id AS id_jabatan, jabatan_ft.nama AS nama_jabatan
+		, 'jft' AS jenis_jabatan, NULL::numeric AS id_satker
+	FROM jabatan_ft
+	WHERE jabatan_ft.status_eofice = '1'
+	UNION ALL
+	SELECT
+		jabatan_ft_pppk.jabatan_ft_pppk_id AS id_jabatan, jabatan_ft_pppk.nama AS nama_jabatan
+		, 'jft_pppk' AS jenis_jabatan, NULL::numeric AS id_satker
+	FROM jabatan_ft_pppk
+	WHERE jabatan_ft_pppk.status_eofice = '1'
+	UNION ALL
+	SELECT
+		jabatan_fu.jabatan_fu_id AS id_jabatan, jabatan_fu.nama AS nama_jabatan
+		, 'jfu' AS jenis_jabatan, NULL::numeric AS id_satker
+	FROM jabatan_fu
+	WHERE jabatan_fu.status_eofice = '1'
+	UNION ALL
+	SELECT
+		satuan_kerja.satuan_kerja_id AS id_jabatan, satuan_kerja.nama_jabatan
+		, 'struktural' AS jenis_jabatan, satuan_kerja.satuan_kerja_id AS id_satker
+	FROM satuan_kerja
+	WHERE 1 = 1 AND satuan_kerja.tipe_jabatan_id = 1 AND satuan_kerja.masa_berlaku_akhir IS NULL
+) a
+WHERE 1 = 1;
+GRANT ALL ON TABLE ref_jabatan TO postgres;
+GRANT SELECT ON TABLE ref_jabatan TO kominfo_readonly;
+--================================================================================================================
+CREATE OR REPLACE VIEW ref_satker AS
+select
+	a.id_satker, a.nama_satker, a.id_satker_parent
+	, a.id_satker_induk, a.id_satker_induk_upt, a.is_aktif
+from
+(
+	SELECT
+		a.satuan_kerja_id id_satker, a.nama nama_satker, a.satuan_kerja_parent_id id_satker_parent
+		, a.satuan_kerja_induk_id id_satker_induk, a.satuan_kerja_induk_upt id_satker_induk_upt
+		,
+		case when
+		coalesce(a.masa_berlaku_awal, current_date::timestamp without time zone) <= current_date
+		and coalesce(a.masa_berlaku_akhir, current_date::timestamp without time zone) >= current_date
+		then 'Y' else 'N' end is_aktif
+	FROM satuan_kerja a
+	WHERE 1 = 1
+) a
+WHERE 1 = 1
+/*
+AND 
+(
+	EXISTS 
+	( 
+	  SELECT 1
+	  FROM satuan_kerja s
+	  WHERE 1 = 1 AND COALESCE(s.masa_berlaku_awal, CURRENT_DATE::timestamp without time zone) <= CURRENT_DATE AND COALESCE(s.masa_berlaku_akhir, CURRENT_DATE::timestamp without time zone) >= COALESCE(s.masa_berlaku_akhir, CURRENT_DATE::timestamp without time zone) AND a.satuan_kerja_id = s.satuan_kerja_id
+	)
+)*/
+;
+GRANT ALL ON TABLE ref_satker TO postgres;
+GRANT SELECT ON TABLE ref_satker TO kominfo_readonly;
+--================================================================================================================
+create or replace view ref_riwayat_jabatan as
+select
+	a.pegawai_id id_pegawai
+	,
+	CASE a.jenis_jabatan_id
+	WHEN '1' THEN a.satker_id
+	WHEN '2' THEN a.jabatan_fu_id
+	WHEN '3' THEN a.jabatan_ft_id
+	ELSE NULL::numeric
+	END id_jabatan
+	, a.nama nama_jabatan
+	,
+	CASE a.jenis_jabatan_id
+	WHEN '1' THEN 'struktural'
+	WHEN '2' THEN 'jfu'
+	WHEN '3' THEN 'jft'
+	ELSE ''
+	END jenis_jabatan, a.satker_id id_satker, to_char(a.tmt_jabatan, 'dd/mm/yyyy') tmt_jabatan
+from jabatan_riwayat a
+where 1=1
+and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+union all
+select
+	a.pegawai_id id_pegawai
+	,
+	CASE a.jenis_formasi_tugas_id
+	WHEN '2' THEN a.jabatan_ft_id
+	ELSE NULL::numeric
+	END id_jabatan, a.jabatan_tugas nama_jabatan
+	,
+	CASE a.jenis_formasi_tugas_id
+	WHEN '2' THEN 'jft_pppk'
+	ELSE ''
+	END jenis_jabatan
+	, a.satuan_kerja_id id_satker, to_char(a.tmt_pppk, 'dd/mm/yyyy') tmt_jabatan
+from sk_pppk a
+where 1=1
+;
+GRANT ALL ON TABLE ref_riwayat_jabatan TO postgres;
+GRANT SELECT ON TABLE ref_riwayat_jabatan TO kominfo_readonly;
+--================================================================================================================
+create or replace view ref_riwayat_golongan as
+select
+	a.pegawai_id id_pegawai, a.pangkat_id id_gol, to_char(a.tmt_pangkat, 'dd/mm/yyyy') tmt_pangkat, 'cpns' jenis_golongan
+from pangkat_riwayat a
+where 1=1
+and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+union all
+select
+	a.pegawai_id id_pegawai, a.golongan_pppk_id id_gol, to_char(a.tmt_pppk, 'dd/mm/yyyy') tmt_pangkat, 'pppk' jenis_golongan
+from sk_pppk a
+where 1=1
+and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+;
+GRANT ALL ON TABLE ref_riwayat_golongan TO postgres;
+GRANT SELECT ON TABLE ref_riwayat_golongan TO kominfo_readonly;
+--================================================================================================================
+create or replace view ref_riwayat_cuti as
+select
+a.pegawai_id id_pegawai
+,
+case a.jenis_cuti 
+when 1 then 'cutitahunan'
+when 2 then 'cutibesar'
+when 3 then 'cutisakit'
+when 4 then 'cutibersalin'
+when 5 then 'cutialasanpenting'
+when 6 then 'cutibersama'
+when 7 then 'cltn'
+else null::text end jenis_cuti
+, to_char(a.tanggal_mulai, 'dd/mm/yyyy') tanggal_mulai, to_char(a.tanggal_selesai, 'dd/mm/yyyy') tanggal_selesai
+from cuti a
+where 1=1
+and (coalesce(nullif(a.status, ''), null) is null or a.status = '2')
+;
+GRANT ALL ON TABLE ref_riwayat_cuti TO postgres;
+GRANT SELECT ON TABLE ref_riwayat_cuti TO kominfo_readonly;
+--================================================================================================================
+create or replace view ref_riwayat_tugasbelajar as
+select
+null::numeric id
+;
