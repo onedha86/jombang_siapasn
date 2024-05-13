@@ -1,0 +1,38 @@
+delete from menu where menu_id = '011307' and menu_group_id = 1;
+insert into menu(menu_id, menu_parent_id, menu_group_id, nama, link_file, status, menu_icon_id)
+values('011307', '0113', 1, 'Tugas Belajar', 'pegawai_add_tugas_belajar_monitoring', 1, 'fa fa-files-o');
+
+drop table if exists tugas_belajar;
+create table tugas_belajar
+(
+	tugas_belajar_id numeric not null
+	, jenis_id numeric
+	, pegawai_id numeric
+	, no_sk character varying(175)
+	, tanggal_sk date
+	, tanggal_mulai date
+	, tanggal_selesai date
+	, ds_jabatan_riwayat_id numeric
+	, pendidikan_id numeric
+	, pendidikan_jurusan_id numeric
+	, nama character varying
+	, tempat character varying
+	, pejabat_penetap_id numeric
+	, pejabat_penetap character varying
+	, last_user character varying
+	, last_date timestamp without time zone
+	, last_level numeric
+	, status character varying(1)
+	, user_login_id numeric
+	, user_login_pegawai_id numeric
+	, last_create_user character varying
+	, last_create_date timestamp without time zone
+	, id_sapk character varying(100)
+	, sync_id integer
+	, sync_nama character varying
+	, sync_waktu timestamp without time zone
+	, sync_status character varying
+	, constraint pk_tugas_belajar primary key (tugas_belajar_id)
+	, constraint fk_tugas_belajartopegawai foreign key (pegawai_id) references pegawai (pegawai_id) match simple on update restrict on delete restrict
+	, constraint ak_u_tugas_belajar unique (pegawai_id, tanggal_mulai, status)
+);

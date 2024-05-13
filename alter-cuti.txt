@@ -1,4 +1,5 @@
 --insert into kategori_file (kategori_file_id, nama, urut) values(31, 'KGB PPPK', 6);
+--insert into kategori_file (kategori_file_id, nama, urut) values(32, 'Tugas Belajar', 24);
 
 --drop view if exists riwayat_file;
 CREATE OR REPLACE VIEW riwayat_file AS 
