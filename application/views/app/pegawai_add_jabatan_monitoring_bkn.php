@@ -408,6 +408,16 @@ usort($arrkunci, "sortdatefunctiondesc");
             <input type="hidden" id="<?=$infoidbkn?>" value="<?=$infoidriwayat?>">
 
             <?
+            $infoidhapusbkndisabled= "disabled";
+            if(!empty($infoidbkn) || !empty($infoidriwayat))
+            {
+              $infoidhapusbkndisabled= "";
+              $infoidhapusbkn= "infoidhapusbkn";
+            }
+            ?>
+            <a href="javascript:void(0)" id="<?=$infoidhapusbkn.$infoidriwayat?>" class="<?=$infoidhapusbkndisabled?>" title="hapus data" ><img src="images/icon-seru.png"></a>
+
+            <?
             $inforesetidsapk= "";
             $inforesetidsapkdisabled= "disabled";
             if(!empty($infoidsapkriwayat) && !empty($syncsapk))
@@ -449,6 +459,45 @@ usort($arrkunci, "sortdatefunctiondesc");
   <link href="lib/mbox/mbox-modif.css" rel="stylesheet">
 
   <script type="text/javascript">
+    $('[id^="infoidhapusbkn"]').click(function() {
+      vinfoid= $(this).attr('id');
+      vinfoid= vinfoid.replace("infoidhapusbkn", "");
+      var vinfoidbkn= $("#"+vinfoid).val();
+      info= "Apakah Anda Yakin, menghapus data?";
+      mbox.custom({
+          message: info,
+          options: {close_speed: 100},
+          buttons: [
+          {
+            label: 'Ya',
+            color: 'green darken-2',
+            callback: function() {
+
+              var s_url='bkn/jabatan_json/delete_bkn?reqRiwayatId='+vinfoid+"&reqBknId="+vinfoidbkn;
+              $.ajax({'url': s_url, type: "get",'success': function(data){
+                // console.log(data);return false;
+                mbox.alert('Proses Data', {open_speed: 500}, interval = window.setInterval(function() 
+                {
+                  clearInterval(interval);
+                  document.location.href= "app/loadUrl/app/pegawai_add_jabatan_monitoring_bkn/?reqId=<?=$reqId?>";
+                }, 1000));
+                $(".mbox > .right-align").css({"display": "none"});
+                
+              }});
+              mbox.close();
+          }
+          },
+          {
+            label: 'Tidak',
+            color: 'grey darken-2',
+            callback: function() {
+              mbox.close();
+            }
+          }
+          ]
+        });
+    });
+
     $('[id^="resetsinkron"]').click(function() {
       vinfoid= $(this).attr('id');
       vinfoid= vinfoid.replace("resetsinkron", "");
@@ -559,7 +608,7 @@ usort($arrkunci, "sortdatefunctiondesc");
                 mbox.alert('Proses Data', {open_speed: 500}, interval = window.setInterval(function() 
                 {
                   clearInterval(interval);
-                   document.location.href= "app/loadUrl/app/pegawai_add_jabatan_monitoring_bkn/?reqId=<?=$reqId?>";
+                  document.location.href= "app/loadUrl/app/pegawai_add_jabatan_monitoring_bkn/?reqId=<?=$reqId?>";
                 }, 1000));
                 $(".mbox > .right-align").css({"display": "none"});
                 

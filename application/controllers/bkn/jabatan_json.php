@@ -145,6 +145,60 @@ class jabatan_json extends CI_Controller {
         echo json_encode( $arrDataStatus,true);
 	}
 
+    function delete_bkn(){
+        $this->load->model('base-api/DataCombo');
+        $this->load->model('JabatanRiwayat');
+
+        $reqBknId= $this->input->get('reqBknId');
+        $reqRiwayatId= $this->input->get('reqRiwayatId');
+
+        // untuk reset riwayat
+        if(!empty($reqRiwayatId))
+        {
+            $berhasil= "";
+            $set= new JabatanRiwayat();
+            $set->setField("LAST_LEVEL", $this->LOGIN_LEVEL);
+            $set->setField("LAST_USER", $this->LOGIN_USER);
+            $set->setField("USER_LOGIN_ID", $this->LOGIN_ID);
+            $set->setField("USER_LOGIN_PEGAWAI_ID", ValToNullDB($this->LOGIN_PEGAWAI_ID));
+            $set->setField("LAST_DATE", "NOW()");
+            $set->setField("JABATAN_RIWAYAT_ID", $reqRiwayatId);
+            $set->setField("STATUS", "1");
+            if($set->updateStatus())
+            {
+                $berhasil= "1";
+                $arrparam= ["reqRiwayatId"=>$reqRiwayatId, "id"=>""];
+                $this->setidsapk($arrparam);
+            }
+        }
+
+        // untuk reset riwayat
+        if(!empty($reqBknId))
+        {
+            $berhasil= "";
+
+            $set= new DataCombo();
+            $arrparam= ["id"=>$reqBknId, "m"=>"hapus", "vurl"=>"Data_rw_jabatan_json"];
+            $set= new DataCombo();
+            $set->selectdata($arrparam, "");
+        }
+
+        if($berhasil == "1")
+        {
+          $arrDataStatus =array("PESAN"=>'Data berhasil di hapus',"code"=>200);
+          if(!empty($reqRiwayatId))
+          {
+            $this->reset_siapasn();
+          }
+        }
+        else
+        {
+          $arrDataStatus =array("PESAN"=>$pesan,"code"=>400);
+        }
+
+        echo json_encode( $arrDataStatus,true);
+    }
+
     function bkn_siapasn(){
 
         $this->load->model('Pegawai');

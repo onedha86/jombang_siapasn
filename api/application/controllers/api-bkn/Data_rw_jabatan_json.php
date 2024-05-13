@@ -12,25 +12,35 @@ class Data_rw_jabatan_json extends REST_Controller {
     }
  
     // show data entitas
-	function index_get() {
+    function index_get() {
         $nip= $this->input->get("nip");
         $id= $this->input->get("id");
+        $reqId= $this->input->get("reqId");
+        $m= $this->input->get("m");
         $gp= new Gapi();
 
-        if(!empty($id))
+        if($m == "hapus" && !empty($reqId))
         {
-            $arrparam= ["ctrl"=>"jabatan/id", "value"=>$id];
-            $vreturn= $gp->getdataParam($arrparam);
+            $arrparam= ["ctrl"=>"jabatan/delete/".$reqId];
+            $vreturn= $gp->getDataDelete($arrparam);
         }
         else
         {
-            $arrparam= ["vjenis"=>"rw-jabatan", "nip"=>$nip, "lihatdata"=>""];
-            $vreturn= $gp->getdata($arrparam);
+            if(!empty($id))
+            {
+                $arrparam= ["ctrl"=>"jabatan/id", "value"=>$id];
+                $vreturn= $gp->getdataParam($arrparam);
+            }
+            else
+            {
+                $arrparam= ["vjenis"=>"rw-jabatan", "nip"=>$nip, "lihatdata"=>""];
+                $vreturn= $gp->getdata($arrparam);
+            }
         }
         // print_r($vreturn);exit;
         $this->response(array('status' => 'success', 'message' => 'success', 'code' => 200, 'result' => $vreturn));
     }
-	
+    
     // insert new data to entitas
     function index_post() {
         $id= $this->input->post("id");  

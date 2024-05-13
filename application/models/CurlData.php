@@ -106,40 +106,43 @@ DESCRIPTION			:
 
     }
 
-    function curlDelete($url, $data){
+    function curldelete($url, $data){
     	$settingurlapi= $this->config->config["settingurlapi"];
 		 // echo $settingurlapi;exit;
 
-		$url= $settingurlapi.$url.'?reqToken='.$token;
-    	// echo $url;exit();
+    	$vid= $data["id"];
+    	if(!empty($vid))
+    	{
+			$url= $settingurlapi.$url.'?reqToken='.$token."&id=".$vid;
+	    	// echo $url;exit();
 
-    	$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_POST, 1);
-		// curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-		// curl_setopt($ch, CURLOPT_SSLVERSION, 'CURL_SSLVERSION_TLSv1_2');
- // curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-		// curl_setopt($ch, CURLOPT_TIMEOUT, 500);
-		// curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	    	$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_POST, 1);
+			// curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+			// curl_setopt($ch, CURLOPT_SSLVERSION, 'CURL_SSLVERSION_TLSv1_2');
+			// curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+			// curl_setopt($ch, CURLOPT_TIMEOUT, 500);
+			// curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
+			// execute post
+			$result = curl_exec($ch);
+			$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			// print_r($httpCode);
+			// close connection
+			curl_close($ch);
 
-
-		// execute post
-		$result = curl_exec($ch);
-		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-// print_r($httpCode);
-		// close connection
-		curl_close($ch);
-
-		$rs= json_decode($result);
-		// print_r($rs);exit();
-		return $rs;
-
+			$rs= json_decode($result);
+			// print_r($result);exit();
+			return $rs;
+    	}
+    	else
+    		return false;
     }
 	
 	public function getField($fieldName){
